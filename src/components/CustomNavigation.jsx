@@ -31,7 +31,7 @@ export default class CustomNavigation extends React.Component {
 	componentDidMount() {
 	}
 
-	renderIframes(sub) {
+	renderIframes(sub, depth) {
 		let r = []
 
 		if (sub != null)
@@ -44,7 +44,7 @@ export default class CustomNavigation extends React.Component {
 	                    </IconButton>
 	                  : ""}>
 		            <ListItemButton selected={this.props.currentIframe == iframe.index} onClick={() => this.props.setIframe(iframe.index)}>
-		              <ListItemIcon>
+		              <ListItemIcon sx={{ pl: depth}}>
 		                <Icon>{iframe.icon}</Icon>
 		              </ListItemIcon>
 		              <ListItemText primary={iframe.title} sx={{wordBreak: "break-all"}}/>
@@ -55,13 +55,13 @@ export default class CustomNavigation extends React.Component {
 					 r.push(
 					 	<Box key={iframe.index}>
 						 	<ListItemButton onClick={() => this.props.toggleIframeSub(iframe.index)}>
-					        <ListItemIcon>
+					        <ListItemIcon sx={{ pl: depth}}>
 					          <Icon>{iframe.icon}</Icon>
 					        </ListItemIcon>
-					        <ListItemText primary={iframe.title} />
+					        <ListItemText primary={iframe.title} sx={{wordBreak: "break-all"}}/>
 					        {iframe.opened ? <ExpandLess /> : <ExpandMore />}
 					      </ListItemButton>
-						 	<Collapse in={iframe.opened} timeout="auto" unmountOnExit><List component="div" disablePadding sx={{ pl: 1}}>{this.renderIframes(iframe["sub"])}</List></Collapse>
+						 	<Collapse in={iframe.opened} timeout="auto" unmountOnExit><List component="div" disablePadding>{this.renderIframes(iframe["sub"], depth+1)}</List></Collapse>
 						 </Box>
 					 	)
 				}
@@ -89,7 +89,7 @@ export default class CustomNavigation extends React.Component {
 			        </Box>
 			        <Divider />
 			      <List>
-			      {this.renderIframes(this.props.iframes)}
+			      {this.renderIframes(this.props.iframes, 0)}
 			      </List>
 			    </Box>
 	          </Drawer>
