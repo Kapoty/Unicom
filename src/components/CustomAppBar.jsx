@@ -42,7 +42,7 @@ export default class CustomAppBar extends React.Component {
 			         </IconButton>
 		        	</Box>
 		           	<Box sx={{display: "flex", flexGrow: 1, justifyContent: "left", alignItems: "center", gap: "10px", "&:hover": {cursor: "pointer"}}} onClick={() => window.location.reload()}>
-		           		<img style={{width: "auto", height: "24px"}}src='./assets/image/UniSystem_Logo.png'/>
+		           		<img style={{width: "auto", height: "24px"}} src='./assets/image/UniSystem_Logo.png'/>
 		           	</Box>
 		           	<IconButton sx={{color: "#FFFFFF"}} onClick={() => this.props.toggleFullscreen()}>
 			        	<Icon>{this.props.fullscreen ? "fullscreen_exit" : "fullscreen"}</Icon>
