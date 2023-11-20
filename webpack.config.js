@@ -8,7 +8,7 @@ module.exports = {
     	"app": "./src/App.jsx"
     },
     "output": {
-        "path": __dirname+'/out',
+        "path": __dirname+'/docs',
         "filename": "[name].[chunkhash:8].js"
     },
     "module": {
