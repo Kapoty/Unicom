@@ -1,0 +1,48 @@
+{
+	"reports": [
+		{
+			"title": "Fibra",
+			"icon": "cable",
+			"active": 1,
+			"sub": [
+				{
+					"title": "Fibra A",
+					"icon": "computer",
+					"iframe": "https://app.powerbi.com/reportEmbed?reportId=ca0b2603-34c4-4068-820a-56a897751fce&autoAuth=true&ctid=3699bfcc-bc9d-4dcc-9ecd-789e1cc5769e&navContentPaneEnabled=false",
+					"active": 1
+				},
+				{
+					"title": "Fibra B",
+					"icon": "star",
+					"iframe": "https://app.powerbi.com/reportEmbed?reportId=ca0b2603-34c4-4068-820a-56a897751fce&autoAuth=true&ctid=3699bfcc-bc9d-4dcc-9ecd-789e1cc5769e&navContentPaneEnabled=false",
+					"active": 1
+				},
+				{
+					"title": "Fibra XXX XXX XXX XXX",
+					"icon": "android",
+					"active": 1,
+					"sub": [
+						{
+							"title": "Fibra ZZZZZZZZZZZZZZZZZZZZZ",
+							"icon": "abc",
+							"iframe": "https://app.powerbi.com/reportEmbed?reportId=ca0b2603-34c4-4068-820a-56a897751fce&autoAuth=true&ctid=3699bfcc-bc9d-4dcc-9ecd-789e1cc5769e&navContentPaneEnabled=false",
+							"active": 1
+						}
+					]
+				}
+			]
+		},
+		{
+			"title": "TV",
+			"icon": "tv",
+			"iframe": "https://app.powerbi.com/reportEmbed?reportId=ca0b2603-34c4-4068-820a-56a897751fce&autoAuth=true&ctid=3699bfcc-bc9d-4dcc-9ecd-789e1cc5769e&navContentPaneEnabled=false",
+			"active": 1
+		},
+		{
+			"title": "Telefone",
+			"icon": "phone",
+			"iframe": "https://app.powerbi.com/reportEmbed?reportId=ca0b2603-34c4-4068-820a-56a897751fce&autoAuth=true&ctid=3699bfcc-bc9d-4dcc-9ecd-789e1cc5769e&navContentPaneEnabled=false",
+			"active": 1
+		}
+	]
+} 
