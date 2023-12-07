@@ -1,5 +1,5 @@
 var config = {
-	assetsURL: "./assets/"
+	assetsURL: "/assets/"
 }
 
 module.exports = config;

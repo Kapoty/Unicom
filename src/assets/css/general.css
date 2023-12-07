@@ -1,3 +1,9 @@
+* {
+    -webkit-print-color-adjust: exact !important;   /* Chrome, Safari 6 – 15.3, Edge */
+    color-adjust: exact !important;                 /* Firefox 48 – 96 */
+    print-color-adjust: exact !important;           /* Firefox 97+, Safari 15.4+ */
+}
+
 body {
 	margin: 0;
 	padding: 0;
@@ -10,4 +16,26 @@ iframe {
 	padding: 0;
 	border: 0;
 	outline: 0;
+}
+
+.customIcon {
+	width:  24px;
+	height: 24px;
+}
+
+@media print {
+
+	#iframeBox {
+		position: absolute;
+		left: 0;
+		top: 0;
+		width: 100dvw;
+		height: 100dvh;
+		z-index: 9999999;
+	}
+
+	.MuiTooltip-popper {
+		display: none
+	}
+
 }

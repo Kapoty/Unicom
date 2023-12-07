@@ -3,13 +3,14 @@ const {CleanWebpackPlugin} = require('clean-webpack-plugin');
 const CopyPlugin = require('copy-webpack-plugin');
 
 module.exports = {
-    "mode": "production",//"development",//
+    "mode": "development",//"production",//
     "entry": {
     	"app": "./src/App.jsx"
     },
     "output": {
         "path": __dirname+'/docs',
-        "filename": "[name].[chunkhash:8].js"
+        "filename": "[name].[chunkhash:8].js",
+        "publicPath": "/"
     },
     "module": {
         "rules": [
@@ -30,8 +31,7 @@ module.exports = {
                 "test": /\.(scss|css)$/,
                 "use": [
                     "style-loader",
-                    "css-loader",
-                    "sass-loader"
+                    "css-loader"
                 ]
             }
         ]
@@ -61,5 +61,8 @@ module.exports = {
     },
     "target": "web",
     "devServer": {
+        historyApiFallback:{
+            index: '/'
+        },
     },
 }

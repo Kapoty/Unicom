@@ -3,15 +3,14 @@
 	<head>
 		<meta charset="UTF-8">
 		<title><%= htmlWebpackPlugin.options.title %></title>
-		<link rel=icon href="./assets/image/Icon.png" sizes="any" type="image/png">
+		<link rel=icon href="/assets/image/Icon.png" sizes="any" type="image/png">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" />
 		<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
-		<link rel="stylesheet" href="./assets/css/general.css" />
 		<meta name="google" value="notranslate">
-		<!--<meta property="og:image" content="https://alternativa.centesima.art.br/assets/image/logo-256.png">
-		<meta property="og:description" content="Alternativa Calçados">
-		<meta property="og:title" content="Alternativa Calçados">-->
+		<meta property="og:image" content="./assets/image/Icon.png">
+		<meta property="og:description" content="<%= htmlWebpackPlugin.options.title %>">
+		<meta property="og:title" content="<%= htmlWebpackPlugin.options.title %>">
 	</head>
 	<body>
 		<div id="root"></div>

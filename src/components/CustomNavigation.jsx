@@ -18,6 +18,7 @@ import Collapse from '@mui/material/Collapse';
 import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import CloseIcon from '@mui/icons-material/Close';
+import Tooltip from '@mui/material/Tooltip';
 
 export default class CustomNavigation extends React.Component {
 
@@ -36,27 +37,41 @@ export default class CustomNavigation extends React.Component {
 
 		if (sub != null)
 			sub.forEach(iframe => {
-				if (!iframe.active)
+				if (!iframe.active || iframe.hidden)
 					return
 				if ("iframe" in iframe) {
-					r.push(<ListItem key={iframe.index} disablePadding secondaryAction={iframe.opened ? <IconButton edge="end" aria-label="fechar" onClick={() => this.props.closeIframe(iframe.index)}>
-	                      <CloseIcon />
-	                    </IconButton>
-	                  : ""}>
-		            <ListItemButton selected={this.props.currentIframe == iframe.index} onClick={() => this.props.setIframe(iframe.index)}>
-		              <ListItemIcon sx={{ pl: depth}}>
-		                <Icon>{iframe.icon}</Icon>
-		              </ListItemIcon>
-		              <ListItemText primary={iframe.title} sx={{wordBreak: "break-all"}}/>
-		            </ListItemButton>
-		          </ListItem>)
+					if (!("new_tab" in iframe) || ("new_tab" in iframe && !iframe["new_tab"]))
+						r.push(<ListItem key={iframe.index} disablePadding secondaryAction={iframe.opened ? <Tooltip title="Fechar"><IconButton edge="end" aria-label="fechar" onClick={() => this.props.closeIframe(iframe.index)}>
+		                      <CloseIcon />
+		                    </IconButton></Tooltip>
+		                  : ""}>
+			            <ListItemButton selected={this.props.currentIframe == iframe.index} onClick={() => this.props.setIframe(iframe.index)}>
+			              <ListItemIcon sx={{ pl: depth}}>
+			              	{"customIcon" in iframe ? <img className="customIcon" src={'/assets/image/custom_icons/' + iframe.customIcon}/> :
+			                <Icon>{iframe.icon}</Icon>}
+			              </ListItemIcon>
+			              <ListItemText primary={iframe.title} sx={{wordBreak: "break-all"}}/>
+			            </ListItemButton>
+			          </ListItem>)
+					else
+						r.push(<ListItem key={iframe.index} disablePadding>
+				            <ListItemButton onClick={() => this.props.openIframeByIndex(iframe.index)}>
+				              <ListItemIcon sx={{ pl: depth}}>
+				              	{"customIcon" in iframe ? <img className="customIcon" src={'/assets/image/custom_icons/' + iframe.customIcon}/> :
+				                <Icon>{iframe.icon}</Icon>}
+				              </ListItemIcon>
+				              <ListItemText primary={iframe.title} sx={{wordBreak: "break-all"}}/>
+				              <Icon>open_in_new</Icon>
+				            </ListItemButton>
+			          </ListItem>)
 				}
 				if ("sub" in iframe) {
 					 r.push(
 					 	<Box key={iframe.index}>
 						 	<ListItemButton onClick={() => this.props.toggleIframeSub(iframe.index)}>
 					        <ListItemIcon sx={{ pl: depth}}>
-					          <Icon>{iframe.icon}</Icon>
+					          {"customIcon" in iframe ? <img className="customIcon" src={'/assets/image/custom_icons/' + iframe.customIcon}/> :
+		                		<Icon>{iframe.icon}</Icon>}
 					        </ListItemIcon>
 					        <ListItemText primary={iframe.title} sx={{wordBreak: "break-all"}}/>
 					        {iframe.opened ? <ExpandLess /> : <ExpandMore />}
@@ -76,17 +91,23 @@ export default class CustomNavigation extends React.Component {
 				variant="persistent"
 				anchor="left"
 	            open={this.props.menuOpen}
-	            sx={{width: this.props.menuOpen ? "250px" : "0px", transition: "width 0.25s"}}
+	            sx={{width: this.props.menuOpen ? "325px" : "0px", transition: "width 0.25s"}}
+	            PaperProps={{
+		          sx: {
+		            position: "relative",
+		            overflow: "hidden"
+		          },
+		        }}
 	          >
 	             <Box
-			      sx={{ width: 250}}
+			      sx={{ width: 325}}
 			      role="presentation"
 			    >
-			    	<Box sx={{display: "flex", justifyContent: "flex-end", padding: "10px"}}>
+			    	{/*<Box sx={{display: "flex", justifyContent: "flex-end", padding: "10px"}}>
 			          <IconButton onClick={this.props.toggleMenu}>
 			             <ChevronLeftIcon />
 			          </IconButton>
-			        </Box>
+			        </Box>*/}
 			        <Divider />
 			      <List>
 			      {this.renderIframes(this.props.iframes, 0)}

@@ -21,7 +21,7 @@ export default class CustomBottomNavigation extends React.Component {
 		return (
 			<React.Fragment>
 				<div style={{display: this.props.display ? "Flex" : "None", width: "100%", height: "100%"}}>
-					{this.props.opened ? <iframe style={{width: "100%", height: "100%"}} src={this.props.iframe}></iframe> : ""}
+					{this.props.opened ? <iframe style={{width: "100%", height: "100%"}} src={this.props.iframe + this.props.extra} className={this.props.display ? "currentIframe" : ""}></iframe> : ""}
 				</div>
 		    </React.Fragment>
 		  );

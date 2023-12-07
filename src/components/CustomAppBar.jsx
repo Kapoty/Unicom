@@ -8,6 +8,7 @@ import Button from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
 import Icon from '@mui/material/Icon';
+import Tooltip from '@mui/material/Tooltip';
 
 export default class CustomAppBar extends React.Component {
 
@@ -27,10 +28,9 @@ export default class CustomAppBar extends React.Component {
 		return (
 		    <Box sx={{display: this.props.display ? "flex" : "None"}}>
 		      <AppBar position="static" sx={{background: "black"}}>
-		        <Toolbar sx={{display: "flex", justifyContent: "space-between"}}>
-		        	<Box>
+		        <Toolbar sx={{display: "flex", justifyContent: "space-between", gap: "10px"}}>
 		        		<IconButton
-		        		style={{display: !this.props.menuOpen ? "block" : "none"}}
+		        		style={{display: !this.props.menuOpen ? "flex" : "flex"}}
 			            size="large"
 			            edge="start"
 			            color="inherit"
@@ -40,13 +40,29 @@ export default class CustomAppBar extends React.Component {
 			          >
 			            <MenuIcon />
 			         </IconButton>
-		        	</Box>
-		           	<Box sx={{display: "flex", flexGrow: 1, justifyContent: "left", alignItems: "center", gap: "10px", "&:hover": {cursor: "pointer"}}} onClick={() => window.location.reload()}>
-		           		<img style={{width: "auto", height: "24px"}} src='./assets/image/UniSystem_Logo.png'/>
+		           	<Box sx={{display: "flex", flexGrow: 1, justifyContent: "left", alignItems: "center", gap: "10px", "&:hover": {cursor: "pointer"}}} onClick={() => {}}>
+		           		<img style={{width: "auto", height: "24px"}} src='/assets/image/UniSystem_Logo.png'/>
 		           	</Box>
-		           	<IconButton sx={{color: "#FFFFFF"}} onClick={() => this.props.toggleFullscreen()}>
-			        	<Icon>{this.props.fullscreen ? "fullscreen_exit" : "fullscreen"}</Icon>
-		      		</IconButton>
+		           	<Tooltip title="Recarregar">
+			           	<IconButton sx={{color: "#FFFFFF"}} onClick={() => this.props.refreshIframe()} disabled={!this.props.iframeSelected}>
+				        	<Icon>refresh</Icon>
+			      		</IconButton>
+		      		</Tooltip>
+		      		<Tooltip title="Abrir em nova aba">
+			      		<IconButton sx={{color: "#FFFFFF"}} onClick={() => this.props.openIframe()} disabled={!this.props.iframeSelected}>
+				        	<Icon>open_in_new</Icon>
+			      		</IconButton>
+			      	</Tooltip>
+			      	<Tooltip title="Imprimir">
+			           	<IconButton sx={{color: "#FFFFFF"}} onClick={() => this.props.printIframe()} disabled={!this.props.iframeSelected}>
+				        	<Icon>printer</Icon>
+			      		</IconButton>
+		      		</Tooltip>
+			      	<Tooltip title="Tela cheia">
+			           	<IconButton sx={{color: "#FFFFFF"}} onClick={() => this.props.toggleFullscreen()} disabled={!this.props.iframeSelected}>
+				        	<Icon>{this.props.fullscreen ? "fullscreen_exit" : "fullscreen"}</Icon>
+			      		</IconButton>
+			      	</Tooltip>
 		        </Toolbar>
 		      </AppBar>
 		    </Box>
