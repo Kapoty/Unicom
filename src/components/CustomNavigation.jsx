@@ -19,120 +19,168 @@ import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import CloseIcon from '@mui/icons-material/Close';
 import Tooltip from '@mui/material/Tooltip';
+import CircularProgress from '@mui/material/CircularProgress';
 
-export default class CustomNavigation extends React.Component {
+import IframeContextMenu from '../components/iframeContextMenu'
+
+import { useNavigate, useLocation } from "react-router-dom";
+
+class CustomNavigation extends React.Component {
 
 	constructor(props) {
 		super(props);
 		this.state = {
-			"value": 0
+			iframeListOpen: false,
+			iframeContextMenuOpen: false,
+			iframeContextMenuIframe: null,
+			iframeContextMenuX: 0,
+			iframeContextMenuY: 0,
 		}
+
+		this.handleIframeContextMenu = this.handleIframeContextMenu.bind(this);
+		this.closeIframeContextMenu = this.closeIframeContextMenu.bind(this);
 	}
 
 	componentDidMount() {
 	}
 
-	renderIframes(sub, depth) {
-		let r = []
+	handleIframeContextMenu(iframe, event) {
+		event.preventDefault();
+		this.setState({iframeContextMenuIframe: iframe, iframeContextMenuOpen: true, iframeContextMenuX: event.clientX, iframeContextMenuY: event.clientY})
+	}
 
-		if (sub != null)
-			sub.forEach(iframe => {
-				if (!iframe.active || iframe.hidden)
-					return
-				if ("iframe" in iframe) {
-					if (!("new_tab" in iframe) || ("new_tab" in iframe && !iframe["new_tab"]))
-						r.push(<ListItem key={iframe.index} disablePadding secondaryAction={iframe.opened ? <Tooltip title="Fechar"><IconButton edge="end" aria-label="fechar" onClick={() => this.props.closeIframe(iframe.index)}>
-		                      <CloseIcon />
-		                    </IconButton></Tooltip>
-		                  : ""}>
-			            <ListItemButton selected={this.props.currentIframe == iframe.index} onClick={() => this.props.setIframe(iframe.index)}>
-			              <ListItemIcon sx={{ pl: depth}}>
-			              	{"customIcon" in iframe ? <img className="customIcon" src={'/assets/image/custom_icons/' + iframe.customIcon}/> :
-			                <Icon>{iframe.icon}</Icon>}
-			              </ListItemIcon>
-			              <ListItemText primary={iframe.title} sx={{wordBreak: "break-all"}}/>
-			            </ListItemButton>
-			          </ListItem>)
-					else
-						r.push(<ListItem key={iframe.index} disablePadding>
-				            <ListItemButton onClick={() => this.props.openIframeByIndex(iframe.index)}>
-				              <ListItemIcon sx={{ pl: depth}}>
-				              	{"customIcon" in iframe ? <img className="customIcon" src={'/assets/image/custom_icons/' + iframe.customIcon}/> :
-				                <Icon>{iframe.icon}</Icon>}
-				              </ListItemIcon>
-				              <ListItemText primary={iframe.title} sx={{wordBreak: "break-all"}}/>
-				              <Icon>open_in_new</Icon>
-				            </ListItemButton>
-			          </ListItem>)
-				}
-				if ("sub" in iframe) {
-					 r.push(
-					 	<Box key={iframe.index}>
-						 	<ListItemButton onClick={() => this.props.toggleIframeSub(iframe.index)}>
-					        <ListItemIcon sx={{ pl: depth}}>
-					          {"customIcon" in iframe ? <img className="customIcon" src={'/assets/image/custom_icons/' + iframe.customIcon}/> :
-		                		<Icon>{iframe.icon}</Icon>}
-					        </ListItemIcon>
-					        <ListItemText primary={iframe.title} sx={{wordBreak: "break-all"}}/>
-					        {iframe.opened ? <ExpandLess /> : <ExpandMore />}
-					      </ListItemButton>
-						 	<Collapse in={iframe.opened} timeout="auto" unmountOnExit><List component="div" disablePadding>{this.renderIframes(iframe["sub"], depth+1)}</List></Collapse>
-						 </Box>
-					 	)
-				}
-			})
-
-      	return r;
+	closeIframeContextMenu() {
+		this.setState({iframeContextMenuOpen: false})
 	}
 
 	render() {
 		return (
-			<Drawer
-				variant="persistent"
-				anchor="left"
-	            open={this.props.menuOpen}
-	            sx={{width: this.props.menuOpen ? "325px" : "0px", transition: "width 0.25s"}}
-	            PaperProps={{
-		          sx: {
-		            position: "relative",
-		            overflow: "hidden"
-		          },
-		        }}
-	          >
-	             <Box
-			      sx={{ width: 325}}
-			      role="presentation"
-			    >
-			    	{/*<Box sx={{display: "flex", justifyContent: "flex-end", padding: "10px"}}>
-			          <IconButton onClick={this.props.toggleMenu}>
-			             <ChevronLeftIcon />
-			          </IconButton>
-			        </Box>*/}
-			        <Divider />
-			      <List>
-			      {this.renderIframes(this.props.iframes, 0)}
-			      </List>
-			    </Box>
-	          </Drawer>
+			<React.Fragment>
+				<Drawer
+					variant="persistent"
+					anchor="left"
+		            open={this.props.menuOpen}
+		            sx={
+		            	{
+		            		width: this.props.menuOpen ? "350px" : "0px",
+		            		transition: "width 0.25s",
+		            		"& .MuiDivider-fullWidth": {
+		            			display: "none"
+		            		},
+		            	}
+		            }
+		            PaperProps={{
+			          sx: {
+			            position: "relative",
+			            backgroundColor: "rgba(0, 0, 0, 0.75)",
+			            border: "none"
+			          },
+			        }}
+		          >
+		             <Box
+				      sx={
+				      	{
+				      		minWidth: 325,
+				      	}
+				      }
+				      role="presentation"
+				    >
+				     <List>
+					      <ListItem disablePadding>
+								<ListItemButton onClick={() => {this.props.navigate(`/`)}}
+									selected={this.props.location.pathname == "/"}
+									>
+									<ListItemIcon>
+										<Icon>home</Icon>
+									</ListItemIcon>
+									<ListItemText primary={"Início"}/>
+								</ListItemButton>
+							</ListItem>
+						{this.props.usuario !== null ?
+							<React.Fragment>
+						      	{this.props.usuario.permissaoList.includes("Iframe.Read.All") ?
+						      	<React.Fragment>
+								 	<ListItemButton onClick={() => this.setState({iframeListOpen: !this.state.iframeListOpen})}>
+										<ListItemIcon>
+											<Icon>web</Icon>
+										</ListItemIcon>
+										<ListItemText primary={"Relatórios"} sx={{wordBreak: "break-all"}}/>
+										{this.state.iframeListOpen ? <ExpandLess /> : <ExpandMore />}
+									</ListItemButton>
+									<Collapse in={this.state.iframeListOpen} timeout="auto" unmountOnExit>
+										<List component="div" disablePadding>
+											{this.props.iframeCategoryList !== null ?
+											this.props.iframeCategoryList.map((iframeCategory) => <List key={iframeCategory.iframeCategoryId} disablePadding>
+												<ListItemButton onClick={() => this.props.toggleIframeCategory(iframeCategory)} sx={{ pl: 3 }}>
+													<ListItemIcon>
+														<Icon sx={{ color: "red"}}>{iframeCategory.icon}</Icon>
+													</ListItemIcon>
+													<ListItemText primary={iframeCategory.titulo} sx={{wordBreak: "break-all"}}/>
+													{iframeCategory.open ? <ExpandLess /> : <ExpandMore />}
+												</ListItemButton>
+												<Collapse in={iframeCategory.open} timeout="auto" unmountOnExit>
+													<List disablePadding>
+														{iframeCategory.iframeList.map((iframe) =>
+															!iframe.novaGuia ?
+																<ListItem
+																	key={iframe.iframeId}
+																	disablePadding
+																	onContextMenu={(event) => {this.handleIframeContextMenu(iframe, event)}}
+																	secondaryAction={iframe.open ? <Tooltip title="Fechar"><IconButton edge="end" aria-label="fechar" onClick={() => this.props.closeIframe(iframe, this.props.location.pathname == `/i/${iframeCategory.uri}/${iframe.uri}`)}>
+																		<CloseIcon />
+																	</IconButton></Tooltip> : ""}>
+																	<ListItemButton onClick={() => {this.props.navigate(`i/${iframeCategory.uri}/${iframe.uri}`)}}
+																		sx={{ pl: 4 }}
+																		selected={this.props.location.pathname == `/i/${iframeCategory.uri}/${iframe.uri}`}
+																		>
+																		<ListItemIcon>
+																			<Icon>{iframe.icon}</Icon>
+																		</ListItemIcon>
+																		<ListItemText primary={iframe.titulo} sx={{wordBreak: "break-all"}}/>
+																	</ListItemButton>
+																</ListItem> : 
+																<ListItem key={iframe.iframeId} disablePadding>
+																	<ListItemButton onClick={() => window.open(iframe.iframe, "_blank")} sx={{ pl: 4}}>
+																		<ListItemIcon>
+																			<Icon>{iframe.icon}</Icon>
+																		</ListItemIcon>
+																		<ListItemText primary={iframe.titulo} sx={{wordBreak: "break-all"}}/>
+																		<Icon>open_in_new</Icon>
+																	</ListItemButton>
+																</ListItem>
+														)}
+													</List>
+												</Collapse>
+											</List>) : <Box width="100%" display="flex" justifyContent="center" m={3}><CircularProgress/></Box>}
+										</List>
+									</Collapse>
+								</React.Fragment> : ""}
+								{this.props.usuario.permissaoList.includes("Usuario.Read.All") ?
+								<React.Fragment>
+									<ListItem disablePadding>
+										<ListItemButton onClick={() => {this.props.navigate(`usuarios`)}}
+											selected={this.props.location.pathname.startsWith(`/usuarios`)}
+											>
+											<ListItemIcon>
+												<Icon>person</Icon>
+											</ListItemIcon>
+											<ListItemText primary={"Usuários"}/>
+										</ListItemButton>
+									</ListItem>
+								</React.Fragment> : ""}
+							</React.Fragment> : <Box width="100%" display="flex" justifyContent="center" m={3}><CircularProgress/></Box>}
+				      </List> 
+				    </Box>
+		          </Drawer>
+		          <IframeContextMenu open={this.state.iframeContextMenuOpen} iframe={this.state.iframeContextMenuIframe} x={this.state.iframeContextMenuX} y={this.state.iframeContextMenuY} closeIframeContextMenu={this.closeIframeContextMenu}/>
+	          </React.Fragment>
 			);
-
-
-		/*return (
-		    <Box>
-		      <BottomNavigation
-		      	sx={{position: "relative"}}
-		        showLabels
-		        value={this.state.value}
-		        onChange={(event, newValue) => {
-		          this.setState({"value": newValue})
-		          this.props.setIframe(newValue)
-		        }}
-		      >
-		      {this.props.iframes == null ? "" :
-		      this.props.iframes.map((iframe, i) => iframe.active ? <BottomNavigationAction key={i} label={iframe.title} icon={<Icon>{iframe.icon}</Icon>} /> : "")}
-		      </BottomNavigation>
-		    </Box>
-		  );*/
 	}
 
+}
+
+export default (props) => {
+	const navigate = useNavigate();
+	const location = useLocation();
+	return <CustomNavigation navigate={navigate} location={location} {...props}/>
 }

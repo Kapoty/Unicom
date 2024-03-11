@@ -1,6 +1,7 @@
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const {CleanWebpackPlugin} = require('clean-webpack-plugin');
 const CopyPlugin = require('copy-webpack-plugin');
+const path = require('path');
 
 module.exports = {
     "mode": "development",//"production",//
@@ -31,7 +32,12 @@ module.exports = {
                 "test": /\.(scss|css)$/,
                 "use": [
                     "style-loader",
-                    "css-loader"
+                    {
+                        "loader": "css-loader",
+                        "options": {
+                            "url": false
+                        }
+                    }
                 ]
             }
         ]
@@ -53,16 +59,14 @@ module.exports = {
         ]})
     ],
     "resolve": {
-        "modules": [
-          "node_modules",
-          __dirname+'/src'
-        ],
+        "modules": [path.resolve(__dirname, "src"), "node_modules"],
         "extensions": [".js", ".json", ".jsx", ".scss", "css"]
     },
     "target": "web",
     "devServer": {
-        historyApiFallback:{
-            index: '/'
-        },
+        historyApiFallback: true,
+        hot: true,
+        watchFiles: ['src'],
     },
+    "cache": false,
 }
