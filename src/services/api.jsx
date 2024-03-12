@@ -36,6 +36,7 @@ api.interceptors.response.use(
       history.push("/");
       return new Promise(() => {});
     }
+    
     return Promise.reject(error);
   }
 );

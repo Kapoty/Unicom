@@ -17,8 +17,16 @@ import CircularProgress from '@mui/material/CircularProgress';
 
 const IframesModule = React.lazy(() => import('../modules/IframesModule'));
 const UsuariosModule = React.lazy(() => import('../modules/UsuariosModule'));
+const CreateEditUsuarioModule = React.lazy(() => import('../modules/CreateEditUsuarioModule'));
 
-import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
+import { useNavigate, useLocation, useSearchParams, useParams } from "react-router-dom";
+
+const CreateEditUsuarioModuleWrapper = () => {
+  const {usuarioId} = useParams();
+  console.log(usuarioId);
+
+  return <CreateEditUsuarioModule key={usuarioId} />
+};
 
 class PainelRoute extends React.Component {
 
@@ -174,7 +182,8 @@ class PainelRoute extends React.Component {
 						{this.state.usuario !== null && this.state.usuario.permissaoList.includes("Iframe.Read.All") ? <IframesModule iframeCategoryList={this.state.iframeCategoryList}/> : ""}
 							<Routes>
 								<Route path="/" element={<Box></Box>}/>
-								{this.state.usuario !== null && this.state.usuario.permissaoList.includes("Usuario.Read.All") ? <Route path="/usuarios/*" element={<UsuariosModule usuario={this.state.usuario}/>} /> : null}
+								{this.state.usuario !== null && this.state.usuario.permissaoList.includes("Usuario.Read.All") ? <Route path="/usuarios/" element={<UsuariosModule usuario={this.state.usuario}/>} /> : null}
+								{this.state.usuario !== null && this.state.usuario.permissaoList.includes("Usuario.Read.All") ? <Route path="/usuarios/:usuarioId" element={<CreateEditUsuarioModuleWrapper/>} /> : null}
 							</Routes>
 					</Suspense>
 				</Box>

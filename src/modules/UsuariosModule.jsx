@@ -19,10 +19,12 @@ import IconButton from '@mui/material/IconButton';
 import PersonOffIcon from '@mui/icons-material/PersonOff';
 import PersonIcon from '@mui/icons-material/Person';
 import Tooltip from '@mui/material/Tooltip';
+import Alert from '@mui/material/Alert';
+import Collapse from '@mui/material/Collapse';
 
 import api from "../services/api";
 
-import { useParams, useLocation } from 'react-router-dom';
+import { useParams, useLocation, useNavigate } from 'react-router-dom';
 
 class UsuariosModule extends React.Component {
 
@@ -30,9 +32,14 @@ class UsuariosModule extends React.Component {
 		super(props);
 		this.state = {
 			usuarioList: null,
+
 			usuarioRows: [],
 			usuarioSelected: null,
+
 			calling: false,
+
+			alertOpen: false,
+			alert: null
 		}
 
 		this.columns = [
@@ -48,7 +55,7 @@ class UsuariosModule extends React.Component {
 			{ field: 'ativo', headerName: 'Status', width: 100, renderCell: (params) =>
 				<Chip label={params.value ? "Ativo" : "Inativo"} color={params.value ? "success" : "error"} /> },
 			{ field: "actions", headerName: "Ações", width: 300, renderCell: (params) => <Stack direction="row" spacing={1}>
-				<Tooltip title="Editar">
+				<Tooltip title="Editar" onClick={() => this.props.navigate("/usuarios/" + params.row.usuarioId)}>
 					<IconButton color="warning">
 						<EditIcon />
 					</IconButton>
@@ -56,11 +63,13 @@ class UsuariosModule extends React.Component {
 				
 				{params.row.ativo ?
 					<Tooltip title="Desativar">
-						<IconButton color="error">
-							<PersonOffIcon />
-						</IconButton>
+						<span>
+							<IconButton color="error" onClick={() => this.setUsuarioAtivo(params.row.usuarioId, !params.row.ativo)} disabled={params.row.usuarioId == this.props.usuario.usuarioId}>
+								<PersonOffIcon />
+							</IconButton>
+						</span>
 					</Tooltip> :
-					<Tooltip title="Ativar">
+					<Tooltip title="Ativar" onClick={() => this.setUsuarioAtivo(params.row.usuarioId, !params.row.ativo)}>
 						<IconButton color="success">
 							<PersonIcon />
 						</IconButton>
@@ -71,6 +80,9 @@ class UsuariosModule extends React.Component {
 
 		this.getUsuarioListFromApi = this.getUsuarioListFromApi.bind(this);
 		this.handleUsuarioSelected = this.handleUsuarioSelected.bind(this);
+		this.setUsuarioAtivo = this.setUsuarioAtivo.bind(this);
+		this.openAlert = this.openAlert.bind(this);
+		this.closeAlert = this.closeAlert.bind(this);
 	}
 
 	componentDidMount() {
@@ -78,6 +90,7 @@ class UsuariosModule extends React.Component {
 	}
 
 	getUsuarioListFromApi() {
+		this.setState({calling: true})
 		api.get("/empresa/me/usuario")
 			.then((response) => {
 				let usuarioRows = response.data.map((usuario) => {return {
@@ -89,7 +102,7 @@ class UsuariosModule extends React.Component {
 					papelList: usuario.papelList.map(papel => papel.nome),
 					ativo: usuario.ativo
 				}})
-				this.setState({usuarioList: response.data, usuarioRows: usuarioRows});
+				this.setState({usuarioList: response.data, usuarioRows: usuarioRows, calling: false});
 			})
 			.catch((err) => {
 				console.log(err);
@@ -104,6 +117,28 @@ class UsuariosModule extends React.Component {
 		this.setState({usuarioSelected: usuarioSelected})
 	}
 
+	openAlert(severity, message) {
+		this.setState({alert: <Alert severity={severity} onClose={this.closeAlert}>{message}</Alert>, alertOpen: true});
+	}
+
+	closeAlert() {
+		this.setState({alertOpen: false});
+	}
+
+	setUsuarioAtivo(usuarioId, ativo) {
+		api.patch(`/usuario/${usuarioId}`, {ativo: ativo})
+			.then((response) => {
+				this.openAlert("success", `Usuário ${usuarioId} ${ativo ? "ativado" : "desativado"} com sucesso!`);
+				this.getUsuarioListFromApi();
+			})
+			.catch((err) => {
+				this.openAlert("error", `Falha ao ${ativo ? "ativar" : "desativar"} usuário!`);
+			})
+			.finally(() => {
+				this.setState({calling: false});
+			});
+	}
+
 	render() {
 		return (
 			<React.Fragment>
@@ -112,31 +147,29 @@ class UsuariosModule extends React.Component {
 					Usuários
 					</Typography>
 					<ButtonGroup sx={{marginBottom: 3}}>
-							<Button variant="contained" size="large" startIcon={<PersonAddIcon />}>Adicionar Novo Usuário</Button>
+							<Button variant="contained" size="large" startIcon={<PersonAddIcon />} onClick={() => this.props.navigate("/usuarios/novo")}>Novo Usuário</Button>
 					</ButtonGroup>
-					<Box>
+					<Box sx={{ flexGrow: 1 }}>
 						<DataGrid
 							rows={this.state.usuarioRows}
 							columns={this.columns}
 							disableColumnFilter
 							disableColumnMenu
 							disableColumnSelector
-							editMode="row"
+							disableRowSelectionOnClick
 							autoHeight
+							initialState={{
+							    pagination: { paginationModel: { pageSize: 10 } },
+							  }}
+							pageSizeOptions={[10, 30, 50, 100]}
 							onRowSelectionModelChange={this.handleUsuarioSelected}
-							loading={this.state.usuarioList == null || this.state.usuarioSelected !== null}
+							loading={this.state.usuarioList == null || this.state.calling}
 							sx={{marginBottom: 3}}
 						/>
 					</Box>
-					{/*this.state.usuarioSelected !== null ? <ButtonGroup variant="outlined">
-						<Button>Editar</Button>
-						{this.state.usuarioSelected.usuarioId != this.props.usuario.usuarioId ? <LoadingButton
-				          endIcon={<CheckBoxIcon />}
-				          loading={true}
-				          loadingPosition="end"
-				          variant="outlined"
-				        >Desativar</LoadingButton>: ""}
-					</ButtonGroup> : ""*/}
+					<Collapse in={this.state.alertOpen}>
+						{this.state.alert}
+					</Collapse>
 				</Paper>
 		    </React.Fragment>
 		  );
@@ -146,6 +179,7 @@ class UsuariosModule extends React.Component {
 
 export default (props) => {
 	const params = useParams();
-	const location = useLocation()
-	return <UsuariosModule params={params} location={location} {...props}/>
+	const location = useLocation();
+	const navigate = useNavigate();
+	return <UsuariosModule params={params} location={location} navigate={navigate} {...props}/>
 }

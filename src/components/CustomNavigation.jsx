@@ -20,6 +20,7 @@ import ExpandMore from '@mui/icons-material/ExpandMore';
 import CloseIcon from '@mui/icons-material/Close';
 import Tooltip from '@mui/material/Tooltip';
 import CircularProgress from '@mui/material/CircularProgress';
+import PeopleIcon from '@mui/icons-material/People';
 
 import IframeContextMenu from '../components/iframeContextMenu'
 
@@ -35,6 +36,8 @@ class CustomNavigation extends React.Component {
 			iframeContextMenuIframe: null,
 			iframeContextMenuX: 0,
 			iframeContextMenuY: 0,
+
+			usuarioModuleOpen: false,
 		}
 
 		this.handleIframeContextMenu = this.handleIframeContextMenu.bind(this);
@@ -113,7 +116,7 @@ class CustomNavigation extends React.Component {
 											this.props.iframeCategoryList.map((iframeCategory) => <List key={iframeCategory.iframeCategoryId} disablePadding>
 												<ListItemButton onClick={() => this.props.toggleIframeCategory(iframeCategory)} sx={{ pl: 3 }}>
 													<ListItemIcon>
-														<Icon sx={{ color: "red"}}>{iframeCategory.icon}</Icon>
+														<Icon>{iframeCategory.icon}</Icon>
 													</ListItemIcon>
 													<ListItemText primary={iframeCategory.titulo} sx={{wordBreak: "break-all"}}/>
 													{iframeCategory.open ? <ExpandLess /> : <ExpandMore />}
@@ -134,7 +137,7 @@ class CustomNavigation extends React.Component {
 																		selected={this.props.location.pathname == `/i/${iframeCategory.uri}/${iframe.uri}`}
 																		>
 																		<ListItemIcon>
-																			<Icon>{iframe.icon}</Icon>
+																			<Icon sx={{ color: "red"}}>{iframe.icon}</Icon>
 																		</ListItemIcon>
 																		<ListItemText primary={iframe.titulo} sx={{wordBreak: "break-all"}}/>
 																	</ListItemButton>
@@ -142,7 +145,7 @@ class CustomNavigation extends React.Component {
 																<ListItem key={iframe.iframeId} disablePadding>
 																	<ListItemButton onClick={() => window.open(iframe.iframe, "_blank")} sx={{ pl: 4}}>
 																		<ListItemIcon>
-																			<Icon>{iframe.icon}</Icon>
+																			<Icon sx={{ color: "red"}}>{iframe.icon}</Icon>
 																		</ListItemIcon>
 																		<ListItemText primary={iframe.titulo} sx={{wordBreak: "break-all"}}/>
 																		<Icon>open_in_new</Icon>
@@ -157,16 +160,37 @@ class CustomNavigation extends React.Component {
 								</React.Fragment> : ""}
 								{this.props.usuario.permissaoList.includes("Usuario.Read.All") ?
 								<React.Fragment>
-									<ListItem disablePadding>
-										<ListItemButton onClick={() => {this.props.navigate(`usuarios`)}}
-											selected={this.props.location.pathname.startsWith(`/usuarios`)}
-											>
-											<ListItemIcon>
-												<Icon>person</Icon>
-											</ListItemIcon>
-											<ListItemText primary={"Usuários"}/>
-										</ListItemButton>
-									</ListItem>
+									<ListItemButton onClick={() => this.setState({usuarioModuleOpen: !this.state.usuarioModuleOpen})}>
+										<ListItemIcon>
+											<Icon>person</Icon>
+										</ListItemIcon>
+										<ListItemText primary={"Usuários"} sx={{wordBreak: "break-all"}}/>
+										{this.state.usuarioModuleOpen ? <ExpandLess /> : <ExpandMore />}
+									</ListItemButton>
+									<Collapse in={this.state.usuarioModuleOpen}>
+										<List component="div" disablePadding>
+											<ListItem disablePadding>
+												<ListItemButton onClick={() => {this.props.navigate(`usuarios`)}} sx={{ pl: 3 }}
+													selected={this.props.location.pathname == `/usuarios`}
+													>
+													<ListItemIcon>
+														<Icon>people</Icon>
+													</ListItemIcon>
+													<ListItemText primary={"Usuários"}/>
+												</ListItemButton>
+											</ListItem>
+											<ListItem disablePadding>
+												<ListItemButton onClick={() => {this.props.navigate(`usuarios/novo`)}} sx={{ pl: 3 }}
+													selected={/^\/usuarios\/(\d|(novo))+$/.test(this.props.location.pathname)}
+													>
+													<ListItemIcon>
+														<Icon>person_add</Icon>
+													</ListItemIcon>
+													<ListItemText primary={"Novo Usuário"}/>
+												</ListItemButton>
+											</ListItem>
+										</List>
+									</Collapse>
 								</React.Fragment> : ""}
 							</React.Fragment> : <Box width="100%" display="flex" justifyContent="center" m={3}><CircularProgress/></Box>}
 				      </List> 
