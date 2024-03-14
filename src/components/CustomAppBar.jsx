@@ -25,6 +25,10 @@ import WorkIcon from '@mui/icons-material/Work';
 import BadgeIcon from '@mui/icons-material/Badge';
 import MailIcon from '@mui/icons-material/Mail';
 import Chip from '@mui/material/Chip'
+import GroupsIcon from '@mui/icons-material/Groups';
+import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
+
+import api from "../services/api";
 
 import { useNavigate, useLocation } from "react-router-dom";
 
@@ -89,7 +93,7 @@ class CustomAppBar extends React.Component {
 			      	</Tooltip>
 			      	<Chip
 			      		clickable
-			      		avatar={<Avatar>{this.props.usuario !== null ? this.props.usuario.nome.charAt(0) : "?"}</Avatar>}
+			      		avatar={<Avatar src={this.props.usuario !== null ? api.defaults.baseURL + "/usuario/" + this.props.usuario.usuarioId + "/foto-perfil?versao=" + this.props.usuario.fotoPerfilVersao : ""}>{this.props.usuario !== null ? this.props.usuario.nome.charAt(0) : "?"}</Avatar>}
 			      		label={this.props.usuario !== null ? this.props.usuario.nome : "..."}
 			      		ref={this.usuarioMenuRef}
 			      		onClick={() => this.setState({usuarioMenuOpen: !this.props.usuarioMenuOpen})}
@@ -112,7 +116,7 @@ class CustomAppBar extends React.Component {
 				      >
 				      	<MenuItem sx={{padding: 0}}>
 				      		{this.props.usuario !== null ?
-					      		<List disablePadding>
+					      		<List disablePadding dense>
 							      	<ListItem>
 							      		<ListItemIcon>
 											<WorkIcon/>
@@ -131,11 +135,23 @@ class CustomAppBar extends React.Component {
 										</ListItemIcon>
 										<ListItemText primary={this.props.usuario.email} />
 							      	</ListItem>
-									<ListItem>
+							      	<ListItem>
+							      		<ListItemIcon>
+											<GroupsIcon/>
+										</ListItemIcon>
+										<ListItemText primary={this.props.usuario.departamento !== null ? this.props.usuario.departamento.nome : ""} />
+							      	</ListItem>
+							      	<ListItem>
 							      		<ListItemIcon>
 											<BadgeIcon/>
 										</ListItemIcon>
-										<ListItemText  primaryTypographyProps={{ style: { whiteSpace: "normal" } }} primary={this.props.usuario.papelList.map(p => <div>{p.nome}</div>)} />
+										<ListItemText primary={this.props.usuario.cargo !== null ? this.props.usuario.cargo.nome : ""} />
+							      	</ListItem>
+									<ListItem>
+							      		<ListItemIcon>
+											<VerifiedUserIcon/>
+										</ListItemIcon>
+										<ListItemText  primaryTypographyProps={{ style: { whiteSpace: "normal" } }} primary={this.props.usuario.papelList.map(p => <div key={p.papelId}>{p.nome}</div>)} />
 									</ListItem>
 								</List> : <Box width="100%" display="flex" justifyContent="center"><CircularProgress/></Box>}
 					      	</MenuItem> 

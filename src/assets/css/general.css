@@ -38,6 +38,12 @@ iframe {
 	height: 24px;
 }
 
+.modulePaper {
+	backdrop-filter: blur(10px);
+	background-color: rgba(0,0,0,0.7) !important;
+	background-image: none !important;
+}
+
 @media print {
 
 	.currentIframe {

@@ -2,6 +2,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const {CleanWebpackPlugin} = require('clean-webpack-plugin');
 const CopyPlugin = require('copy-webpack-plugin');
 const path = require('path');
+const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
 module.exports = {
     "mode": "development",//"production",//
@@ -56,7 +57,8 @@ module.exports = {
         		"from": "src/assets",
         		"to":  "assets"
         	}
-        ]})
+        ]}),
+        //new BundleAnalyzerPlugin()
     ],
     "resolve": {
         "modules": [path.resolve(__dirname, "src"), "node_modules"],

@@ -19,11 +19,12 @@ const IframesModule = React.lazy(() => import('../modules/IframesModule'));
 const UsuariosModule = React.lazy(() => import('../modules/UsuariosModule'));
 const CreateEditUsuarioModule = React.lazy(() => import('../modules/CreateEditUsuarioModule'));
 
+const RegistroPontoModule = React.lazy(() => import('../modules/RegistroPontoModule'));
+
 import { useNavigate, useLocation, useSearchParams, useParams } from "react-router-dom";
 
 const CreateEditUsuarioModuleWrapper = () => {
   const {usuarioId} = useParams();
-  console.log(usuarioId);
 
   return <CreateEditUsuarioModule key={usuarioId} />
 };
@@ -172,7 +173,7 @@ class PainelRoute extends React.Component {
 	
 		return <React.Fragment>
 		<Box className="painelBox">
-			<CustomAppBar usuario={this.state.usuario} toggleMenu={this.toggleMenu} logout={this.logout} fullscreen={this.state.fullscreen} toggleFullscreen={this.toggleFullscreen}/>
+			<CustomAppBar usuario={this.state.usuario} usuarioFotoPerfil={this.state.usuarioFotoPerfil} toggleMenu={this.toggleMenu} logout={this.logout} fullscreen={this.state.fullscreen} toggleFullscreen={this.toggleFullscreen}/>
 			<Box sx={{display: "flex", flexGrow: 1, flexDirection: "row", height: "100dvh", overflow: "hidden"}}>
 				<CustomNavigation menuOpen={this.state.menuOpen} toggleMenu={this.toggleMenu} usuario={this.state.usuario} iframeCategoryList={this.state.iframeCategoryList} toggleIframeCategory={this.toggleIframeCategory} closeIframe={this.closeIframe}/>
 				<Box sx={{flexGrow: 1, height: "100%", overflow: "auto"}}>
@@ -184,6 +185,7 @@ class PainelRoute extends React.Component {
 								<Route path="/" element={<Box></Box>}/>
 								{this.state.usuario !== null && this.state.usuario.permissaoList.includes("Usuario.Read.All") ? <Route path="/usuarios/" element={<UsuariosModule usuario={this.state.usuario}/>} /> : null}
 								{this.state.usuario !== null && this.state.usuario.permissaoList.includes("Usuario.Read.All") ? <Route path="/usuarios/:usuarioId" element={<CreateEditUsuarioModuleWrapper/>} /> : null}
+								{this.state.usuario !== null && this.state.usuario.permissaoList.includes("Ponto.Read.All") ? <Route path="/registro-ponto/" element={<RegistroPontoModule/>} /> : null}
 							</Routes>
 					</Suspense>
 				</Box>

@@ -42,9 +42,25 @@ class CustomNavigation extends React.Component {
 
 		this.handleIframeContextMenu = this.handleIframeContextMenu.bind(this);
 		this.closeIframeContextMenu = this.closeIframeContextMenu.bind(this);
+
+		this.openModulesByLocation = this.openModulesByLocation.bind(this);
 	}
 
 	componentDidMount() {
+		this.openModulesByLocation();
+	}
+
+	componentDidUpdate(prevProps, prevState) {
+		if (this.props.location !== prevProps.location) {
+			this.openModulesByLocation();
+		}
+	}
+
+	openModulesByLocation() {
+		if (this.props.location.pathname.startsWith("/i"))
+			this.setState({iframeListOpen: true});
+		if (this.props.location.pathname.startsWith("/usuarios"))
+			this.setState({usuarioModuleOpen: true});
 	}
 
 	handleIframeContextMenu(iframe, event) {
@@ -174,7 +190,7 @@ class CustomNavigation extends React.Component {
 													selected={this.props.location.pathname == `/usuarios`}
 													>
 													<ListItemIcon>
-														<Icon>people</Icon>
+														<Icon sx={{ color: "red"}}>people</Icon>
 													</ListItemIcon>
 													<ListItemText primary={"Usuários"}/>
 												</ListItemButton>
@@ -184,7 +200,7 @@ class CustomNavigation extends React.Component {
 													selected={/^\/usuarios\/(\d|(novo))+$/.test(this.props.location.pathname)}
 													>
 													<ListItemIcon>
-														<Icon>person_add</Icon>
+														<Icon sx={{ color: "red"}}>person_add</Icon>
 													</ListItemIcon>
 													<ListItemText primary={"Novo Usuário"}/>
 												</ListItemButton>
@@ -192,6 +208,18 @@ class CustomNavigation extends React.Component {
 										</List>
 									</Collapse>
 								</React.Fragment> : ""}
+								{this.props.usuario.permissaoList.includes("Ponto.Read.All") ?
+									<ListItem disablePadding>
+										<ListItemButton onClick={() => {this.props.navigate(`/registro-ponto`)}}
+											selected={this.props.location.pathname == "/registro-ponto"}
+											>
+											<ListItemIcon>
+												<Icon>fingerprint</Icon>
+											</ListItemIcon>
+											<ListItemText primary={"Registro Ponto"}/>
+										</ListItemButton>
+									</ListItem>
+								: ""}
 							</React.Fragment> : <Box width="100%" display="flex" justifyContent="center" m={3}><CircularProgress/></Box>}
 				      </List> 
 				    </Box>

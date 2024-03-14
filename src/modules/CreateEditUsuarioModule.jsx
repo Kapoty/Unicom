@@ -35,6 +35,19 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import Switch from '@mui/material/Switch';
 import Autocomplete from '@mui/material/Autocomplete';
 import SaveIcon from '@mui/icons-material/Save';
+import Avatar from '@mui/material/Avatar';
+import DeleteIcon from '@mui/icons-material/Delete';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import InputLabel from '@mui/material/InputLabel';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import EmailIcon from '@mui/icons-material/Email';
+import NumbersIcon from '@mui/icons-material/Numbers';
+import SmartphoneIcon from '@mui/icons-material/Smartphone';
+import WhatsAppIcon from '@mui/icons-material/WhatsApp';
+
+import dayjs from 'dayjs';
 
 import api from "../services/api";
 
@@ -49,7 +62,15 @@ class CreateEditUsuarioModule extends React.Component {
 
 			usuario: null,
 			papelList: null,
-			papelListByPapelId: null,
+			papelByPapelId: null,
+			cargoList: null,
+			cargoByCargoId: null,
+			contratoList: null,
+			contratoByContratoId: null,
+			departamentoList: null,
+			departamentoByDepartamentoId: null,
+			jornadaList: null,
+			jornadaByJornadaId: null,
 
 			usuarioId: "",
 			nome: "",
@@ -59,10 +80,21 @@ class CreateEditUsuarioModule extends React.Component {
 			confirmaSenha: "",
 			ativo: true,
 			papelIdList: [],
+			dataNascimento: null,
+			cpf: "",
+			telefoneCelular: "",
+			whatsapp: "",
+			dataContratacao: null,
+			cargoId: null,
+			contratoId: null,
+			departamentoId: null,
+			jornadaId: null,
 
 			showSenha: false,
 
 			saving: false,
+			savingFotoPerfil: false,
+			deletingFotoPerfil: false,
 			calling: false,
 
 			alertOpen: false,
@@ -73,11 +105,17 @@ class CreateEditUsuarioModule extends React.Component {
 
 		this.getUsuarioFromApi = this.getUsuarioFromApi.bind(this);
 		this.getPapelListFromApi = this.getPapelListFromApi.bind(this);
+		this.getCargoListFromApi = this.getCargoListFromApi.bind(this);
+		this.getContratoListFromApi = this.getContratoListFromApi.bind(this);
+		this.getDepartamentoListFromApi = this.getDepartamentoListFromApi.bind(this);
+		this.getJornadaListFromApi = this.getJornadaListFromApi.bind(this);
 
 		this.saveUsuario = this.saveUsuario.bind(this);
 		this.patchUsuario = this.patchUsuario.bind(this);
 		this.postUsuario = this.postUsuario.bind(this);
 		this.setUsuarioIdFromParams = this.setUsuarioIdFromParams.bind(this);
+		this.deleteUsuarioFotoPerfil = this.deleteUsuarioFotoPerfil.bind(this);
+		this.handleUsuarioFotoChange = this.handleUsuarioFotoChange.bind(this);
 
 		this.openAlert = this.openAlert.bind(this);
 		this.closeAlert = this.closeAlert.bind(this);
@@ -86,6 +124,10 @@ class CreateEditUsuarioModule extends React.Component {
 	componentDidMount() {
 		this.setUsuarioIdFromParams();
 		this.getPapelListFromApi();
+		this.getCargoListFromApi();
+		this.getContratoListFromApi();
+		this.getDepartamentoListFromApi();
+		this.getJornadaListFromApi();
 		if (this.props.searchParams.get("novo") !== null) {
 			this.openAlert("success", 'Usuário criado com sucesso!');
 		}
@@ -115,6 +157,15 @@ class CreateEditUsuarioModule extends React.Component {
 					errors: {},
 					senha: "",
 					confirmaSenha: "",
+					dataNascimento: usuario.dataNascimento,
+					cpf: usuario.cpf !==null ? usuario.cpf : "",
+					telefoneCelular: usuario.telefoneCelular !==null ? usuario.telefoneCelular : "",
+					whatsapp: usuario.whatsapp !==null ? usuario.whatsapp : "",
+					dataContratacao: usuario.dataContratacao,
+					cargoId: usuario.cargoId,
+					contratoId: usuario.contratoId,
+					departamentoId: usuario.departamentoId,
+					jornadaId: usuario.jornadaId,
 					calling: false});
 			})
 			.catch((err) => {
@@ -127,13 +178,69 @@ class CreateEditUsuarioModule extends React.Component {
 		api.get("/empresa/me/papel")
 			.then((response) => {
 				let papelList = response.data;
-				let papelListByPapelId = {};
-				papelList.forEach((papel) => papelListByPapelId[papel.papelId] = papel);
-				this.setState({papelList: papelList, papelListByPapelId: papelListByPapelId});
+				let papelByPapelId = {};
+				papelList.forEach((papel) => papelByPapelId[papel.papelId] = papel);
+				this.setState({papelList: papelList, papelByPapelId: papelByPapelId});
 			})
 			.catch((err) => {
 				console.log(err);
 				setTimeout(this.getPapelListFromApi, 3000);
+			});
+	}
+
+	getCargoListFromApi() {
+		api.get("/empresa/me/cargo")
+			.then((response) => {
+				let cargoList = response.data;
+				let cargoByCargoId = {};
+				cargoList.forEach((cargo) => cargoByCargoId[cargo.cargoId] = cargo);
+				this.setState({cargoList: cargoList, cargoByCargoId: cargoByCargoId});
+			})
+			.catch((err) => {
+				console.log(err);
+				setTimeout(this.getCargoListFromApi, 3000);
+			});
+	}
+
+	getContratoListFromApi() {
+		api.get("/empresa/me/contrato")
+			.then((response) => {
+				let contratoList = response.data;
+				let contratoByContratoId = {};
+				contratoList.forEach((contrato) => contratoByContratoId[contrato.contratoId] = contrato);
+				this.setState({contratoList: contratoList, contratoByContratoId: contratoByContratoId});
+			})
+			.catch((err) => {
+				console.log(err);
+				setTimeout(this.getContratoListFromApi, 3000);
+			});
+	}
+
+	getDepartamentoListFromApi() {
+		api.get("/empresa/me/departamento")
+			.then((response) => {
+				let departamentoList = response.data;
+				let departamentoByDepartamentoId = {};
+				departamentoList.forEach((departamento) => departamentoByDepartamentoId[departamento.departamentoId] = departamento);
+				this.setState({departamentoList: departamentoList, departamentoByDepartamentoId: departamentoByDepartamentoId});
+			})
+			.catch((err) => {
+				console.log(err);
+				setTimeout(this.getDepartamentoListFromApi, 3000);
+			});
+	}
+
+	getJornadaListFromApi() {
+		api.get("/empresa/me/jornada")
+			.then((response) => {
+				let jornadaList = response.data;
+				let jornadaByJornadaId = {};
+				jornadaList.forEach((jornada) => jornadaByJornadaId[jornada.jornadaId] = jornada);
+				this.setState({jornadaList: jornadaList, jornadaByJornadaId: jornadaByJornadaId});
+			})
+			.catch((err) => {
+				console.log(err);
+				setTimeout(this.getJornadaListFromApi, 3000);
 			});
 	}
 
@@ -191,6 +298,15 @@ class CreateEditUsuarioModule extends React.Component {
 			matricula: this.state.matricula,
 			ativo: this.state.ativo,
 			papelIdList: this.state.papelIdList,
+			dataNascimento: this.state.dataNascimento,
+			cpf: this.state.cpf != "" ? this.state.cpf : null,
+			telefoneCelular:  this.state.telefoneCelular != "" ? this.state.telefoneCelular : null,
+			whatsapp:  this.state.whatsapp != "" ? this.state.whatsapp : null,
+			dataContratacao: this.state.dataContratacao,
+			cargoId: this.state.cargoId,
+			contratoId: this.state.contratoId,
+			departamentoId: this.state.departamentoId,
+			jornadaId: this.state.jornadaId,
 		};
 
 		if (this.state.senha != "") {
@@ -208,174 +324,384 @@ class CreateEditUsuarioModule extends React.Component {
 			this.patchUsuario(data);
 	}
 
+	deleteUsuarioFotoPerfil() {
+		this.setState({calling: true, deletingUsuarioFotoPerfil: true});
+		api.delete(`/usuario/${this.state.usuario.usuarioId}/foto-perfil`)
+			.then((response) => {
+				this.openAlert("success", "Foto deletada com sucesso!");
+				this.getUsuarioFromApi();
+				this.setState({calling: false, deletingUsuarioFotoPerfil: false, errors: {}});
+			})
+			.catch((err) => {
+				this.openAlert("error", "Falha ao deletar foto!");
+				this.setState({calling: false, deletingUsuarioFotoPerfil: false, errors: {}});
+			})
+	}
+
+	handleUsuarioFotoChange(event) {
+		this.setState({calling: true, savingFotoPerfil: true});
+		let formData = new FormData();
+		formData.append('file', event.target.files[0]);
+		let config = {
+			headers: {
+			'content-type': 'multipart/form-data',
+			},
+		};
+
+		api.post(`/usuario/${this.state.usuario.usuarioId}/foto-perfil`, formData, config)
+			.then((response) => {
+				this.openAlert("success", "Foto salva com sucesso!");
+				this.getUsuarioFromApi();
+				this.setState({calling: false, savingFotoPerfil: false, errors: {}});
+			})
+			.catch((err) => {
+				this.openAlert("error", "Falha ao salvar foto!");
+				this.setState({calling: false, savingFotoPerfil: false, errors: {}});
+			})
+
+		event.target.value = "";
+	}
+
 	render() {
 		return (
 			<React.Fragment>
-				<Paper elevation={3} sx={{flexGrow: 1, padding: 5, minHeight: "100%", minWidth: "800px", boxSizing: "border-box", display: "flex", flexDirection: "column", aligmItems: "center", justifyContent: "start"}}>
+				<Paper elevation={3} sx={{flexGrow: 1, padding: 5, minHeight: "100%", minWidth: "800px", boxSizing: "border-box", display: "flex", flexDirection: "column", aligmItems: "center", justifyContent: "start"}} className="modulePaper">
 					<Typography variant="h3" gutterBottom>
 					{this.state.createMode ? "Novo Usuário" : "Editar Usuário"}
 					</Typography>
 					<ButtonGroup sx={{marginBottom: 3}}>
 							<Button variant="outlined" size="large" startIcon={<ArrowBackIcon />}  onClick={() => this.props.navigate(-1)}>Voltar</Button>
-							<LoadingButton variant="contained" size="large" startIcon={<SaveIcon />} loadingPosition="start" loading={this.state.saving} onClick={this.saveUsuario}>Salvar</LoadingButton>
+							<LoadingButton variant="contained" size="large" startIcon={<SaveIcon />} loadingPosition="start" loading={this.state.saving} disabled={this.state.calling} onClick={this.saveUsuario}>Salvar</LoadingButton>
 					</ButtonGroup>
 					<Box sx={{ flexGrow: 1 }}>
-						{((!this.state.createMode && this.state.usuario == null) || this.state.papelList == null) ? <Box width="100%" display="flex" justifyContent="center" m={3}><CircularProgress/></Box> :
-						<form onSubmit={(e) => e.preventDefault()} disabled={this.state.createMode && this.state.usuario == null}>
-							<Grid container spacing={3}>
-								<Grid item xs={6}>
-									<TextField
-										id="nome"
-										value={this.state.nome}
-										onChange={(e) => this.setState({nome: e.target.value})}
-										fullWidth
-										label="Nome"
-										InputProps={{
-											startAdornment: (
-												<InputAdornment position="start">
-													<AccountCircle />
-												</InputAdornment>
-											)
-										}}
-										variant="outlined"
-										disabled={this.state.calling}
-										error={"nome" in this.state.errors}
-										helperText={"nome" in this.state.errors ? this.state.errors["nome"] : ""}
-									/>
-								</Grid>
-								<Grid item xs={6}>
-									<TextField
-										id="email"
-										value={this.state.email}
-										onChange={(e) => this.setState({email: e.target.value})}
-										fullWidth
-										label="Email"
-										InputProps={{
-											startAdornment: (
-												<InputAdornment position="start">
-													<AccountCircle />
-												</InputAdornment>
-											)
-										}}
-										variant="outlined"
-										disabled={this.state.calling}
-										error={"email" in this.state.errors}
-										helperText={"email" in this.state.errors ? this.state.errors["email"] : ""}
-									/>
-								</Grid>
-								<Grid item xs={6}>
-									{this.state.papelList != null ? <Autocomplete
-										multiple
-										id="papel-list"
-										options={Object.keys(this.state.papelListByPapelId).map(key => parseInt(key))}
-										getOptionLabel={(option) => this.state.papelListByPapelId[option].nome}
-										value={this.state.papelIdList}
-										onChange={(event, value) => this.setState({papelIdList: value})}
-										renderInput={(params) => (
-											<TextField
-											{...params}
-										variant="standard"
-										label="Cargos"
-										/>
-										)}
-									/> : null}
-								</Grid>
-								<Grid item xs={6}>
-									<TextField
-										id="matricula"
-										value={this.state.matricula}
-										onChange={(e) => this.setState({matricula: e.target.value})}
-										fullWidth
-										label="Matrícula"
-										InputProps={{
-											startAdornment: (
-												<InputAdornment position="start">
-													<AccountCircle />
-												</InputAdornment>
-											)
-										}}
-										variant="outlined"
-										disabled={this.state.calling}
-										error={"matricula" in this.state.errors}
-										helperText={"matricula" in this.state.errors ? this.state.errors["matricula"] : ""}
-									/>
-								</Grid>
-								<Grid item xs={4}>
-									<TextField
-										id="senha"
-										value={this.state.senha}
-										type={this.state.showSenha ? 'text' : 'password'}
-										onChange={(e) => this.setState({senha: e.target.value})}
-										fullWidth
-										label="Senha"
-										InputProps={{
-											startAdornment: (
-												<InputAdornment position="start">
-													<KeyIcon />
-												</InputAdornment>
-											),
-											endAdornment: (
-												<InputAdornment position="end">
-													<IconButton
-														aria-label="toggle password visibility"
-														onClick={() => this.setState({showSenha: !this.state.showSenha})}
-														edge="end"
-													>
-														{this.state.showSenha ? <VisibilityOff /> : <Visibility />}
-													</IconButton>
-												</InputAdornment>
-											),
-											autoComplete: 'new-password'
-										}}
-										variant="outlined"
-										disabled={this.state.calling}
-										error={"senha" in this.state.errors}
-										helperText={"senha" in this.state.errors ? this.state.errors["senha"] : ""}
-									/>
-								</Grid>
-								<Grid item xs={4}>
-									<TextField
-										id="confirma-senha"
-										value={this.state.confirmaSenha}
-										type={this.state.showSenha ? 'text' : 'password'}
-										onChange={(e) => this.setState({confirmaSenha: e.target.value})}
-										fullWidth
-										label="Confirmar Senha"
-										InputProps={{
-											startAdornment: (
-												<InputAdornment position="start">
-													<KeyIcon />
-												</InputAdornment>
-											),
-											endAdornment: (
-												<InputAdornment position="end">
-													<IconButton
-														aria-label="toggle password visibility"
-														onClick={() => this.setState({showSenha: !this.state.showSenha})}
-														edge="end"
-													>
-														{this.state.showSenha ? <VisibilityOff /> : <Visibility />}
-													</IconButton>
-												</InputAdornment>
-											),
-											autoComplete: 'new-password'
-										}}
-										variant="outlined"
-										disabled={this.state.calling}
-										error={"confirmaSenha" in this.state.errors}
-										helperText={"confirmaSenha" in this.state.errors ? this.state.errors["confirmaSenha"] : ""}
-									/>
-								</Grid>
-								<Grid item xs={4}>
-									<FormControl component="fieldset" variant="standard">
-										<FormLabel component="legend">Ativo</FormLabel>
-										<FormGroup>
-	      									<FormControlLabel control={<Switch checked={this.state.ativo} onChange={(e) => this.setState({ativo: e.target.checked})}/>} />
-	      								</FormGroup>
-	      							</FormControl>
-								</Grid>
+						{((!this.state.createMode && this.state.usuario == null) || this.state.papelList == null || this.state.cargoList == null || this.state.contratoList == null || this.state.departamentoList == null || this.state.jornadaList == null) ? <Box width="100%" display="flex" justifyContent="center" m={3}><CircularProgress/></Box> :
+						<Grid container spacing={3} sx={{margin: 0}}>
+							<Grid item xs>
+								<Stack gap={1} justifyContent="center" alignItems="center">
+									{!this.state.createMode ? <React.Fragment>
+										<Avatar variant="square" sx={{ width: "128px", height: "128px"}} src={this.state.usuario.fotoPerfil ? api.defaults.baseURL + "/usuario/" + this.state.usuario.usuarioId + "/foto-perfil?versao=" + this.state.usuario.fotoPerfilVersao : ""}>{this.state.nome.charAt(0)}</Avatar>
+										<LoadingButton component="label" variant="contained" sx={{width: "128px"}} startIcon={<CloudUploadIcon />} loadingPosition="start" loading={this.state.savingFotoPerfil} disabled={this.state.calling}>
+										Upload
+										<input type="file" accept="image/jpeg" id="foto-perfil" hidden onChange={this.handleUsuarioFotoChange}/>
+										</LoadingButton>
+										{this.state.usuario.fotoPerfil ? <LoadingButton variant="contained" sx={{width: "128px"}} startIcon={<DeleteIcon />} color="error" loadingPosition="start" loading={this.state.deletingFotoPerfil} onClick={this.deleteUsuarioFotoPerfil}>Remover</LoadingButton> : ""}
+									</React.Fragment> : <Avatar variant="square" sx={{ width: "128px", height: "128px"}} >{this.state.nome.charAt(0)}</Avatar>}
+								</Stack>
 							</Grid>
-						</form>}
+							<Grid item xs={11}>
+								<form onSubmit={(e) => e.preventDefault()} disabled={this.state.createMode && this.state.usuario == null}>
+									<Grid container spacing={3}>
+										<Grid item xs={6}>
+											<TextField
+												id="nome"
+												value={this.state.nome}
+												onChange={(e) => this.setState({nome: e.target.value})}
+												fullWidth
+												label="Nome"
+												required
+												InputProps={{
+													startAdornment: (
+														<InputAdornment position="start">
+															<AccountCircle />
+														</InputAdornment>
+													)
+												}}
+												variant="outlined"
+												disabled={this.state.calling}
+												error={"nome" in this.state.errors}
+												helperText={"nome" in this.state.errors ? this.state.errors["nome"] : ""}
+											/>
+										</Grid>
+										<Grid item xs={6}>
+											<TextField
+												id="email"
+												value={this.state.email}
+												onChange={(e) => this.setState({email: e.target.value})}
+												fullWidth
+												label="Email"
+												required
+												InputProps={{
+													startAdornment: (
+														<InputAdornment position="start">
+															<EmailIcon />
+														</InputAdornment>
+													)
+												}}
+												variant="outlined"
+												disabled={this.state.calling}
+												error={"email" in this.state.errors}
+												helperText={"email" in this.state.errors ? this.state.errors["email"] : ""}
+											/>
+										</Grid>
+										<Grid item xs={6}>
+											{this.state.papelList != null ? <Autocomplete
+												multiple
+												id="papel-list"
+												options={Object.keys(this.state.papelByPapelId).map(key => parseInt(key))}
+												getOptionLabel={(option) => this.state.papelByPapelId[option].nome}
+												value={this.state.papelIdList}
+												onChange={(event, value) => this.setState({papelIdList: value})}
+												renderInput={(params) => (
+													<TextField
+													{...params}
+												variant="outlined"
+												label="Papéis"
+												/>
+												)}
+											/> : null}
+										</Grid>
+										<Grid item xs={6}>
+											<TextField
+												id="matricula"
+												value={this.state.matricula}
+												onChange={(e) => this.setState({matricula: e.target.value})}
+												fullWidth
+												label="Matrícula"
+												InputProps={{
+													startAdornment: (
+														<InputAdornment position="start">
+															<NumbersIcon />
+														</InputAdornment>
+													)
+												}}
+												variant="outlined"
+												disabled={this.state.calling}
+												error={"matricula" in this.state.errors}
+												helperText={"matricula" in this.state.errors ? this.state.errors["matricula"] : ""}
+											/>
+										</Grid>
+										<Grid item xs={4}>
+											<TextField
+												id="cpf"
+												value={this.state.cpf}
+												onChange={(e) => this.setState({cpf: e.target.value})}
+												fullWidth
+												label="CPF"
+												InputProps={{
+													startAdornment: (
+														<InputAdornment position="start">
+															<AccountCircle />
+														</InputAdornment>
+													)
+												}}
+												variant="outlined"
+												disabled={this.state.calling}
+												error={"cpf" in this.state.errors}
+												helperText={"cpf" in this.state.errors ? this.state.errors["cpf"] : ""}
+											/>
+										</Grid>
+										<Grid item xs={4}>
+											<TextField
+												id="telefone-celular"
+												value={this.state.telefoneCelular}
+												onChange={(e) => this.setState({telefoneCelular: e.target.value})}
+												fullWidth
+												label="Telefone Celular"
+												InputProps={{
+													startAdornment: (
+														<InputAdornment position="start">
+															<SmartphoneIcon />
+														</InputAdornment>
+													)
+												}}
+												variant="outlined"
+												disabled={this.state.calling}
+												error={"telefoneCelular" in this.state.errors}
+												helperText={"telefoneCelular" in this.state.errors ? this.state.errors["telefoneCelular"] : ""}
+											/>
+										</Grid>
+										<Grid item xs={4}>
+											<TextField
+												id="whatsapp"
+												value={this.state.whatsapp}
+												onChange={(e) => this.setState({whatsapp: e.target.value})}
+												fullWidth
+												label="Whatsapp"
+												InputProps={{
+													startAdornment: (
+														<InputAdornment position="start">
+															<WhatsAppIcon />
+														</InputAdornment>
+													)
+												}}
+												variant="outlined"
+												disabled={this.state.calling}
+												error={"whatsapp" in this.state.errors}
+												helperText={"whatsapp" in this.state.errors ? this.state.errors["whatsapp"] : ""}
+											/>
+										</Grid>
+										<Grid item xs={6}>
+											<DatePicker
+												id="data-nascimento"
+												value={this.state.dataNascimento !== null ? dayjs(this.state.dataNascimento) : null}
+												onChange={(newValue) => this.setState({dataNascimento: newValue})}
+												label="Data de Nascimento"
+												slotProps={{
+													field: { clearable: true },
+													textField: {
+														fullWidth: true,
+														error: "dataNascimento" in this.state.errors,
+														helperText: "dataNascimento" in this.state.errors ? this.state.errors["dataNascimento"] : ""
+													},
+												}}
+												disableFuture
+												variant="outlined"
+												disabled={this.state.calling}
+											/>
+										</Grid>
+										<Grid item xs={6}>
+											<DatePicker
+												id="data-contratacao"
+												value={this.state.dataContratacao !== null ? dayjs(this.state.dataContratacao) : null}
+												onChange={(newValue) => this.setState({dataContratacao: newValue})}
+												label="Data Contratação"
+												slotProps={{
+													field: { clearable: true },
+													textField: {
+														fullWidth: true,
+														error: "dataContratacao" in this.state.errors,
+														helperText: "dataContratacao" in this.state.errors ? this.state.errors["dataContratacao"] : ""
+													},
+												}}
+												disableFuture
+												variant="outlined"
+												disabled={this.state.calling}
+											/>
+										</Grid>
+										<Grid item xs={3}>
+											<FormControl fullWidth>
+												<InputLabel>Departamento</InputLabel>
+												<Select
+													id="departamento"
+													value={this.state.departamentoId}
+													label="Departamento"
+													onChange={(e) => this.setState({departamentoId: e.target.value})}
+													>
+													<MenuItem key={"nenhum"} value={null}>Nenhum</MenuItem>
+													{this.state.departamentoList.map((departamento) => <MenuItem key={departamento.departamentoId} value={departamento.departamentoId}>{departamento.nome}</MenuItem>)}
+												</Select>
+											</FormControl>
+										</Grid>
+										<Grid item xs={3}>
+											<FormControl fullWidth>
+												<InputLabel>Cargo</InputLabel>
+												<Select
+													id="cargo"
+													value={this.state.cargoId}
+													label="Cargo"
+													onChange={(e) => this.setState({cargoId: e.target.value})}
+													>
+													<MenuItem key={"nenhum"} value={null}>Nenhum</MenuItem>
+													{this.state.cargoList.map((cargo) => <MenuItem key={cargo.cargoId} value={cargo.cargoId}>{cargo.nome}</MenuItem>)}
+												</Select>
+											</FormControl>
+										</Grid>
+										<Grid item xs={3}>
+											<FormControl fullWidth>
+												<InputLabel>Contrato</InputLabel>
+												<Select
+													id="contrato"
+													value={this.state.contratoId}
+													label="Contrato"
+													onChange={(e) => this.setState({contratoId: e.target.value})}
+													>
+													<MenuItem key={"nenhum"} value={null}>Nenhum</MenuItem>
+													{this.state.contratoList.map((contrato) => <MenuItem key={contrato.contratoId} value={contrato.contratoId}>{contrato.nome}</MenuItem>)}
+												</Select>
+											</FormControl>
+										</Grid>
+										<Grid item xs={3}>
+											<FormControl fullWidth>
+												<InputLabel>Jornada</InputLabel>
+												<Select
+													id="jornada"
+													value={this.state.jornadaId}
+													label="Jornada"
+													onChange={(e) => this.setState({jornadaId: e.target.value})}
+													>
+													<MenuItem key={"nenhum"} value={null}>Nenhum</MenuItem>
+													{this.state.jornadaList.map((jornada) => <MenuItem key={jornada.jornadaId} value={jornada.jornadaId}>{`${jornada.entrada.substr(0,5)} - ${jornada.intervaloInicio.substr(0,5)} - ${jornada.intervaloFim.substr(0,5)} - ${jornada.saida.substr(0,5)}`}</MenuItem>)}
+												</Select>
+											</FormControl>
+										</Grid>
+										<Grid item xs={4}>
+											<TextField
+												id="senha"
+												value={this.state.senha}
+												type={this.state.showSenha ? 'text' : 'password'}
+												onChange={(e) => this.setState({senha: e.target.value})}
+												fullWidth
+												label="Senha"
+												InputProps={{
+													startAdornment: (
+														<InputAdornment position="start">
+															<KeyIcon />
+														</InputAdornment>
+													),
+													endAdornment: (
+														<InputAdornment position="end">
+															<IconButton
+																aria-label="toggle password visibility"
+																onClick={() => this.setState({showSenha: !this.state.showSenha})}
+																edge="end"
+															>
+																{this.state.showSenha ? <VisibilityOff /> : <Visibility />}
+															</IconButton>
+														</InputAdornment>
+													),
+													autoComplete: 'new-password'
+												}}
+												variant="outlined"
+												disabled={this.state.calling}
+												error={"senha" in this.state.errors}
+												helperText={"senha" in this.state.errors ? this.state.errors["senha"] : ""}
+											/>
+										</Grid>
+										<Grid item xs={4}>
+											<TextField
+												id="confirma-senha"
+												value={this.state.confirmaSenha}
+												type={this.state.showSenha ? 'text' : 'password'}
+												onChange={(e) => this.setState({confirmaSenha: e.target.value})}
+												fullWidth
+												label="Confirmar Senha"
+												InputProps={{
+													startAdornment: (
+														<InputAdornment position="start">
+															<KeyIcon />
+														</InputAdornment>
+													),
+													endAdornment: (
+														<InputAdornment position="end">
+															<IconButton
+																aria-label="toggle password visibility"
+																onClick={() => this.setState({showSenha: !this.state.showSenha})}
+																edge="end"
+															>
+																{this.state.showSenha ? <VisibilityOff /> : <Visibility />}
+															</IconButton>
+														</InputAdornment>
+													),
+													autoComplete: 'new-password'
+												}}
+												variant="outlined"
+												disabled={this.state.calling}
+												error={"confirmaSenha" in this.state.errors}
+												helperText={"confirmaSenha" in this.state.errors ? this.state.errors["confirmaSenha"] : ""}
+											/>
+										</Grid>
+										<Grid item xs={4}>
+											<FormControl component="fieldset" variant="standard">
+												<FormLabel component="legend">Ativo</FormLabel>
+												<FormGroup>
+			      									<FormControlLabel control={<Switch checked={this.state.ativo} onChange={(e) => this.setState({ativo: e.target.checked})}/>} />
+			      								</FormGroup>
+			      							</FormControl>
+										</Grid>
+									</Grid>
+								</form>
+							</Grid>
+						</Grid>}
 					</Box>
 					<Collapse in={this.state.alertOpen}>
 						{this.state.alert}

@@ -21,6 +21,7 @@ import PersonIcon from '@mui/icons-material/Person';
 import Tooltip from '@mui/material/Tooltip';
 import Alert from '@mui/material/Alert';
 import Collapse from '@mui/material/Collapse';
+import Avatar from '@mui/material/Avatar';
 
 import api from "../services/api";
 
@@ -43,12 +44,16 @@ class UsuariosModule extends React.Component {
 		}
 
 		this.columns = [
-			{ field: 'usuarioId', headerName: 'ID', minWidth: 100, flex: 1 },
+			//{ field: 'usuarioId', headerName: 'ID', minWidth: 100, flex: 1},
+			{ field: 'fotoPerfil', 'headerName': "", renderCell: (params) => 
+				<Avatar src={params.row.fotoPerfilUrl}>{params.row.nome.charAt(0)}</Avatar>},
 			{ field: 'nome', headerName: 'Nome', minWidth: 200, flex: 1 },
 			{ field: 'matricula', headerName: 'Matrícula', minWidth: 200, flex: 1 },
 			{ field: 'email', headerName: 'Email', minWidth: 200, flex: 1 },
-			{ field: 'papelList', headerName: 'Cargos', minWidth: 300, flex: 1, renderCell: (params) => 
-				<Stack direction="row" spacing={1}>
+			{ field: 'departamento', headerName: 'Departamento', minWidth: 200, flex: 1 },
+			{ field: 'cargo', headerName: 'Cargo', minWidth: 200, flex: 1 },
+			{ field: 'papelList', headerName: 'Papéis', minWidth: 300, flex: 1, renderCell: (params) => 
+				<Stack direction="row" spacing={1} sx={{"overflow": "auto"}}>
 					{params.value.map(papel=> <Chip key={papel} label={papel} variant="outlined" />)}
 				</Stack>
 			},
@@ -95,11 +100,14 @@ class UsuariosModule extends React.Component {
 			.then((response) => {
 				let usuarioRows = response.data.map((usuario) => {return {
 					id: usuario.usuarioId,
+					fotoPerfilUrl: usuario.fotoPerfil ? api.defaults.baseURL + "/usuario/" + usuario.usuarioId + "/foto-perfil?versao=" + usuario.fotoPerfilVersao : "",
 					usuarioId: usuario.usuarioId,
 					nome: usuario.nome,
 					matricula: usuario.matricula,
 					email: usuario.email,
 					papelList: usuario.papelList.map(papel => papel.nome),
+					departamento: usuario.departamento !== null ? usuario.departamento.nome : "",
+					cargo: usuario.cargo !== null ? usuario.cargo.nome : "",
 					ativo: usuario.ativo
 				}})
 				this.setState({usuarioList: response.data, usuarioRows: usuarioRows, calling: false});
@@ -142,7 +150,7 @@ class UsuariosModule extends React.Component {
 	render() {
 		return (
 			<React.Fragment>
-				<Paper elevation={3} sx={{flexGrow: 1, padding: 5, minHeight: "100%", minWidth: "800px", boxSizing: "border-box", display: "flex", flexDirection: "column", aligmItems: "center", justifyContent: "start"}}>
+				<Paper elevation={3} sx={{flexGrow: 1, padding: 5, minHeight: "100%", minWidth: "800px", boxSizing: "border-box", display: "flex", flexDirection: "column", aligmItems: "center", justifyContent: "start"}} className="modulePaper">
 					<Typography variant="h3" gutterBottom>
 					Usuários
 					</Typography>
