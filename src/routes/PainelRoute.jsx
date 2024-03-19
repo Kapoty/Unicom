@@ -42,6 +42,8 @@ class PainelRoute extends React.Component {
 
 			fullscreen: false,
 
+			notificationsGranted: undefined,
+
 			menuOpen: true,
 		};
 
@@ -59,6 +61,8 @@ class PainelRoute extends React.Component {
 		this.toggleFullscreen = this.toggleFullscreen.bind(this);
 		this.fullScreenChanged = this.fullScreenChanged.bind(this);
 
+		this.getNotificationsStatus = this.getNotificationsStatus.bind(this);
+		this.requestNotificationsPermission = this.requestNotificationsPermission.bind(this);
 	}
 
 	getUsuarioFromApi() {
@@ -107,6 +111,7 @@ class PainelRoute extends React.Component {
 		document.body.onfullscreenchange = this.fullScreenChanged;
 		//window.onbeforeunload = s => "";
 		//this.disableDefaultContextMenu();
+		this.getNotificationsStatus();
 	}
 
 	componentDidUpdate(prevProps, prevState) {
@@ -169,12 +174,44 @@ class PainelRoute extends React.Component {
 		this.setState({fullscreen: document.fullscreenElement ? true : false});
 	}
 
+	getNotificationsStatus() {
+		if (!("Notification" in window)) {
+			this.setState({notificationsGranted: null})
+ 		} else if (Notification.permission === "granted") {
+ 			this.setState({notificationsGranted: true})
+			/*let title = 'Hi!';
+			let options = {
+				body: 'Very Important Message',
+			};
+
+			navigator.serviceWorker.ready.then(function(registration) {
+				registration.showNotification(title, options);
+			});*/
+			
+ 		} else if (Notification.permission !== "denied") {
+ 			this.setState({notificationsGranted: false})
+			//this.requestNotificationsPermission();
+		} else {
+			this.setState({notificationsGranted: false});
+		}
+	}
+
+	requestNotificationsPermission() {
+		Notification.requestPermission().then((permission) => {
+			if (permission === "granted") {
+				this.setState({notificationsGranted: true})
+			} else {
+				this.setState({notificationsGranted: false});
+			}
+		});
+	}
+
 	render() {
 	
 		return <React.Fragment>
-		<Box className="painelBox">
-			<CustomAppBar usuario={this.state.usuario} usuarioFotoPerfil={this.state.usuarioFotoPerfil} toggleMenu={this.toggleMenu} logout={this.logout} fullscreen={this.state.fullscreen} toggleFullscreen={this.toggleFullscreen}/>
-			<Box sx={{display: "flex", flexGrow: 1, flexDirection: "row", height: "100dvh", overflow: "hidden"}}>
+		<Box className="painelBox" sx={{height: "100dvh"}}>
+			<CustomAppBar usuario={this.state.usuario} usuarioFotoPerfil={this.state.usuarioFotoPerfil} toggleMenu={this.toggleMenu} logout={this.logout} fullscreen={this.state.fullscreen} toggleFullscreen={this.toggleFullscreen} notificationsGranted={this.state.notificationsGranted} requestNotificationsPermission={this.requestNotificationsPermission}/>
+			<Box sx={{display: "flex", flexGrow: 1, flexDirection: "row", overflow: "hidden"}}>
 				<CustomNavigation menuOpen={this.state.menuOpen} toggleMenu={this.toggleMenu} usuario={this.state.usuario} iframeCategoryList={this.state.iframeCategoryList} toggleIframeCategory={this.toggleIframeCategory} closeIframe={this.closeIframe}/>
 				<Box sx={{flexGrow: 1, height: "100%", overflow: "auto"}}>
 					<Suspense fallback={<Backdrop sx={{color: "primary.main"}} open={true}>
@@ -185,7 +222,7 @@ class PainelRoute extends React.Component {
 								<Route path="/" element={<Box></Box>}/>
 								{this.state.usuario !== null && this.state.usuario.permissaoList.includes("Usuario.Read.All") ? <Route path="/usuarios/" element={<UsuariosModule usuario={this.state.usuario}/>} /> : null}
 								{this.state.usuario !== null && this.state.usuario.permissaoList.includes("Usuario.Read.All") ? <Route path="/usuarios/:usuarioId" element={<CreateEditUsuarioModuleWrapper/>} /> : null}
-								{this.state.usuario !== null && this.state.usuario.permissaoList.includes("Ponto.Read.All") ? <Route path="/registro-ponto/" element={<RegistroPontoModule/>} /> : null}
+								{this.state.usuario !== null && this.state.usuario.permissaoList.includes("Ponto.Read.All") ? <Route path="/registro-ponto/" element={<RegistroPontoModule usuario={this.state.usuario}/>} /> : null}
 							</Routes>
 					</Suspense>
 				</Box>

@@ -13,6 +13,11 @@ import SaveIcon from '@mui/icons-material/Save';
 import { green, yellow, blue, red } from '@mui/material/colors';
 import FingerprintIcon from '@mui/icons-material/Fingerprint';
 import LockIcon from '@mui/icons-material/Lock';
+import LockOpenIcon from '@mui/icons-material/LockOpen';
+import Tooltip from '@mui/material/Tooltip';
+import ScheduleIcon from '@mui/icons-material/Schedule';
+
+import {isAuth, getToken, setToken, removeToken} from "../utils/pontoAuth"
 
 import api from "../services/api";
 
@@ -24,6 +29,8 @@ class RegistroPontoModule extends React.Component {
 		super(props);
 
 		this.state = {
+			isAuth: isAuth(),
+
 			registroPonto: null,
 
 			naoRegistraReason: null,
@@ -32,6 +39,7 @@ class RegistroPontoModule extends React.Component {
 
 			calling: false,
 			logging: false,
+			authenticating: false,
 
 			alertOpen: false,
 			alert: null
@@ -40,6 +48,9 @@ class RegistroPontoModule extends React.Component {
 		this.getUsuarioRegistroPontoFromApi = this.getUsuarioRegistroPontoFromApi.bind(this);
 		this.registrarPonto = this.registrarPonto.bind(this);
 		this.getLockedSecondsFromApi = this.getLockedSecondsFromApi.bind(this);
+		this.handleAuthenticate = this.handleAuthenticate.bind(this);
+		this.authenticate = this.authenticate.bind(this);
+		this.validateToken = this.validateToken.bind(this);
 
 		this.minusOneSecond = this.minusOneSecond.bind(this);
 
@@ -49,10 +60,12 @@ class RegistroPontoModule extends React.Component {
 
 	componentDidMount() {
 		this.getUsuarioRegistroPontoFromApi();
+		if (this.state.isAuth)
+			this.validateToken();
 	}
 
 	getUsuarioRegistroPontoFromApi() {
-		this.setState({calling: true})
+		this.setState({calling: true, naoRegistraReason: null, lockedSeconds: null});
 		api.get("/registro-ponto/me/hoje")
 			.then((response) => {
 				let registroPonto = response.data;
@@ -91,18 +104,25 @@ class RegistroPontoModule extends React.Component {
 					else
 						naoRegistraReason = "Falha inesperada!"
 				}
+				else {
+					naoRegistraReason = "O servidor não respondeu a solicitação!"
+					setTimeout(this.getUsuarioRegistroPontoFromApi, 3000);
+				}
 				this.setState({calling: false, naoRegistraReason: naoRegistraReason});
 			});
 	}
 
 	registrarPonto() {
 		this.setState({calling: true, logging: true})
-		api.post("/registro-ponto/me/hoje/registrar")
+		api.post("/registro-ponto/me/hoje/registrar", {
+				token: getToken(),
+			})
 			.then((response) => {
 				this.setState({
 					calling: false,
 					logging: false
 				});
+				this.openAlert("success", "Ponto registrado com sucesso!");
 				this.getUsuarioRegistroPontoFromApi();
 			})
 			.catch((err) => {
@@ -112,10 +132,14 @@ class RegistroPontoModule extends React.Component {
 					if ("full" in errors)
 						this.openAlert("error", "Todos os pontos já foram batidos hoje!");
 					else if ("locked" in errors)
-						this.openAlert("error", "Locked!");
+						this.openAlert("error", "Por favor, aguarde os segundos restantes...");
+					else
+						if ("token" in errors)
+							this.openAlert("error", "Dispositivo não autorizado!");
 					else
 						this.openAlert("error", "Erro inesperado!");
-				}
+				} else 
+					this.openAlert("error", "Falha ao registrar ponto!");
 				this.setState({calling: false, logging: false});
 				this.getUsuarioRegistroPontoFromApi();
 			});
@@ -154,6 +178,44 @@ class RegistroPontoModule extends React.Component {
 		this.setState({alertOpen: false});
 	}
 
+	handleAuthenticate() {
+		if (this.state.isAuth) {
+			this.openAlert("success", "Dispositivo desautorizado com sucesso!");
+			removeToken();
+			this.setState({isAuth: false});
+		} else
+			this.authenticate();
+	}
+
+	authenticate() {
+		this.setState({authenticating: true});
+		api.get("/registro-ponto/generate-token")
+			.then((response) => {
+				this.openAlert("success", "Dispositivo autorizado com sucesso!");
+				setToken(response.data.token);
+				this.setState({authenticating: false, isAuth: true})
+			})
+			.catch((err) => {
+				console.log(err);
+				this.openAlert("error", "Falha ao autorizar dispositivo!");
+				this.setState({authenticating: false})
+			});
+	}
+
+	validateToken() {
+		api.post("/registro-ponto/validate-token", {
+			token: getToken()
+			})
+			.then((response) => {
+				this.setState({isAuth: true});
+			})
+			.catch((err) => {
+				this.openAlert("error", "Autorização do dispositivo expirou!");
+				removeToken();
+				this.setState({isAuth: false});
+			});
+	}
+
 	render() {
 		return (
 			<React.Fragment>
@@ -162,30 +224,30 @@ class RegistroPontoModule extends React.Component {
 						<Grid container spacing={3} sx={{margin: 0}}>
 							<Grid item xs={3}>
 								<Stack alignItems="center">
-									<Typography variant="h4" sx={{ fontWeight: 'bold' }} gutterBottom color={green[400]}>{this.state.registroPonto !== null && this.state.registroPonto.entrada !== null ? this.state.registroPonto.entrada : "-"}</Typography>
+									<Tooltip title="Horário do Registro"><Typography variant="h4" sx={{ fontWeight: 'bold' }} gutterBottom color={green[400]}>{this.state.registroPonto !== null && this.state.registroPonto.entrada !== null ? this.state.registroPonto.entrada : "-"}</Typography></Tooltip>
 									<Typography variant="h6">Entrada</Typography>
-									<Typography variant="h6" color={green[700]}>{this.state.registroPonto !== null ? this.state.registroPonto.jornadaEntrada : "-"}</Typography>
+									<Tooltip title="Jornada Padrão"><Typography variant="h6" color={green[700]}>{this.state.registroPonto !== null ? this.state.registroPonto.jornadaEntrada : "-"}</Typography></Tooltip>
 								</Stack>
 							</Grid>
 							<Grid item xs={3}>
 								<Stack alignItems="center">
-									<Typography variant="h4" sx={{ fontWeight: 'bold' }} gutterBottom color={yellow[400]}>{this.state.registroPonto !== null && this.state.registroPonto.intervaloInicio !== null ? this.state.registroPonto.intervaloInicio : "-"}</Typography>
+									<Tooltip title="Horário do Registro"><Typography variant="h4" sx={{ fontWeight: 'bold' }} gutterBottom color={yellow[400]}>{this.state.registroPonto !== null && this.state.registroPonto.intervaloInicio !== null ? this.state.registroPonto.intervaloInicio : "-"}</Typography></Tooltip>
 									<Typography variant="h6">Início do Intervalo</Typography>
-									<Typography variant="h6" color={yellow[700]}>{this.state.registroPonto !== null ? this.state.registroPonto.jornadaIntervaloInicio : "-"}</Typography>
+									<Tooltip title="Jornada Padrão"><Typography variant="h6" color={yellow[700]}>{this.state.registroPonto !== null ? this.state.registroPonto.jornadaIntervaloInicio : "-"}</Typography></Tooltip>
 								</Stack>
 							</Grid>
 							<Grid item xs={3}>
 								<Stack alignItems="center">
-									<Typography variant="h4" sx={{ fontWeight: 'bold' }} gutterBottom color={blue[400]}>{this.state.registroPonto !== null && this.state.registroPonto.intervaloFim !== null ? this.state.registroPonto.intervaloFim : "-"}</Typography>
+									<Tooltip title="Horário do Registro"><Typography variant="h4" sx={{ fontWeight: 'bold' }} gutterBottom color={blue[400]}>{this.state.registroPonto !== null && this.state.registroPonto.intervaloFim !== null ? this.state.registroPonto.intervaloFim : "-"}</Typography></Tooltip>
 									<Typography variant="h6">Fim do Intervalo</Typography>
-									<Typography variant="h6" color={blue[700]}>{this.state.registroPonto !== null ? this.state.registroPonto.jornadaIntervaloFim : "-"}</Typography>
+									<Tooltip title="Jornada Padrão"><Typography variant="h6" color={blue[700]}>{this.state.registroPonto !== null ? this.state.registroPonto.jornadaIntervaloFim : "-"}</Typography></Tooltip>
 								</Stack>
 							</Grid>
 							<Grid item xs={3}>
 								<Stack alignItems="center">
-									<Typography variant="h4" sx={{ fontWeight: 'bold' }} gutterBottom color={red[400]}>{this.state.registroPonto !== null && this.state.registroPonto.saida !== null ? this.state.registroPonto.saida : "-"}</Typography>
+									<Tooltip title="Horário do Registro"><Typography variant="h4" sx={{ fontWeight: 'bold' }} gutterBottom color={red[400]}>{this.state.registroPonto !== null && this.state.registroPonto.saida !== null ? this.state.registroPonto.saida : "-"}</Typography></Tooltip>
 									<Typography variant="h6">Saída</Typography>
-									<Typography variant="h6" color={red[700]}>{this.state.registroPonto !== null ? this.state.registroPonto.jornadaSaida : "-"}</Typography>
+									<Tooltip title="Jornada Padrão"><Typography variant="h6" color={red[700]}>{this.state.registroPonto !== null ? this.state.registroPonto.jornadaSaida : "-"}</Typography></Tooltip>
 								</Stack>
 							</Grid>
 							<Grid item container xs={12} justifyContent="center" sx={{marginTop: 5}}s>
@@ -194,14 +256,29 @@ class RegistroPontoModule extends React.Component {
 								 	sx={{width: 400, height: 120}}
 								 	color={this.state.color}
 								 	loading={this.state.logging}
-								 	disabled={this.state.calling || this.state.naoRegistraReason !== null || this.state.lockedSeconds !== 0}
+								 	disabled={this.state.calling || this.state.naoRegistraReason !== null || this.state.lockedSeconds !== 0 || !this.state.isAuth}
 								 	onClick={this.registrarPonto}
 								>
-									{this.state.naoRegistraReason != null ?  <Stack justifyContent="center" alignItems="center" gap={1}><LockIcon sx={{fontSize: 60}}/> {this.state.naoRegistraReason}</Stack> :
+									{!this.state.isAuth ?  <Stack justifyContent="center" alignItems="center" gap={1}><LockIcon sx={{fontSize: 60}}/>Dispositivo não autorizado!</Stack> :
+									this.state.naoRegistraReason != null ?  <Stack justifyContent="center" alignItems="center" gap={1}><LockIcon sx={{fontSize: 60}}/> {this.state.naoRegistraReason}</Stack> :
 									this.state.lockedSeconds == null ? <CircularProgress color="inherit"/> :
 								 	this.state.lockedSeconds == 0 ? <FingerprintIcon sx={{fontSize: 60}} /> : <Stack justifyContent="center" alignItems="center" gap={1}><LockIcon sx={{fontSize: 60}}/> {`Aguarde ${this.state.lockedSeconds} segundos...`}</Stack>}
 								 </LoadingButton>
 							</Grid>
+							{this.props.usuario !== null && this.props.usuario.permissaoList.includes("Ponto.Write.All") ? <Grid item container xs={12} justifyContent="center" sx={{marginTop: 5}}s>
+								<LoadingButton
+								 	variant="contained"
+								 	size="large"
+								 	loading={this.state.authenticating}
+								 	startIcon={this.state.isAuth ? <LockIcon /> : <LockOpenIcon/>}
+								 	loadingPosition="start"
+								 	color={this.state.isAuth ? "error" : "success"}
+								 	disabled={this.state.authenticating}
+								 	onClick={this.handleAuthenticate}
+								>
+									{this.state.isAuth ? "Desautorizar Dispositivo" : "Autorizar Dispositivo"}
+								 </LoadingButton>
+							</Grid> : ""}
 						</Grid>
 					</Box>
 					<Collapse in={this.state.alertOpen}>

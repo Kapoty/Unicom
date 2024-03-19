@@ -27,6 +27,8 @@ import MailIcon from '@mui/icons-material/Mail';
 import Chip from '@mui/material/Chip'
 import GroupsIcon from '@mui/icons-material/Groups';
 import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
+import NotificationsOffIcon from '@mui/icons-material/NotificationsOff';
+import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 
 import api from "../services/api";
 
@@ -155,6 +157,31 @@ class CustomAppBar extends React.Component {
 									</ListItem>
 								</List> : <Box width="100%" display="flex" justifyContent="center"><CircularProgress/></Box>}
 					      	</MenuItem> 
+				        <Divider />
+				        <MenuItem onClick={this.props.requestNotificationsPermission} disabled={this.props.notificationsGranted == true}>
+							<ListItemIcon>
+								{this.props.notificationsGranted == true ? <NotificationsActiveIcon fontSize="small" /> : <NotificationsOffIcon fontSize="small" />}
+							</ListItemIcon>
+							{this.props.notificationsGranted == true ? "Notificações ativadas" : "Ativar notificações"}
+				        </MenuItem>
+				        <MenuItem onClick={() => {
+				        	let title = 'Interação Requisitada';
+				        	let options = {
+								body: 'Interaja com o sistema para  confirmar que está presente!',
+								vibrate: [300, 100, 400],
+								requireInteraction: true
+							};
+
+							navigator.serviceWorker.ready.then(function(registration) {
+								registration.showNotification(title, options);
+							});
+				        }}>
+							<ListItemIcon>
+								<NotificationsActiveIcon fontSize="small" />
+							</ListItemIcon>
+							Testar notificação
+				        </MenuItem>
+				        
 				        <Divider />
 				        <MenuItem onClick={this.props.logout}>
 							<ListItemIcon>

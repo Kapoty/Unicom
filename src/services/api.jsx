@@ -4,7 +4,7 @@ import {getToken, removeToken} from "../utils/auth"
 import history from "utils/history";
 
 const api = axios.create({
-  baseURL: "http://127.0.0.1:8000/api",
+  baseURL: process.env.NODE_ENV === "development" ? "https://192.168.1.15:8000/api" : "https://unisystem.unicom.net.br:8001/api",
 });
 
 api.interceptors.request.use(

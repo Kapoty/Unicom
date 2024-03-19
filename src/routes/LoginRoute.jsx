@@ -79,7 +79,7 @@ class LoginRoute extends React.Component {
 			display="flex"
 			justifyContent="center"
 			alignItems="center"
-			height="100vh"
+			height="100dvh"
 			flexDirection="column"
 			>
 				<Paper elevation={3} sx={{width: "400px", padding: 5}}>

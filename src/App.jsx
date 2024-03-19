@@ -5,6 +5,7 @@ import 'assets/css/general.css';
 
 const LoginRoute = React.lazy(() => import('routes/LoginRoute'));
 const PainelRoute = React.lazy(() => import('routes/PainelRoute'));
+const PontoFacialRoute = React.lazy(() => import('routes/PontoFacialRoute'));
 
 import { red, green, grey } from '@mui/material/colors';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
@@ -36,7 +37,7 @@ const theme = createTheme({
 
 class SiteRouter extends React.Component {
 
-	 render() {
+	render() {
 	return <HistoryRouter history={history}>
 				<ThemeProvider theme={theme}>
 					<LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="pt">
@@ -46,6 +47,7 @@ class SiteRouter extends React.Component {
 												</Backdrop>}>
 								<Routes>
 									 <Route path="/login" element={<LoginRoute/>} />
+									 {/*<Route path="/ponto-facial" element={<PontoFacialRoute/>} />*/}
 									 <Route path="/*" element={<PainelRoute/>} />
 								</Routes>
 							</Suspense>
@@ -59,3 +61,14 @@ class SiteRouter extends React.Component {
 const root = createRoot( document.getElementById("root"));
 
 root.render(<SiteRouter/>,);
+
+if ('serviceWorker' in navigator) {
+	window.addEventListener('load', () => {
+		navigator.serviceWorker.register('/service-worker.js')
+		.then(registration => {
+			console.log('SW registered: ', registration);
+		}).catch(registrationError => {
+			console.log('SW registration failed: ', registrationError);
+		});
+	});
+}

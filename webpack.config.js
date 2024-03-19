@@ -5,14 +5,14 @@ const path = require('path');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
 module.exports = {
-    "mode": "development",//"production",//
+    //"mode": "development",//"production",//
     "entry": {
     	"app": "./src/App.jsx"
     },
     "output": {
         "path": __dirname+'/docs',
-        "filename": "[name].[chunkhash:8].js",
-        "publicPath": "/"
+        "filename": "assets/js/[name].[chunkhash:8].js",
+        "publicPath": process.env.NODE_ENV === "development" ? "/" : "/",
     },
     "module": {
         "rules": [
@@ -50,13 +50,16 @@ module.exports = {
         	"title": "UniSystem",
             "hash": true,
             "chunks": ["app"],
-            "path": __dirname+'/static',
+            "path": __dirname+'/docs',
             "filename": 'index.html' //relative to root of the application
         }),
-        new CopyPlugin({"patterns": [{
+        new CopyPlugin({"patterns": [
+            {
         		"from": "src/assets",
         		"to":  "assets"
-        	}
+        	},
+            { from: 'src/manifest', to: 'manifest' },
+            { from: 'src/service-worker.js', to: 'service-worker.js' },
         ]}),
         //new BundleAnalyzerPlugin()
     ],
@@ -69,6 +72,13 @@ module.exports = {
         historyApiFallback: true,
         hot: true,
         watchFiles: ['src'],
+        server: {
+            type: 'https',
+            options: {
+                key: __dirname+'/cert/key1.key',
+                cert: __dirname+'/cert/cert1.crt',
+            }
+        },
     },
     "cache": false,
 }
