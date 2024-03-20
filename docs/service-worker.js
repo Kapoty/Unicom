@@ -1,1 +1,0 @@
-self.addEventListener("install",(e=>{self.skipWaiting(),caches.keys().then((function(e){for(let n of e)caches.delete(n)}))})),self.addEventListener("notificationclick",(e=>{e.notification.close(),e.waitUntil(clients.matchAll({type:"window"}).then((e=>{for(const n of e)return n.focus();if(clients.openWindow)return clients.openWindow("/")})))}));

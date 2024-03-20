@@ -47,12 +47,12 @@ class UsuariosModule extends React.Component {
 			//{ field: 'usuarioId', headerName: 'ID', minWidth: 100, flex: 1},
 			{ field: 'fotoPerfil', 'headerName': "", renderCell: (params) => 
 				<Avatar src={params.row.fotoPerfilUrl}>{params.row.nome.charAt(0)}</Avatar>},
-			{ field: 'nome', headerName: 'Nome', minWidth: 200, flex: 1 },
-			{ field: 'matricula', headerName: 'Matrícula', minWidth: 200, flex: 1 },
-			{ field: 'email', headerName: 'Email', minWidth: 200, flex: 1 },
-			{ field: 'departamento', headerName: 'Departamento', minWidth: 200, flex: 1 },
-			{ field: 'cargo', headerName: 'Cargo', minWidth: 200, flex: 1 },
-			{ field: 'papelList', headerName: 'Papéis', minWidth: 300, flex: 1, renderCell: (params) => 
+			{ field: 'nome', headerName: 'Nome', minWidth: 100, flex: 1 },
+			{ field: 'matricula', headerName: 'Matrícula', minWidth: 100, flex: 1 },
+			{ field: 'email', headerName: 'Email', minWidth: 100, flex: 1 },
+			{ field: 'departamento', headerName: 'Departamento', minWidth: 100, flex: 1 },
+			{ field: 'cargo', headerName: 'Cargo', minWidth: 100, flex: 1 },
+			{ field: 'papelList', headerName: 'Papéis', minWidth: 200, flex: 1, renderCell: (params) => 
 				<Stack direction="row" spacing={1} sx={{"overflow": "auto"}}>
 					{params.value.map(papel=> <Chip key={papel} label={papel} variant="outlined" />)}
 				</Stack>

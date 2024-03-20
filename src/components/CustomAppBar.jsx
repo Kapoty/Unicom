@@ -29,6 +29,7 @@ import GroupsIcon from '@mui/icons-material/Groups';
 import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
 import NotificationsOffIcon from '@mui/icons-material/NotificationsOff';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
+import ApartmentIcon from '@mui/icons-material/Apartment';
 
 import api from "../services/api";
 
@@ -39,7 +40,7 @@ class CustomAppBar extends React.Component {
 	constructor(props) {
 		super(props);
 		this.state = {
-			usuarioMenuOpen: false
+			usuarioMenuOpen: false,
 		};
 
 		this.usuarioMenuRef = React.createRef();
@@ -121,7 +122,7 @@ class CustomAppBar extends React.Component {
 					      		<List disablePadding dense>
 							      	<ListItem>
 							      		<ListItemIcon>
-											<WorkIcon/>
+											<ApartmentIcon/>
 										</ListItemIcon>
 										<ListItemText primary={this.props.usuario.empresa.nome} />
 							      	</ListItem>
@@ -139,7 +140,7 @@ class CustomAppBar extends React.Component {
 							      	</ListItem>
 							      	<ListItem>
 							      		<ListItemIcon>
-											<GroupsIcon/>
+											<WorkIcon/>
 										</ListItemIcon>
 										<ListItemText primary={this.props.usuario.departamento !== null ? this.props.usuario.departamento.nome : ""} />
 							      	</ListItem>
@@ -148,6 +149,12 @@ class CustomAppBar extends React.Component {
 											<BadgeIcon/>
 										</ListItemIcon>
 										<ListItemText primary={this.props.usuario.cargo !== null ? this.props.usuario.cargo.nome : ""} />
+							      	</ListItem>
+							      	<ListItem>
+							      		<ListItemIcon>
+											<GroupsIcon/>
+										</ListItemIcon>
+										<ListItemText primary={this.props.usuario.equipe !== null ? this.props.usuario.equipe.nome : ""} />
 							      	</ListItem>
 									<ListItem>
 							      		<ListItemIcon>

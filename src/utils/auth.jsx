@@ -1,16 +1,18 @@
+import Cookies from 'js-cookie'
+
 export const isAuth = () => {
-  return window.localStorage.getItem("token") != null;
+  return Cookies.get("token") != undefined;
 };
 
 export const getToken = () => {
-  return isAuth() ? window.localStorage.getItem("token") : "";
+  return isAuth() ? Cookies.get("token") : "";
 };
 
 
 export const setToken = (token) => {
-  window.localStorage.setItem("token", token);
+  Cookies.set("token", token);
 };
 
 export const removeToken = () => {
-  window.localStorage.removeItem("token");
+  Cookies.remove("token");
 };

@@ -38,6 +38,7 @@ class CustomNavigation extends React.Component {
 			iframeContextMenuY: 0,
 
 			usuarioModuleOpen: false,
+			minhaEquipeModuleOpen: false,
 		}
 
 		this.handleIframeContextMenu = this.handleIframeContextMenu.bind(this);
@@ -61,6 +62,8 @@ class CustomNavigation extends React.Component {
 			this.setState({iframeListOpen: true});
 		if (this.props.location.pathname.startsWith("/usuarios"))
 			this.setState({usuarioModuleOpen: true});
+		if (this.props.location.pathname.startsWith("/minha-equipe"))
+			this.setState({minhaEquipeModuleOpen: true});
 	}
 
 	handleIframeContextMenu(iframe, event) {
@@ -171,6 +174,31 @@ class CustomNavigation extends React.Component {
 													</List>
 												</Collapse>
 											</List>) : <Box width="100%" display="flex" justifyContent="center" m={3}><CircularProgress/></Box>}
+										</List>
+									</Collapse>
+								</React.Fragment> : ""}
+								{this.props.usuario.permissaoList.includes("Equipe.Read.All") ?
+								<React.Fragment>
+									<ListItemButton onClick={() => this.setState({minhaEquipeModuleOpen: !this.state.minhaEquipeModuleOpen})}>
+										<ListItemIcon>
+											<Icon>groups</Icon>
+										</ListItemIcon>
+										<ListItemText primary={"Minha Equipe"} sx={{wordBreak: "break-all"}}/>
+										{this.state.minhaEquipeModuleOpen ? <ExpandLess /> : <ExpandMore />}
+									</ListItemButton>
+									<Collapse in={this.state.minhaEquipeModuleOpen}>
+										<List component="div" disablePadding>
+											{this.props.minhaEquipeList !== null ?
+												this.props.minhaEquipeList.map((equipe) => <ListItem disablePadding key={equipe.equipeId}>
+													<ListItemButton onClick={() => {this.props.navigate(`minha-equipe/${equipe.equipeId}`)}} sx={{ pl: 3 }}
+														selected={this.props.location.pathname == `/minha-equipe/${equipe.equipeId}`}
+														>
+														<ListItemIcon>
+															<Icon sx={{ color: "red"}}>groups</Icon>
+														</ListItemIcon>
+														<ListItemText primary={equipe.nome}/>
+													</ListItemButton>
+												</ListItem>)  : <Box width="100%" display="flex" justifyContent="center" m={3}><CircularProgress/></Box>}
 										</List>
 									</Collapse>
 								</React.Fragment> : ""}

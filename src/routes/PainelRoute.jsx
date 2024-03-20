@@ -18,6 +18,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 const IframesModule = React.lazy(() => import('../modules/IframesModule'));
 const UsuariosModule = React.lazy(() => import('../modules/UsuariosModule'));
 const CreateEditUsuarioModule = React.lazy(() => import('../modules/CreateEditUsuarioModule'));
+const MinhaEquipeModule = React.lazy(() => import('../modules/MinhaEquipeModule'));
 
 const RegistroPontoModule = React.lazy(() => import('../modules/RegistroPontoModule'));
 
@@ -29,16 +30,25 @@ const CreateEditUsuarioModuleWrapper = () => {
   return <CreateEditUsuarioModule key={usuarioId} />
 };
 
+const MinhaEquipeModuleWrapper = () => {
+  const {equipeId} = useParams();
+
+  return <MinhaEquipeModule key={equipeId} />
+};
+
 class PainelRoute extends React.Component {
 
 	constructor(props) {
 		super(props);
 		this.state = {
+			isAuth: false,
 			usuario: null,
 
 			iframeCategoryList: null,
 			iframeCategoryByPath: null,
 			iframeByPath: null,
+
+			minhaEquipeList: null,
 
 			fullscreen: false,
 
@@ -49,6 +59,7 @@ class PainelRoute extends React.Component {
 
 		this.getUsuarioFromApi = this.getUsuarioFromApi.bind(this);
 		this.getIframeCategoryListFromApi = this.getIframeCategoryListFromApi.bind(this);
+		this.getMinhaEquipeListFromApi = this.getMinhaEquipeListFromApi.bind(this);
 
 		this.logout = this.logout.bind(this);
 
@@ -68,9 +79,11 @@ class PainelRoute extends React.Component {
 	getUsuarioFromApi() {
 		api.get("/usuario/me")
 			.then((response) => {
-				this.setState({usuario: response.data});
+				this.setState({isAuth: true, usuario: response.data});
 				if (response.data.permissaoList.includes("Iframe.Read.All"))
 					this.getIframeCategoryListFromApi();
+				if (response.data.permissaoList.includes("Equipe.Read.All"))
+					this.getMinhaEquipeListFromApi();
 			})
 			.catch((err) => {
 				setTimeout(this.getUsuarioFromApi, 3000);
@@ -98,6 +111,16 @@ class PainelRoute extends React.Component {
 			})
 			.catch((err) => {
 				setTimeout(this.getIframeCategoryListFromApi, 3000);
+			});
+	}
+
+	getMinhaEquipeListFromApi() {
+		api.get("/usuario/me/minha-equipe")
+			.then((response) => {
+				this.setState({minhaEquipeList: response.data});
+			})
+			.catch((err) => {
+				setTimeout(this.getMinhaEquipeListFromApi, 3000);
 			});
 	}
 
@@ -207,12 +230,17 @@ class PainelRoute extends React.Component {
 	}
 
 	render() {
-	
+
+		if (!this.state.isAuth)
+			return <Backdrop sx={{color: "primary.main"}} open={true}>
+						<CircularProgress color="inherit"/>
+					</Backdrop>
+
 		return <React.Fragment>
 		<Box className="painelBox" sx={{height: "100dvh"}}>
 			<CustomAppBar usuario={this.state.usuario} usuarioFotoPerfil={this.state.usuarioFotoPerfil} toggleMenu={this.toggleMenu} logout={this.logout} fullscreen={this.state.fullscreen} toggleFullscreen={this.toggleFullscreen} notificationsGranted={this.state.notificationsGranted} requestNotificationsPermission={this.requestNotificationsPermission}/>
 			<Box sx={{display: "flex", flexGrow: 1, flexDirection: "row", overflow: "hidden"}}>
-				<CustomNavigation menuOpen={this.state.menuOpen} toggleMenu={this.toggleMenu} usuario={this.state.usuario} iframeCategoryList={this.state.iframeCategoryList} toggleIframeCategory={this.toggleIframeCategory} closeIframe={this.closeIframe}/>
+				<CustomNavigation menuOpen={this.state.menuOpen} toggleMenu={this.toggleMenu} usuario={this.state.usuario} iframeCategoryList={this.state.iframeCategoryList} minhaEquipeList={this.state.minhaEquipeList} toggleIframeCategory={this.toggleIframeCategory} closeIframe={this.closeIframe}/>
 				<Box sx={{flexGrow: 1, height: "100%", overflow: "auto"}}>
 					<Suspense fallback={<Backdrop sx={{color: "primary.main"}} open={true}>
 											<CircularProgress color="inherit"/>
@@ -223,6 +251,7 @@ class PainelRoute extends React.Component {
 								{this.state.usuario !== null && this.state.usuario.permissaoList.includes("Usuario.Read.All") ? <Route path="/usuarios/" element={<UsuariosModule usuario={this.state.usuario}/>} /> : null}
 								{this.state.usuario !== null && this.state.usuario.permissaoList.includes("Usuario.Read.All") ? <Route path="/usuarios/:usuarioId" element={<CreateEditUsuarioModuleWrapper/>} /> : null}
 								{this.state.usuario !== null && this.state.usuario.permissaoList.includes("Ponto.Read.All") ? <Route path="/registro-ponto/" element={<RegistroPontoModule usuario={this.state.usuario}/>} /> : null}
+								{this.state.usuario !== null && this.state.usuario.permissaoList.includes("Equipe.Read.All") ? <Route path="/minha-equipe/:equipeId" element={<MinhaEquipeModuleWrapper/>} /> : null}
 							</Routes>
 					</Suspense>
 				</Box>

@@ -46,6 +46,7 @@ import EmailIcon from '@mui/icons-material/Email';
 import NumbersIcon from '@mui/icons-material/Numbers';
 import SmartphoneIcon from '@mui/icons-material/Smartphone';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
+import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 
 import dayjs from 'dayjs';
 
@@ -69,8 +70,8 @@ class CreateEditUsuarioModule extends React.Component {
 			contratoByContratoId: null,
 			departamentoList: null,
 			departamentoByDepartamentoId: null,
-			jornadaList: null,
-			jornadaByJornadaId: null,
+			equipeList: null,
+			equipeListByEquipeId: null,
 
 			usuarioId: "",
 			nome: "",
@@ -88,7 +89,10 @@ class CreateEditUsuarioModule extends React.Component {
 			cargoId: null,
 			contratoId: null,
 			departamentoId: null,
-			jornadaId: null,
+			jornadaEntrada: null,
+			jornadaIntervaloInicio: null,
+			jornadaIntervaloFim: null,
+			jornadaSaida: null,
 
 			showSenha: false,
 
@@ -108,7 +112,7 @@ class CreateEditUsuarioModule extends React.Component {
 		this.getCargoListFromApi = this.getCargoListFromApi.bind(this);
 		this.getContratoListFromApi = this.getContratoListFromApi.bind(this);
 		this.getDepartamentoListFromApi = this.getDepartamentoListFromApi.bind(this);
-		this.getJornadaListFromApi = this.getJornadaListFromApi.bind(this);
+		this.getEquipeListFromApi = this.getEquipeListFromApi.bind(this);
 
 		this.saveUsuario = this.saveUsuario.bind(this);
 		this.patchUsuario = this.patchUsuario.bind(this);
@@ -127,7 +131,7 @@ class CreateEditUsuarioModule extends React.Component {
 		this.getCargoListFromApi();
 		this.getContratoListFromApi();
 		this.getDepartamentoListFromApi();
-		this.getJornadaListFromApi();
+		this.getEquipeListFromApi();
 		if (this.props.searchParams.get("novo") !== null) {
 			this.openAlert("success", 'Usuário criado com sucesso!');
 		}
@@ -165,7 +169,11 @@ class CreateEditUsuarioModule extends React.Component {
 					cargoId: usuario.cargoId,
 					contratoId: usuario.contratoId,
 					departamentoId: usuario.departamentoId,
-					jornadaId: usuario.jornadaId,
+					equipeId: usuario.equipeId,
+					jornadaEntrada: usuario.jornada !== null ? dayjs(usuario.jornada.entrada, "HH:mm:ss") : null,
+					jornadaIntervaloInicio: usuario.jornada !== null ? dayjs(usuario.jornada.intervaloInicio, "HH:mm:ss") : null,
+					jornadaIntervaloFim: usuario.jornada !== null ? dayjs(usuario.jornada.intervaloFim, "HH:mm:ss") : null,
+					jornadaSaida: usuario.jornada !== null ? dayjs(usuario.jornada.saida, "HH:mm:ss") : null,
 					calling: false});
 			})
 			.catch((err) => {
@@ -230,17 +238,17 @@ class CreateEditUsuarioModule extends React.Component {
 			});
 	}
 
-	getJornadaListFromApi() {
-		api.get("/empresa/me/jornada")
+	getEquipeListFromApi() {
+		api.get("/empresa/me/equipe")
 			.then((response) => {
-				let jornadaList = response.data;
-				let jornadaByJornadaId = {};
-				jornadaList.forEach((jornada) => jornadaByJornadaId[jornada.jornadaId] = jornada);
-				this.setState({jornadaList: jornadaList, jornadaByJornadaId: jornadaByJornadaId});
+				let equipeList = response.data;
+				let equipeByEquipeId = {};
+				equipeList.forEach((equipe) => equipeByEquipeId[equipe.equipeId] = equipe);
+				this.setState({equipeList: equipeList, equipeByEquipeId: equipeByEquipeId});
 			})
 			.catch((err) => {
 				console.log(err);
-				setTimeout(this.getJornadaListFromApi, 3000);
+				setTimeout(this.getEquipeListFromApi, 3000);
 			});
 	}
 
@@ -306,7 +314,13 @@ class CreateEditUsuarioModule extends React.Component {
 			cargoId: this.state.cargoId,
 			contratoId: this.state.contratoId,
 			departamentoId: this.state.departamentoId,
-			jornadaId: this.state.jornadaId,
+			equipeId: this.state.equipeId,
+			jornada: (this.state.jornadaEntrada == null && this.state.jornadaIntervaloInicio == null && this.state.jornadaIntervaloFim == null && this.state.jornadaSaida == null) ? null : {
+				entrada: this.state.jornadaEntrada !== null ? dayjs(this.state.jornadaEntrada).format("HH:mm:ss") : null,
+				intervaloInicio: this.state.jornadaIntervaloInicio !== null ? dayjs(this.state.jornadaIntervaloInicio).format("HH:mm:ss") : null,
+				intervaloFim: this.state.jornadaIntervaloFim !== null ? dayjs(this.state.jornadaIntervaloFim).format("HH:mm:ss") : null,
+				saida: this.state.jornadaSaida !== null ? dayjs(this.state.jornadaSaida).format("HH:mm:ss") : null
+			},
 		};
 
 		if (this.state.senha != "") {
@@ -374,7 +388,13 @@ class CreateEditUsuarioModule extends React.Component {
 							<LoadingButton variant="contained" size="large" startIcon={<SaveIcon />} loadingPosition="start" loading={this.state.saving} disabled={this.state.calling} onClick={this.saveUsuario}>Salvar</LoadingButton>
 					</ButtonGroup>
 					<Box sx={{ flexGrow: 1 }}>
-						{((!this.state.createMode && this.state.usuario == null) || this.state.papelList == null || this.state.cargoList == null || this.state.contratoList == null || this.state.departamentoList == null || this.state.jornadaList == null) ? <Box width="100%" display="flex" justifyContent="center" m={3}><CircularProgress/></Box> :
+						{((!this.state.createMode && this.state.usuario == null) ||
+							this.state.papelList == null ||
+							this.state.cargoList == null ||
+							this.state.contratoList == null ||
+							this.state.departamentoList == null ||
+							this.state.equipeList == null
+							) ? <Box width="100%" display="flex" justifyContent="center" m={3}><CircularProgress/></Box> :
 						<Grid container spacing={3} sx={{margin: 0}}>
 							<Grid item xs>
 								<Stack gap={1} justifyContent="center" alignItems="center">
@@ -568,7 +588,7 @@ class CreateEditUsuarioModule extends React.Component {
 												disabled={this.state.calling}
 											/>
 										</Grid>
-										<Grid item xs={3}>
+										<Grid item xs={4}>
 											<FormControl fullWidth>
 												<InputLabel>Departamento</InputLabel>
 												<Select
@@ -582,7 +602,7 @@ class CreateEditUsuarioModule extends React.Component {
 												</Select>
 											</FormControl>
 										</Grid>
-										<Grid item xs={3}>
+										<Grid item xs={4}>
 											<FormControl fullWidth>
 												<InputLabel>Cargo</InputLabel>
 												<Select
@@ -596,7 +616,21 @@ class CreateEditUsuarioModule extends React.Component {
 												</Select>
 											</FormControl>
 										</Grid>
-										<Grid item xs={3}>
+										<Grid item xs={4}>
+											<FormControl fullWidth>
+												<InputLabel>Equipe</InputLabel>
+												<Select
+													id="equipe"
+													value={this.state.equipeId}
+													label="Departamento"
+													onChange={(e) => this.setState({equipeId: e.target.value})}
+													>
+													<MenuItem key={"nenhum"} value={null}>Nenhum</MenuItem>
+													{this.state.equipeList.map((equipe) => <MenuItem key={equipe.equipeId} value={equipe.equipeId}>{equipe.nome}</MenuItem>)}
+												</Select>
+											</FormControl>
+										</Grid>
+										<Grid item xs={2}>
 											<FormControl fullWidth>
 												<InputLabel>Contrato</InputLabel>
 												<Select
@@ -610,19 +644,79 @@ class CreateEditUsuarioModule extends React.Component {
 												</Select>
 											</FormControl>
 										</Grid>
-										<Grid item xs={3}>
-											<FormControl fullWidth>
-												<InputLabel>Jornada</InputLabel>
-												<Select
-													id="jornada"
-													value={this.state.jornadaId}
-													label="Jornada"
-													onChange={(e) => this.setState({jornadaId: e.target.value})}
-													>
-													<MenuItem key={"nenhum"} value={null}>Nenhum</MenuItem>
-													{this.state.jornadaList.map((jornada) => <MenuItem key={jornada.jornadaId} value={jornada.jornadaId}>{`${jornada.entrada.substr(0,5)} - ${jornada.intervaloInicio.substr(0,5)} - ${jornada.intervaloFim.substr(0,5)} - ${jornada.saida.substr(0,5)}`}</MenuItem>)}
-												</Select>
-											</FormControl>
+										<Grid container item xs={10} spacing={3}>
+											<Grid container item xs={3}>
+												<TimePicker
+													id="jornada-entrada"
+													value={this.state.jornadaEntrada}
+													onChange={(newValue) => this.setState({jornadaEntrada: newValue})}
+													label="Entrada"
+													slotProps={{
+														field: { clearable: true },
+														textField: {
+															fullWidth: true,
+															error: "jornada.entrada" in this.state.errors || "jornada.jornadaOrderValid" in this.state.errors,
+															helperText: "jornada.entrada" in this.state.errors ? this.state.errors["jornada.entrada"] : "jornada.jornadaOrderValid" in this.state.errors ? this.state.errors["jornada.jornadaOrderValid"] : ""
+														},
+													}}
+													variant="outlined"
+													disabled={this.state.calling}
+												/>
+											</Grid>
+											<Grid container item xs={3}>
+												<TimePicker
+													id="jornada-intervalo-inicio"
+													value={this.state.jornadaIntervaloInicio}
+													onChange={(newValue) => this.setState({jornadaIntervaloInicio: newValue})}
+													label="Início do Intervalo"
+													slotProps={{
+														field: { clearable: true },
+														textField: {
+															fullWidth: true,
+															error: "jornada.intervaloInicio" in this.state.errors,
+															helperText: "jornada.intervaloInicio" in this.state.errors ? this.state.errors["jornada.intervaloInicio"] : ""
+														},
+													}}
+													variant="outlined"
+													disabled={this.state.calling}
+												/>
+											</Grid>
+											<Grid container item xs={3}>
+												<TimePicker
+													id="jornada-intervalo-fim"
+													value={this.state.jornadaIntervaloFim}
+													onChange={(newValue) => this.setState({jornadaIntervaloFim: newValue})}
+													label="Fim do Intervalo"
+													slotProps={{
+														field: { clearable: true },
+														textField: {
+															fullWidth: true,
+															error: "jornada.intervaloFim" in this.state.errors,
+															helperText: "jornada.intervaloFim" in this.state.errors ? this.state.errors["jornada.intervaloFim"] : ""
+														},
+													}}
+													variant="outlined"
+													disabled={this.state.calling}
+												/>
+											</Grid>
+											<Grid container item xs={3}>
+												<TimePicker
+													id="jornada-saida"
+													value={this.state.jornadaSaida}
+													onChange={(newValue) => this.setState({jornadaSaida: newValue})}
+													label="Saída"
+													slotProps={{
+														field: { clearable: true },
+														textField: {
+															fullWidth: true,
+															error: "jornada.saida" in this.state.errors,
+															helperText: "jornada.saida" in this.state.errors ? this.state.errors["jornada.saida"] : ""
+														},
+													}}
+													variant="outlined"
+													disabled={this.state.calling}
+												/>
+											</Grid>
 										</Grid>
 										<Grid item xs={4}>
 											<TextField
