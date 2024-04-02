@@ -31,6 +31,8 @@ import NotificationsOffIcon from '@mui/icons-material/NotificationsOff';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 import ApartmentIcon from '@mui/icons-material/Apartment';
 
+const JornadaChip = React.lazy(() => import('./JornadaChip'));
+
 import api from "../services/api";
 
 import { useNavigate, useLocation } from "react-router-dom";
@@ -54,7 +56,7 @@ class CustomAppBar extends React.Component {
 	
 		return (
 		    <AppBar position="static" sx={{background: "black"}}>
-		        <Toolbar sx={{display: "flex", justifyContent: "space-between", gap: "10px"}}>
+		        <Toolbar sx={{display: "flex", justifyContent: "space-between", gap: "10px", overflow: "auto"}}>
 		        		<IconButton
 			            size="large"
 			            edge="start"
@@ -67,7 +69,12 @@ class CustomAppBar extends React.Component {
 			         </IconButton>
 		           	<Box sx={{display: "flex", flexGrow: 1, justifyContent: "left", alignItems: "center", gap: "10px", "&:hover": {cursor: "pointer"}}} onClick={() => {}}>
 	           			<Link to="/">
-		           			<img style={{width: "auto", height: "24px"}} src='/assets/image/UniSystem_Logo.png'/>
+           					<Box sx={{ display: { xs: 'none', md: 'block' } }}>
+		           				<img style={{width: "auto", height: "24px"}} src='/assets/image/UniSystem_Logo.png'/>
+		           			</Box>
+		           			<Box sx={{ display: { xs: 'block', md: 'none' } }}>
+		           				<img style={{width: "auto", height: "12px"}} src='/assets/image/UniSystem_Logo.png'/>
+		           			</Box>
 		           		</Link>
 		           	</Box>
 		           	{this.props.usuario !== null && this.props.usuario.permissaoList.includes("Iframe.Read.All") && this.props.location.pathname.startsWith("/i/") ? <React.Fragment>
@@ -94,6 +101,7 @@ class CustomAppBar extends React.Component {
 				        	<Icon>{this.props.fullscreen ? "fullscreen_exit" : "fullscreen"}</Icon>
 			      		</IconButton></span>
 			      	</Tooltip>
+			      	{this.props.usuario !==null && this.props.usuario.permissaoList.includes("Jornada.Read.All") ? <JornadaChip usuario={this.props.usuario}/> : ""}
 			      	<Chip
 			      		clickable
 			      		avatar={<Avatar src={this.props.usuario !== null ? api.defaults.baseURL + "/usuario/" + this.props.usuario.usuarioId + "/foto-perfil?versao=" + this.props.usuario.fotoPerfilVersao : ""}>{this.props.usuario !== null ? this.props.usuario.nome.charAt(0) : "?"}</Avatar>}
@@ -107,11 +115,11 @@ class CustomAppBar extends React.Component {
 				        onClose={() => this.setState({usuarioMenuOpen: false})}
 				        anchorOrigin={{
 				          vertical: 'bottom',
-				          horizontal: 'left',
+				          horizontal: 'right',
 				        }}
 				        transformOrigin={{
 				          vertical: 'top',
-				          horizontal: 'left',
+				          horizontal: 'right',
 				        }}
 				         PaperProps={{
 				         	sx: {width: "auto"}

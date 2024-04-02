@@ -7,7 +7,7 @@ import RestoreIcon from '@mui/icons-material/Restore';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 
-export default class CustomBottomNavigation extends React.Component {
+export default class CustomIframe extends React.Component {
 
 	constructor(props) {
 		super(props);

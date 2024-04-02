@@ -24,6 +24,8 @@ const RegistroPontoModule = React.lazy(() => import('../modules/RegistroPontoMod
 
 import { useNavigate, useLocation, useSearchParams, useParams } from "react-router-dom";
 
+import dayjs from 'dayjs';
+
 const CreateEditUsuarioModuleWrapper = () => {
   const {usuarioId} = useParams();
 
@@ -54,8 +56,12 @@ class PainelRoute extends React.Component {
 
 			notificationsGranted: undefined,
 
-			menuOpen: true,
+			menuOpen: false,
 		};
+
+		this.lastPing = null;
+		this.pingIntervalSeconds = 10;
+		
 
 		this.getUsuarioFromApi = this.getUsuarioFromApi.bind(this);
 		this.getIframeCategoryListFromApi = this.getIframeCategoryListFromApi.bind(this);
@@ -74,6 +80,8 @@ class PainelRoute extends React.Component {
 
 		this.getNotificationsStatus = this.getNotificationsStatus.bind(this);
 		this.requestNotificationsPermission = this.requestNotificationsPermission.bind(this);
+
+		this.ping = this.ping.bind(this);
 	}
 
 	getUsuarioFromApi() {
@@ -135,6 +143,11 @@ class PainelRoute extends React.Component {
 		//window.onbeforeunload = s => "";
 		//this.disableDefaultContextMenu();
 		this.getNotificationsStatus();
+		document.body.addEventListener('click', this.ping, true); 
+	}
+
+	componentWillUnmount() {
+		document.body.removeEventListener("click", this.ping, true);
 	}
 
 	componentDidUpdate(prevProps, prevState) {
@@ -227,6 +240,19 @@ class PainelRoute extends React.Component {
 				this.setState({notificationsGranted: false});
 			}
 		});
+	}
+
+	ping() {
+		if (this.state.usuario !== null) {
+			let now = dayjs();
+			if (this.lastPing == null || now.diff(this.lastPing, 'second') >= this.pingIntervalSeconds) {
+				this.lastPing = now;
+				api.post("/usuario/me/ping")
+					.catch((err) => {
+						console.log(err);
+					});
+			}
+		}
 	}
 
 	render() {

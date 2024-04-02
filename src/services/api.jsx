@@ -28,13 +28,17 @@ api.interceptors.response.use(
   (config) => config,
   (error) => {
     console.log(error);
-    if (error.response.status == 401 && error.config.redirect401) {
-      removeToken();
-      history.push("/login");
-      return new Promise(() => {});
-    } else if (error.response.status == 403 && error.config.redirect403) {
-      history.push("/");
-      return new Promise(() => {});
+    if ("response" in error) {
+
+      if (error.response.status == 401 && error.config.redirect401) {
+        removeToken();
+        history.push("/login");
+        return new Promise(() => {});
+      } else if (error.response.status == 403 && error.config.redirect403) {
+        history.push("/");
+        return new Promise(() => {});
+      }
+
     }
     
     return Promise.reject(error);
