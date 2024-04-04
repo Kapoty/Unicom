@@ -32,10 +32,10 @@ const CreateEditUsuarioModuleWrapper = () => {
   return <CreateEditUsuarioModule key={usuarioId} />
 };
 
-const MinhaEquipeModuleWrapper = () => {
+const MinhaEquipeModuleWrapper = (props) => {
   const {equipeId} = useParams();
 
-  return <MinhaEquipeModule key={equipeId} />
+  return <MinhaEquipeModule key={equipeId} {...props} />
 };
 
 class PainelRoute extends React.Component {
@@ -277,7 +277,7 @@ class PainelRoute extends React.Component {
 								{this.state.usuario !== null && this.state.usuario.permissaoList.includes("Usuario.Read.All") ? <Route path="/usuarios/" element={<UsuariosModule usuario={this.state.usuario}/>} /> : null}
 								{this.state.usuario !== null && this.state.usuario.permissaoList.includes("Usuario.Read.All") ? <Route path="/usuarios/:usuarioId" element={<CreateEditUsuarioModuleWrapper/>} /> : null}
 								{this.state.usuario !== null && this.state.usuario.permissaoList.includes("Ponto.Read.All") ? <Route path="/registro-ponto/" element={<RegistroPontoModule usuario={this.state.usuario}/>} /> : null}
-								{this.state.usuario !== null && this.state.usuario.permissaoList.includes("Equipe.Read.All") ? <Route path="/minha-equipe/:equipeId" element={<MinhaEquipeModuleWrapper/>} /> : null}
+								{this.state.usuario !== null && this.state.usuario.permissaoList.includes("Equipe.Read.All") ? <Route path="/minha-equipe/:equipeId" element={<MinhaEquipeModuleWrapper usuario={this.state.usuario}/>} /> : null}
 							</Routes>
 					</Suspense>
 				</Box>

@@ -68,6 +68,10 @@ export default class JornadaChip extends React.Component {
 			alterandoStatus: false,
 		}
 
+		this.usuarioId = "me";
+		if (!props.me)
+			this.usuarioId = this.props.usuarioId;
+
 		this.notifyAlertAusente = true;
 		this.notifyAusente = true;
 		this.notifyHoraExtra = false;
@@ -92,6 +96,7 @@ export default class JornadaChip extends React.Component {
 		this.toggleHoraExtraAuto = this.toggleHoraExtraAuto.bind(this);
 		this.imHere = this.imHere.bind(this);
 		this.handleAlterarStatus = this.handleAlterarStatus.bind(this);
+		this.openPopover = this.openPopover.bind(this);
 
 		this.handleNotifyAlertAusente = this.handleNotifyAlertAusente.bind(this);
 		this.handleNotifyAusente = this.handleNotifyAusente.bind(this);
@@ -113,20 +118,27 @@ export default class JornadaChip extends React.Component {
 		this.stopRefreshTimeout();
 	}
 
+	openPopover() {
+		this.setState({popoverOpen: true}, () => this.getUsuarioRegistroJornadaFromApi());
+	}
+
 	getUsuarioRegistroJornadaFromApi() {
 		this.stopRefreshTimeout();
 		this.setState({calling: true, error: null, refreshing: true});
-		api.get("/registro-jornada/me/hoje")
+		api.get(`/registro-jornada/${this.usuarioId}/hoje?completo=${this.state.popoverOpen ? "true" : "false"}`, {redirect403: false})
 			.then((response) => {
 				let registroJornada = response.data;
-				if (registroJornada.statusOptionList !== null && registroJornada.statusAtual !== null) {
+				if (registroJornada.statusOptionList !== null && registroJornada.statusAtual !== null && registroJornada.completo) {
 					registroJornada.statusOptionList = registroJornada.statusOptionList.filter((status) => {
 						if (status.jornadaStatusId == registroJornada.statusRegularId && !registroJornada.emHoraExtra ||
 							status.jornadaStatusId == registroJornada.statusHoraExtraId && registroJornada.emHoraExtra)
 							return 1;
 						if (status.jornadaStatusId == registroJornada.statusAtual.jornadaStatusId)
 							return 1;
-						return status.usuarioPodeAtivar;
+						if (this.props.me)
+							return status.usuarioPodeAtivar;
+						else
+							return status.supervisorPodeAtivar;
 					});
 					registroJornada.statusOptionList.sort((a, b) => {
 						return (b.jornadaStatusId == registroJornada.statusRegularId || b.jornadaStatusId == registroJornada.statusHoraExtraId) - (a.jornadaStatusId == registroJornada.statusRegularId || a.jornadaStatusId == registroJornada.statusHoraExtraId) ||
@@ -139,9 +151,9 @@ export default class JornadaChip extends React.Component {
 					calling: false,
 					refreshing: false,
 					lastSuccessRefreshTime: dayjs().format("HH:mm:ss"),
-					alertAusente: registroJornada.secondsToAusente !== -1 ? registroJornada.secondsToAusente <= this.alertAusenteSeconds : false,
+					alertAusente: this.props.me && registroJornada.secondsToAusente !== -1 ? registroJornada.secondsToAusente <= this.alertAusenteSeconds : false,
 				}, () => {
-					if (this.state.isAuth) {
+					if (this.state.isAuth && this.props.me) {
 						this.handleNotifyAlertAusente();
 						this.handleNotifyAusente();
 					}
@@ -149,9 +161,12 @@ export default class JornadaChip extends React.Component {
 				this.startRefreshTimeout();
 			})
 			.catch((err) => {
-				console.log(err);
+				if ("response" in err && err.response.status == 403) {
+					this.setState({registroJornada: null, calling: false, error: "Não permitido!", refreshing: false});
+					return;
+				}
 				let error = null;
-				if ("response" in err && "errors" in err.response.data) {
+				if ("response" in err && typeof err.response.data === "object" && "errors" in err.response.data) {
 					let errors = err.response.data.errors;
 					if ("contrato" in errors)
 						error = "Usuário sem contrato cadastrado!"
@@ -161,8 +176,7 @@ export default class JornadaChip extends React.Component {
 						error = "Usuário não registra ponto hoje!"
 					else
 						error = "Falha inesperada!"
-				}
-				else {
+				} else {
 					error = "O servidor não respondeu a solicitação!"
 				}
 				this.setState({registroJornada: null, calling: false, error: error, refreshing: false});
@@ -219,9 +233,9 @@ export default class JornadaChip extends React.Component {
 
 	logar() {
 		this.setState({logando: true})
-		api.post("/registro-jornada/me/logar", {
+		api.post(`/registro-jornada/${this.usuarioId}/logar`, {
 				token: getToken(),
-			})
+			}, {redirect403: false})
 			.then((response) => {
 				this.openAlert("success", "Logado com sucesso!");
 				this.getUsuarioRegistroJornadaFromApi();
@@ -238,9 +252,9 @@ export default class JornadaChip extends React.Component {
 
 	deslogar() {
 		this.setState({deslogando: true})
-		api.post("/registro-jornada/me/deslogar", {
+		api.post(`/registro-jornada/${this.usuarioId}/deslogar`, {
 				token: getToken(),
-			})
+			}, {redirect403: false})
 			.then((response) => {
 				this.openAlert("success", "Deslogado com sucesso!");
 				this.getUsuarioRegistroJornadaFromApi();
@@ -257,9 +271,9 @@ export default class JornadaChip extends React.Component {
 
 	iniciarHoraExtra() {
 		this.setState({iniciandoHoraExtra: true})
-		api.post("/registro-jornada/me/iniciar-hora-extra", {
+		api.post(`/registro-jornada/${this.usuarioId}/iniciar-hora-extra`, {
 				token: getToken(),
-			})
+			}, {redirect403: false})
 			.then((response) => {
 				this.openAlert("success", "Hora extra iniciada com sucesso!");
 				this.getUsuarioRegistroJornadaFromApi();
@@ -276,9 +290,9 @@ export default class JornadaChip extends React.Component {
 
 	toggleHoraExtraAuto() {
 		this.setState({togglingHoraExtraAuto: true})
-		api.post("/registro-jornada/me/toggle-hora-extra-auto", {
+		api.post(`/registro-jornada/${this.usuarioId}/toggle-hora-extra-auto`, {
 				token: getToken(),
-			})
+			}, {redirect403: false})
 			.then((response) => {
 				this.getUsuarioRegistroJornadaFromApi();
 			})
@@ -310,10 +324,10 @@ export default class JornadaChip extends React.Component {
 
 	handleAlterarStatus(e) {
 		this.setState({alterandoStatus: true})
-		api.post("/registro-jornada/me/alterar-status", {
+		api.post(`/registro-jornada/${this.usuarioId}/alterar-status`, {
 				token: getToken(),
 				jornadaStatusId: e.target.value,
-			})
+			}, {redirect403: false})
 			.then((response) => {
 				this.getUsuarioRegistroJornadaFromApi();
 				this.openAlert("success", "Status alterado!");
@@ -433,7 +447,7 @@ export default class JornadaChip extends React.Component {
 		      		}}
 		      		label={chipLabel}
 		      		ref={this.chipRef}
-		      		onClick={() => this.setState({popoverOpen: true})}
+		      		onClick={this.openPopover}
 		      	/>
 		      	<Popover
 					id="popover"
@@ -463,7 +477,7 @@ export default class JornadaChip extends React.Component {
 						{this.state.error ?
 						<Alert severity="error">{this.state.error}</Alert>
 						: ""}
-						{this.state.registroJornada !== null ? <React.Fragment>
+						{this.state.registroJornada !== null && this.state.registroJornada.completo ? <React.Fragment>
 							<Typography variant="caption" color={grey[600]} gutterBottom align="center">
 								última atualização às {this.state.lastSuccessRefreshTime}
 							</Typography>
@@ -495,11 +509,11 @@ export default class JornadaChip extends React.Component {
 											key={status.jornadaStatusId}
 											value={status.jornadaStatusId}
 											disabled={
-												(!this.state.registroJornada.statusAtual.usuarioPodeAtivar && this.state.registroJornada.statusAtual.jornadaStatusId != this.state.registroJornada.statusRegularId && this.state.registroJornada.statusAtual.jornadaStatusId != this.state.registroJornada.statusHoraExtraId) ||
-												(status.maxUso !==null && status.usos >= status.maxUso) ||
+												(!this.state.registroJornada.statusAtual.usuarioPodeAtivar && this.props.me) ||
+												(!this.state.registroJornada.statusAtual.supervisorPodeAtivar && !this.props.me && this.state.registroJornada.statusAtual.jornadaStatusId !== this.state.registroJornada.statusAusenteId) ||
+												(status.maxUso !==null && status.usos >= status.maxUso && this.props.me) ||
 												(status.jornadaStatusId == this.state.registroJornada.statusRegularId && this.state.registroJornada.emHoraExtra) ||
-												(status.jornadaStatusId == this.state.registroJornada.statusHoraExtraId && !this.state.registroJornada.emHoraExtra) ||
-												(!status.usuarioPodeAtivar && status.jornadaStatusId != this.state.registroJornada.statusRegularId && status.jornadaStatusId !=this.state.registroJornada.statusHoraExtraId)
+												(status.jornadaStatusId == this.state.registroJornada.statusHoraExtraId && !this.state.registroJornada.emHoraExtra)
 											}
 										>
 											{status.nome + ( (status.maxUso != null) ? ` (${status.usos}/${status.maxUso})`: "")}

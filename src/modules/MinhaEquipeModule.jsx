@@ -16,6 +16,16 @@ import LockIcon from '@mui/icons-material/Lock';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
 import Tooltip from '@mui/material/Tooltip';
 import ScheduleIcon from '@mui/icons-material/Schedule';
+import Avatar from '@mui/material/Avatar';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import PersonIcon from '@mui/icons-material/Person';
+import ListItem from '@mui/material/ListItem';
+import ListItemText from '@mui/material/ListItemText';
+import List from '@mui/material/List';
+import BadgeIcon from '@mui/icons-material/Badge';
+import Chip from '@mui/material/Chip';
+
+const JornadaChip = React.lazy(() => import('../components/JornadaChip'));
 
 import {isAuth, getToken, setToken, removeToken} from "../utils/pontoAuth"
 
@@ -70,7 +80,7 @@ class MinhaEquipeModule extends React.Component {
 				if (err.response.status == 404)
 					this.props.navigate("/")
 				else
-					setTimeout(this.getUsuarioFromApi, 3000);
+					setTimeout(this.getEquipeFromApi, 3000);
 			});
 	}
 
@@ -85,10 +95,30 @@ class MinhaEquipeModule extends React.Component {
 	render() {
 		return (
 			<React.Fragment>
-				<Paper elevation={3} sx={{flexGrow: 1, padding: 5, minHeight: "100%", minWidth: "900px", boxSizing: "border-box", display: "flex", flexDirection: "column", aligmItems: "center", justifyContent: "start"}} className="modulePaper">
-					<Box sx={{ flexGrow: 1 }}>
-						{JSON.stringify(this.state.equipe)}
-					</Box>
+				<Paper elevation={3} sx={{flexGrow: 1, padding: 5, minHeight: "100%", minWidth: "800px", boxSizing: "border-box", display: "flex", flexDirection: "column", aligmItems: "center", justifyContent: "start"}} className="modulePaper">
+					{this.state.equipe !== null ? <React.Fragment>
+						<Typography variant="h3" gutterBottom>
+							{this.state.equipe.nome}
+						</Typography>
+						<Box sx={{ flexWrap: "wrap", gap: 3, flexDirection: "row", display: "flex"}}>
+							<Paper sx={{display: "flex", width: "300px", alignItems: "center", boxSizing: "border-box", flexDirection: "column", padding: 3, gap: 1}}>
+								<Avatar variant="square" sx={{ width: "128px", height: "128px"}} src={this.state.equipe.supervisor.fotoPerfil ? api.defaults.baseURL + "/usuario/" + this.state.equipe.supervisor.usuarioId + "/foto-perfil?versao=" + this.state.equipe.supervisor.fotoPerfilVersao : ""}>{this.state.equipe.supervisor.nome.charAt(0)}</Avatar>
+								<Typography variant="h4">
+									{this.state.equipe.supervisor.nome}
+								</Typography>
+								<Chip label="Supervisor" color="success" />
+							</Paper>
+							{this.state.equipe.usuarioList.map(usuario =>
+								<Paper key={usuario.usuarioId} sx={{display: "flex", width: "300px", alignItems: "center", boxSizing: "border-box", flexDirection: "column", padding: 3, gap: 1}}>
+									<Avatar variant="square" sx={{ width: "128px", height: "128px"}} src={usuario.fotoPerfil ? api.defaults.baseURL + "/usuario/" + usuario.usuarioId + "/foto-perfil?versao=" + usuario.fotoPerfilVersao : ""}>{usuario.nome.charAt(0)}</Avatar>
+									<Typography variant="h4">
+										{usuario.nome}
+									</Typography>
+									<JornadaChip usuario={this.props.usuario} me={false} usuarioId={usuario.usuarioId}/>
+								</Paper>
+							)}
+						</Box>
+					</React.Fragment> : <Box width="100%" display="flex" justifyContent="center" m={3}><CircularProgress/></Box>}
 					<Collapse in={this.state.alertOpen}>
 						{this.state.alert}
 					</Collapse>

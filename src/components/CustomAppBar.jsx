@@ -101,7 +101,7 @@ class CustomAppBar extends React.Component {
 				        	<Icon>{this.props.fullscreen ? "fullscreen_exit" : "fullscreen"}</Icon>
 			      		</IconButton></span>
 			      	</Tooltip>
-			      	{this.props.usuario !==null && this.props.usuario.permissaoList.includes("Jornada.Read.All") ? <JornadaChip usuario={this.props.usuario}/> : ""}
+			      	{this.props.usuario !==null && this.props.usuario.permissaoList.includes("Jornada.Read.All") ? <JornadaChip usuario={this.props.usuario} me/> : ""}
 			      	<Chip
 			      		clickable
 			      		avatar={<Avatar src={this.props.usuario !== null ? api.defaults.baseURL + "/usuario/" + this.props.usuario.usuarioId + "/foto-perfil?versao=" + this.props.usuario.fotoPerfilVersao : ""}>{this.props.usuario !== null ? this.props.usuario.nome.charAt(0) : "?"}</Avatar>}
