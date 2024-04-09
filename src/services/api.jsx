@@ -27,7 +27,6 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (config) => config,
   (error) => {
-    console.log(error);
     if ("response" in error) {
 
       if (error.response.status == 401 && error.config.redirect401) {

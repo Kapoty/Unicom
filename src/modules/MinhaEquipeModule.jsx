@@ -26,6 +26,8 @@ import BadgeIcon from '@mui/icons-material/Badge';
 import Chip from '@mui/material/Chip';
 
 const JornadaChip = React.lazy(() => import('../components/JornadaChip'));
+const AlterarJornadaButton = React.lazy(() => import('../components/AlterarJornadaButton'));
+const RelatorioJornadaButton = React.lazy(() => import('../components/RelatorioJornadaButton'));
 
 import {isAuth, getToken, setToken, removeToken} from "../utils/pontoAuth"
 
@@ -101,7 +103,7 @@ class MinhaEquipeModule extends React.Component {
 							{this.state.equipe.nome}
 						</Typography>
 						<Box sx={{ flexWrap: "wrap", gap: 3, flexDirection: "row", display: "flex"}}>
-							<Paper sx={{display: "flex", width: "300px", alignItems: "center", boxSizing: "border-box", flexDirection: "column", padding: 3, gap: 1}}>
+							<Paper sx={{display: "flex", width: "300px", alignItems: "center", boxSizing: "border-box", flexDirection: "column", padding: 3, gap: 2}}>
 								<Avatar variant="square" sx={{ width: "128px", height: "128px"}} src={this.state.equipe.supervisor.fotoPerfil ? api.defaults.baseURL + "/usuario/" + this.state.equipe.supervisor.usuarioId + "/foto-perfil?versao=" + this.state.equipe.supervisor.fotoPerfilVersao : ""}>{this.state.equipe.supervisor.nome.charAt(0)}</Avatar>
 								<Typography variant="h4">
 									{this.state.equipe.supervisor.nome}
@@ -109,12 +111,14 @@ class MinhaEquipeModule extends React.Component {
 								<Chip label="Supervisor" color="success" />
 							</Paper>
 							{this.state.equipe.usuarioList.map(usuario =>
-								<Paper key={usuario.usuarioId} sx={{display: "flex", width: "300px", alignItems: "center", boxSizing: "border-box", flexDirection: "column", padding: 3, gap: 1}}>
+								<Paper key={usuario.usuarioId} sx={{display: "flex", width: "300px", alignItems: "center", boxSizing: "border-box", flexDirection: "column", padding: 3, gap: 2}}>
 									<Avatar variant="square" sx={{ width: "128px", height: "128px"}} src={usuario.fotoPerfil ? api.defaults.baseURL + "/usuario/" + usuario.usuarioId + "/foto-perfil?versao=" + usuario.fotoPerfilVersao : ""}>{usuario.nome.charAt(0)}</Avatar>
 									<Typography variant="h4">
 										{usuario.nome}
 									</Typography>
 									<JornadaChip usuario={this.props.usuario} me={false} usuarioId={usuario.usuarioId}/>
+									<AlterarJornadaButton usuarioId={usuario.usuarioId}/>
+									<RelatorioJornadaButton usuarioId={usuario.usuarioId}/>
 								</Paper>
 							)}
 						</Box>

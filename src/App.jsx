@@ -25,6 +25,7 @@ const theme = createTheme({
 	palette: {
 			mode: "dark",
 			primary: grey,
+			secondary: red,
 			background: {
 				 default: "#000000",
 				 paper: "#000000",
