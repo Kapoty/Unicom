@@ -448,9 +448,9 @@ export default class JornadaChip extends React.Component {
 		}
 		else {
 			chipColor = "#" + this.state.registroJornada.statusAtual.cor;
-			let duracao = dayjs.duration(this.state.registroJornada.statusAtual.duracao, 'seconds').format('HH:mm');
+			let duracao = dayjs.duration(this.state.registroJornada.statusAtual.duracao, 'seconds').format('HH[h]mm[m]');
 			if (this.state.registroJornada.statusAtual.maxDuracao !== null)
-				duracao = dayjs.duration(this.state.registroJornada.statusAtual.maxDuracao - this.state.registroJornada.statusAtual.duracao, 'seconds').format('HH:mm');
+				duracao = dayjs.duration(this.state.registroJornada.statusAtual.maxDuracao - this.state.registroJornada.statusAtual.duracao, 'seconds').format('HH[h]mm[m]');
 			chipLabel = <Stack gap={1} direction="row" justifyContent="center" alignItems="center">{duracao}<CircleIcon size={20} color="inherit"/></Stack>
 		}
 		
@@ -554,7 +554,7 @@ export default class JornadaChip extends React.Component {
 							<Divider/>
 							{(this.state.registroJornada.statusGroupedList !== null) ? this.state.registroJornada.statusGroupedList.map(status =>
 								<Typography key={status.jornadaStatusId}>
-									{status.nome}: {dayjs.duration(status.duracao, 'seconds').format('HH:mm')} {status.maxDuracao !== null && status.maxUso !== null && status.duracao > status.maxDuracao * status.maxUso ? ` (-${dayjs.duration(status.duracao - status.maxDuracao * status.maxUso, 'seconds').minutes()}m)` : ""}
+									{status.nome}: {dayjs.duration(status.duracao, 'seconds').format('HH[h]mm[m]')} {status.maxDuracao !== null && status.maxUso !== null && status.duracao > status.maxDuracao * status.maxUso ? ` (-${dayjs.duration(status.duracao - status.maxDuracao * status.maxUso, 'seconds').minutes()}m)` : ""}
 								</Typography>) : ""}
 						</React.Fragment> : ""}
 						{this.props.usuario !== null && this.props.usuario.permissaoList.includes("Jornada.Write.All") ?

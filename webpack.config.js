@@ -25,6 +25,10 @@ module.exports = {
                         "presets": [
                             "@babel/env",
                             "@babel/react"
+                        ],
+                        plugins: [
+                            ['@babel/plugin-transform-nullish-coalescing-operator'],
+                            ['@babel/plugin-transform-optional-chaining']
                         ]
                     }
                 }
