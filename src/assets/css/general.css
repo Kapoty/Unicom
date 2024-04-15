@@ -89,7 +89,7 @@ iframe {
 .folhaPonto .colaboradorInfo td {
 	position: relative;
 	height: 1cm;
-	border-bottom: 2px solid black;
+	border-bottom: 1px solid black;
 }
 
 .folhaPonto .colaboradorInfo td .name {
@@ -107,7 +107,7 @@ iframe {
 }
 
 .folhaPonto .dias, .folhaPonto .dias td, .folhaPonto .dias th, .folhaPonto .totais td {
-	border: 2px solid black;
+	border: 1px solid black;
 }
 
 .folhaPonto .dias {
@@ -124,7 +124,7 @@ iframe {
 }
 
 .folhaPonto .dias td {
-	line-height: 0.45cm;
+	line-height: 0.40cm;
 	font-size: 9pt;
 	text-align: center;
 }
@@ -143,7 +143,7 @@ iframe {
 	justify-content: space-around;
 	height: 1cm;
 	flex: 1;
-	border: 2px solid black;
+	border: 1px solid black;
 	flex-basis: fit-content;
 	font-size: 12pt;
 }
@@ -163,7 +163,7 @@ iframe {
 .folhaPonto .assinatura {
 	width: 50%;
 	text-align: center;
-	border-top: 2px solid black;
+	border-top: 1px solid black;
 	box-sizing: border-box;
 	padding-top: 3mm;
 	font-size: 12pt;

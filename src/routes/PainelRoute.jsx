@@ -7,6 +7,7 @@ import Config from "../config/Config";
 
 import api from "../services/api";
 import {removeToken} from "../utils/auth"
+import {isAuth as isPontoAuth, getToken as getPontoToken} from "../utils/pontoAuth"
 
 import Box from '@mui/material/Box';
 
@@ -243,11 +244,15 @@ class PainelRoute extends React.Component {
 	}
 
 	ping() {
+		if (!isPontoAuth())
+			return;
 		if (this.state.usuario !== null) {
 			let now = dayjs();
 			if (this.lastPing == null || now.diff(this.lastPing, 'second') >= this.pingIntervalSeconds) {
 				this.lastPing = now;
-				api.post("/usuario/me/ping")
+				api.post("/usuario/me/ping", {
+					token: getPontoToken()
+				})
 					.catch((err) => {
 						console.log(err);
 					});

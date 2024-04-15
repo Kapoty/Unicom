@@ -43,6 +43,7 @@ import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import CircularProgress from '@mui/material/CircularProgress';
 import Chip from '@mui/material/Chip';
+import ListItemIcon from '@mui/material/ListItemIcon';
 
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
@@ -98,6 +99,7 @@ export default class RelatorioJornadaButton extends React.Component {
 			horaExtraPermitida: null,
 			observacao: null,
 			ajusteHoraExtra: null,
+			aprovada: null,
 
 			horasNaoTrabalhadas: "",
 			horaExtra: "",
@@ -124,7 +126,7 @@ export default class RelatorioJornadaButton extends React.Component {
 			{ field: 'horaExtra', headerName: 'HORA EXTRA', minWidth: 100, flex: 1 },
 			{ field: 'observacao', headerName: 'OBSERVAÇÃO', minWidth: 300, flex: 1 },
 			{ field: 'correcao', headerName: 'CORREÇÃO', minWidth: 100, flex: 1, renderCell: (params) =>
-				<Chip label={params.value ? "Sim" : "Não"} color={params.value ? "success" : "error"} />,
+				<Chip label={params.value} color={params.value == "Aprovada" ? "success" : params.value == "Não Aprovada" ? "warning" : "error"} />,
 			},
 		];
 
@@ -175,6 +177,10 @@ export default class RelatorioJornadaButton extends React.Component {
 		this.observacaoByValue = {};
 		this.observacaoList.forEach((observacao) => this.observacaoByValue[observacao.value] = observacao);
 
+		this.usuarioId = this.props.usuario.usuarioId;
+		if (!props.me)
+			this.usuarioId = this.props.usuarioId;
+
 		this.getReportFromApi = this.getReportFromApi.bind(this);
 		this.saveCorrecao = this.saveCorrecao.bind(this);
 		this.addCorrecao = this.addCorrecao.bind(this);
@@ -185,6 +191,7 @@ export default class RelatorioJornadaButton extends React.Component {
 		this.calculateRows = this.calculateRows.bind(this);
 		this.setCorrecaoFieldsFromRowSelected = this.setCorrecaoFieldsFromRowSelected.bind(this);
 		this.calculateCorrecaoDerivedFields = this.calculateCorrecaoDerivedFields.bind(this);
+		this.openDialog = this.openDialog.bind(this);
 
 		this.folhaPontoRef = React.createRef();
 
@@ -216,7 +223,7 @@ export default class RelatorioJornadaButton extends React.Component {
 
 	getReportFromApi() {
 		this.setState({calling: true, generating: true, report: null, rowSelected: null});
-		api.post(`/registro-jornada/${this.props.usuarioId}/report`, {
+		api.post(`/registro-jornada/${this.usuarioId}/report`, {
 			ano: this.state.data.year(),
 			mes: this.state.data.month() + 1,
 		}, {redirect403: false})
@@ -235,7 +242,7 @@ export default class RelatorioJornadaButton extends React.Component {
 				console.log(err);
 				if ("response" in err && err.response.status == 403) {
 					this.openAlert("error", "Não permitido!");
-					this.setState({report: [], calling: false, generating: false});
+					this.setState({report: null, calling: false, generating: false});
 					return;
 				}
 				this.openAlert("error", "Falha ao gerar relatório!");
@@ -266,7 +273,7 @@ export default class RelatorioJornadaButton extends React.Component {
 				saida: "",
 				horaExtra: "",
 				observacao: "",
-				correcao: false
+				correcao: "Não"
 			};
 
 			let horaExtra = 0;
@@ -279,7 +286,11 @@ export default class RelatorioJornadaButton extends React.Component {
 			let horaExtraFinal = 0;
 			let diaTrabalhado = false;
 
-			if (day.registroJornadaCorrecao == null) {
+			if (day.registroJornadaCorrecao == null || !day.registroJornadaCorrecao.aprovada) {
+
+				if (day.registroJornadaCorrecao !== null)
+					dayRow.correcao = "Não Aprovada";
+
 				if (day.registroJornada !== null && day.entrada !== null) {
 
 					dayRow.entrada = dayjs(day.entrada, "HH:mm:ss").format('HH:mm');
@@ -314,7 +325,7 @@ export default class RelatorioJornadaButton extends React.Component {
 				}
 			} else {
 				dayRow.observacao = day.registroJornadaCorrecao.observacao !== null ? this.observacaoByValue[day.registroJornadaCorrecao.observacao].nome : "";
-				dayRow.correcao = true;
+				dayRow.correcao = "Aprovada";
 
 				if (day.registroJornadaCorrecao.entrada !== null && day.registroJornadaCorrecao.saida !== null) {
 					dayRow.entrada = dayjs(day.registroJornadaCorrecao.entrada, "HH:mm:ss").format('HH:mm');
@@ -424,6 +435,7 @@ export default class RelatorioJornadaButton extends React.Component {
 			horaExtraPermitida: registroJornadaCorrecao.horaExtraPermitida,
 			observacao: registroJornadaCorrecao.observacao !== null ? registroJornadaCorrecao.observacao : "",
 			ajusteHoraExtra: secondsToDuration(registroJornadaCorrecao.ajusteHoraExtra),
+			aprovada: registroJornadaCorrecao.aprovada,
 		}, () => {
 			this.calculateCorrecaoDerivedFields();
 		})
@@ -488,7 +500,7 @@ export default class RelatorioJornadaButton extends React.Component {
 
 	saveCorrecao() {
 		let data = {
-			usuarioId: this.props.usuarioId,
+			usuarioId: this.usuarioId,
 			data: this.state.rowSelected.data,
 			jornadaEntrada: this.state.jornadaEntrada !== null ? dayjs(this.state.jornadaEntrada).format("HH:mm:ss") : null,
 			jornadaIntervaloInicio: this.state.jornadaIntervaloInicio !== null ? dayjs(this.state.jornadaIntervaloInicio).format("HH:mm:ss") : null,
@@ -501,75 +513,76 @@ export default class RelatorioJornadaButton extends React.Component {
 			saida: this.state.saida !== null ? dayjs(this.state.saida).format("HH:mm:ss") : null,
 			horaExtraPermitida: this.state.horaExtraPermitida,
 			observacao: this.state.observacao != "" ? this.state.observacao : null,
-			ajusteHoraExtra: durationToSeconds(this.state.ajusteHoraExtra), 
+			ajusteHoraExtra: durationToSeconds(this.state.ajusteHoraExtra),
+			aprovada: this.state.aprovada,
 		};
 
 		this.setState({calling: true, saving: true});
-		api.patch(`/registro-jornada-correcao/patch-by-usuario-id-and-data`, data)
+		api.patch(`/registro-jornada-correcao/patch-by-usuario-id-and-data`, data, {redirect403: false})
 			.then((response) => {
 				this.openCorrecaoAlert("success", `Correção salva com sucesso!`);
 				this.getCorrecaoFromApi();
 				this.setState({calling: false, saving: false, errors: {}});
 			})
 			.catch((err) => {
-				let errors = {};
-				if ("response" in err && "errors" in err.response.data) {
+				let errors = err?.response?.data?.errors;
+				if (errors) {
 					errors = err.response.data.errors;
 					this.openCorrecaoAlert("error", "Falha ao salvar correção!");
 				}
 				else
 					this.openCorrecaoAlert("error", "Erro inesperado");
-				this.setState({calling: false, saving: false, errors: errors});
+				this.setState({calling: false, saving: false, errors: errors ?? {}});
 			})
 	}
 
 	addCorrecao() {
 		let data = {
-			usuarioId: this.props.usuarioId,
+			usuarioId: this.usuarioId,
 			data: this.state.rowSelected.data,
 		};
 
 		this.setState({calling: true, adicionando: true});
-		api.post(`/registro-jornada-correcao/create-by-usuario-id-and-data`, data)
+		api.post(`/registro-jornada-correcao/create-by-usuario-id-and-data`, data, {redirect403: false})
 			.then((response) => {
 				this.openCorrecaoAlert("success", `Correção adicionada com sucesso!`);
 				this.getCorrecaoFromApi();
 				this.setState({calling: false, adicionando: false, errors: {}});
 			})
 			.catch((err) => {
-				let errors = {};
-				if ("response" in err && "errors" in err.response.data) {
+				let errors = err?.response?.data?.errors;
+				if (errors) {
 					errors = err.response.data.errors;
 					this.openCorrecaoAlert("error", "Falha ao adicionar correção!");
 				}
 				else
 					this.openCorrecaoAlert("error", "Erro inesperado");
-				this.setState({calling: false, adicionando: false, errors: errors});
+				this.setState({calling: false, adicionando: false, errors: errors ?? {}});
 			})
 	}
 
 	deleteCorrecao() {
 		let data = {
-			usuarioId: this.props.usuarioId,
+			usuarioId: this.usuarioId,
 			data: this.state.rowSelected.data,
 		};
 
 		this.setState({calling: true, deletando: true});
-		api.post(`/registro-jornada-correcao/delete-by-usuario-id-and-data`, data)
+		api.post(`/registro-jornada-correcao/delete-by-usuario-id-and-data`, data, {redirect403: false})
 			.then((response) => {
 				this.openCorrecaoAlert("success", `Correção deletada com sucesso!`);
 				this.getCorrecaoFromApi();
 				this.setState({calling: false, deletando: false, errors: {}});
 			})
 			.catch((err) => {
-				let errors = {};
-				if ("response" in err && "errors" in err.response.data) {
+				let errors = err?.response?.data?.errors;
+				if (errors) {
 					errors = err.response.data.errors;
 					this.openCorrecaoAlert("error", "Falha ao deletar correção!");
 				}
 				else
 					this.openCorrecaoAlert("error", "Erro inesperado");
-				this.setState({calling: false, deletando: false, errors: errors});
+				this.setState({calling: false, deletando: false, errors: errors ?? {}});
 			})
 	}
 
@@ -578,7 +591,7 @@ export default class RelatorioJornadaButton extends React.Component {
 			return;
 		this.setState({calling: true});
 		api.post(`/registro-jornada-correcao/find-by-usuario-id-and-data`, {
-			usuarioId: this.props.usuarioId,
+			usuarioId: this.usuarioId,
 			data: this.state.rowSelected.data
 		}, {redirect403: false})
 			.then((response) => {
@@ -630,13 +643,28 @@ export default class RelatorioJornadaButton extends React.Component {
 		this.setState({correcaoAlertOpen: false});
 	}
 
+	openDialog() {
+		this.setState({
+			dialogOpen: true,
+			report: null,
+			rowSelected: null,
+		});
+	}
+
 	render() {
 	
 		return (
 			<React.Fragment>
-				<Button variant="contained" startIcon={<EventNoteIcon />} onClick={() => this.setState({dialogOpen: true, report: null, rowSelected: null})} fullWidth>
+				{this.props.me ?
+				<MenuItem onClick={this.openDialog}>
+					<ListItemIcon>
+						<EventNoteIcon fontSize="small"/>
+					</ListItemIcon>
 					Folha de Ponto
-				</Button>
+		        </MenuItem> :
+				<Button variant="contained" startIcon={<EventNoteIcon />} onClick={this.openDialog} fullWidth>
+					Folha de Ponto
+				</Button>}
 				{this.state.dialogOpen ? 
 				<Dialog
 					fullWidth={true}
@@ -836,74 +864,80 @@ export default class RelatorioJornadaButton extends React.Component {
 																		{status.nome}: {dayjs.duration(status.duracao, 'seconds').format('HH[h]mm[m]')} {status.maxDuracao !== null && status.maxUso !== null && status.duracao > status.maxDuracao * status.maxUso ? ` (-${dayjs.duration(status.duracao - status.maxDuracao * status.maxUso, 'seconds').minutes()}m)` : ""}
 																	</Typography>) : ""}
 																<Divider/>
-																<form onSubmit={(e) => e.preventDefault()} disabled={true}>
-																	<Grid container spacing={3}>
-																		<Grid item xs={6}>
-																			<TextField
-																				value={this.state.rowSelected.entrada !== null ? dayjs(this.state.rowSelected.entrada, "HH:mm:ss").format("HH:mm") : ""}
-																				fullWidth
-																				label="Entrada"
-																				variant="outlined"
-																			/>
-																		</Grid>
-																		<Grid item xs={6}>
-																			<TextField
-																				value={this.state.rowSelected.saida !== null ? dayjs(this.state.rowSelected.saida, "HH:mm:ss").format("HH:mm") : ""}
-																				fullWidth
-																				label="Saída"
-																				variant="outlined"
-																			/>
-																		</Grid>
-																		<Grid item xs={6}>
-																			<TextField
-																				value={dayjs.duration(this.state.rowSelected.horasATrabalhar, 'seconds').format("HH[h]mm[m]")}
-																				fullWidth
-																				label="Horas a Trabalhar"
-																				variant="outlined"
-																			/>
-																		</Grid>
-																		<Grid item xs={6}>
-																			<TextField
-																				value={dayjs.duration(this.state.rowSelected.horasTrabalhadas, 'seconds').format("HH[h]mm[m]")}
-																				fullWidth
-																				label="Horas Trabalhadas"
-																				variant="outlined"
-																			/>
-																		</Grid>
-																		<Grid item xs={6}>
-																			<TextField
-																				value={dayjs.duration(this.state.rowSelected.horasNaoTrabalhadas, 'seconds').format("HH[h]mm[m]")}
-																				fullWidth
-																				label="Intervalos"
-																				variant="outlined"
-																			/>
-																		</Grid>
-																		<Grid item xs={6}>
-																			<TextField
-																				value={dayjs.duration(this.state.rowSelected.horasTrabalhadas - this.state.rowSelected.horasATrabalhar, 'seconds').format("HH[h]mm[m]")}
-																				fullWidth
-																				label="Hora Extra"
-																				variant="outlined"
-																			/>
-																		</Grid>
-																		<Grid item xs={6}>
-																			<TextField
-																				value={this.state.rowSelected.registroJornada.contrato !== null ? this.state.rowSelected.registroJornada.contrato.nome : ""}
-																				fullWidth
-																				label="Contrato"
-																				variant="outlined"
-																			/>
-																		</Grid>
-																		<Grid item xs={6}>
-																			<TextField
-																				value={this.state.rowSelected.registroJornada.horaExtraPermitida ? "Sim" : "Não"}
-																				fullWidth
-																				label="Hora Extra Permitida"
-																				variant="outlined"
-																			/>
-																		</Grid>
+																<Grid container spacing={3}>
+																	<Grid item xs={6}>
+																		<TextField
+																			value={this.state.rowSelected.entrada !== null ? dayjs(this.state.rowSelected.entrada, "HH:mm:ss").format("HH:mm") : ""}
+																			fullWidth
+																			label="Entrada"
+																			variant="outlined"
+																			disabled
+																		/>
 																	</Grid>
-																</form>
+																	<Grid item xs={6}>
+																		<TextField
+																			value={this.state.rowSelected.saida !== null ? dayjs(this.state.rowSelected.saida, "HH:mm:ss").format("HH:mm") : ""}
+																			fullWidth
+																			label="Saída"
+																			variant="outlined"
+																			disabled
+																		/>
+																	</Grid>
+																	<Grid item xs={6}>
+																		<TextField
+																			value={dayjs.duration(this.state.rowSelected.horasATrabalhar, 'seconds').format("HH[h]mm[m]")}
+																			fullWidth
+																			label="Horas a Trabalhar"
+																			variant="outlined"
+																			disabled
+																		/>
+																	</Grid>
+																	<Grid item xs={6}>
+																		<TextField
+																			value={dayjs.duration(this.state.rowSelected.horasTrabalhadas, 'seconds').format("HH[h]mm[m]")}
+																			fullWidth
+																			label="Horas Trabalhadas"
+																			variant="outlined"
+																			disabled
+																		/>
+																	</Grid>
+																	<Grid item xs={6}>
+																		<TextField
+																			value={dayjs.duration(this.state.rowSelected.horasNaoTrabalhadas, 'seconds').format("HH[h]mm[m]")}
+																			fullWidth
+																			label="Intervalos"
+																			variant="outlined"
+																			disabled
+																		/>
+																	</Grid>
+																	<Grid item xs={6}>
+																		<TextField
+																			value={dayjs.duration(this.state.rowSelected.horasTrabalhadas - this.state.rowSelected.horasATrabalhar, 'seconds').format("HH[h]mm[m]")}
+																			fullWidth
+																			label="Hora Extra"
+																			variant="outlined"
+																			disabled
+																		/>
+																	</Grid>
+																	<Grid item xs={6}>
+																		<TextField
+																			value={this.state.rowSelected.registroJornada.contrato !== null ? this.state.rowSelected.registroJornada.contrato.nome : ""}
+																			fullWidth
+																			label="Contrato"
+																			variant="outlined"
+																			disabled
+																		/>
+																	</Grid>
+																	<Grid item xs={6}>
+																		<TextField
+																			value={this.state.rowSelected.registroJornada.horaExtraPermitida ? "Sim" : "Não"}
+																			fullWidth
+																			label="Hora Extra Permitida"
+																			variant="outlined"
+																			disabled
+																		/>
+																	</Grid>
+																</Grid>
 															</Paper>
 														}
 													</Box>
@@ -920,8 +954,8 @@ export default class RelatorioJornadaButton extends React.Component {
 																<Grid container spacing={3}>
 																	<Grid item xs={12}>
 																		<ButtonGroup sx={{marginBottom: 3}}>
-																			<LoadingButton variant="contained" color="error" size="large" startIcon={<DeleteIcon />} loadingPosition="start" loading={this.state.deletando} disabled={this.state.calling} onClick={this.deleteCorrecao}>Deletar</LoadingButton>
-																			<LoadingButton variant="contained" size="large" startIcon={<SaveIcon />} loadingPosition="start" loading={this.state.saving} disabled={this.state.calling} onClick={this.saveCorrecao}>Salvar</LoadingButton>
+																			<LoadingButton variant="contained" color="error" size="large" startIcon={<DeleteIcon />} loadingPosition="start" loading={this.state.deletando} disabled={(this.state.aprovada && this.props.me) || this.state.calling} onClick={this.deleteCorrecao}>Deletar</LoadingButton>
+																			<LoadingButton variant="contained" size="large" startIcon={<SaveIcon />} loadingPosition="start" loading={this.state.saving} disabled={(this.state.aprovada && this.props.me) || this.state.calling} onClick={this.saveCorrecao}>Salvar</LoadingButton>
 																		</ButtonGroup>
 																	</Grid>
 																	<Grid item xs={6}>
@@ -938,7 +972,7 @@ export default class RelatorioJornadaButton extends React.Component {
 																				},
 																			}}
 																			variant="outlined"
-																			disabled={this.state.calling}
+																			disabled={(this.state.aprovada && this.props.me) || this.state.calling}
 																		/>
 																	</Grid>
 																	<Grid item xs={6}>
@@ -955,7 +989,7 @@ export default class RelatorioJornadaButton extends React.Component {
 																				},
 																			}}
 																			variant="outlined"
-																			disabled={this.state.calling}
+																			disabled={(this.state.aprovada && this.props.me) || this.state.calling}
 																		/>
 																	</Grid>
 																	<Grid item xs={6}>
@@ -972,7 +1006,7 @@ export default class RelatorioJornadaButton extends React.Component {
 																				},
 																			}}
 																			variant="outlined"
-																			disabled={this.state.calling}
+																			disabled={(this.state.aprovada && this.props.me) || this.state.calling}
 																		/>
 																	</Grid>
 																	<Grid item xs={6}>
@@ -989,7 +1023,7 @@ export default class RelatorioJornadaButton extends React.Component {
 																				},
 																			}}
 																			variant="outlined"
-																			disabled={this.state.calling}
+																			disabled={(this.state.aprovada && this.props.me) || this.state.calling}
 																		/>
 																	</Grid>
 																	<Grid item xs={6}>
@@ -1007,7 +1041,7 @@ export default class RelatorioJornadaButton extends React.Component {
 																				},
 																			}}
 																			variant="outlined"
-																			disabled={this.state.calling}
+																			disabled={(this.state.aprovada && this.props.me) || this.state.calling}
 																		/>
 																	</Grid>
 																	<Grid item xs={6}>
@@ -1025,7 +1059,7 @@ export default class RelatorioJornadaButton extends React.Component {
 																				},
 																			}}
 																			variant="outlined"
-																			disabled={this.state.calling}
+																			disabled={(this.state.aprovada && this.props.me) || this.state.calling}
 																		/>
 																	</Grid>
 																	<Grid item xs={6}>
@@ -1048,7 +1082,7 @@ export default class RelatorioJornadaButton extends React.Component {
 																			error={"horasTrabalhadas" in this.state.errors}
 																			helperText={"horasTrabalhadas" in this.state.errors ? this.state.errors["horasTrabalhadas"] : ""}
 																			variant="outlined"
-																			disabled={this.state.calling}
+																			disabled={(this.state.aprovada && this.props.me) || this.state.calling}
 																		/>
 																	</Grid>
 																	<Grid item xs={6}>
@@ -1080,6 +1114,7 @@ export default class RelatorioJornadaButton extends React.Component {
 																					value={this.state.contratoId != null ? this.state.contratoId : ""}
 																					label="Contrato"
 																					onChange={(e) => this.setState({contratoId: e.target.value})}
+																					disabled={(this.state.aprovada && this.props.me) || this.state.calling}
 																					>
 																					<MenuItem value="">Nenhum</MenuItem>
 																					{this.state.contratoList.map((contrato) => <MenuItem key={contrato.contratoId} value={contrato.contratoId}>{contrato.nome}</MenuItem>)}
@@ -1089,7 +1124,7 @@ export default class RelatorioJornadaButton extends React.Component {
 																	</Grid>
 																	<Grid item xs={6}>
 																		<FormGroup>
-																			<FormControlLabel sx={{justifyContent: "center"}} control={<Switch checked={this.state.horaExtraPermitida} disabled={this.state.calling} onClick={(e) => this.setState({horaExtraPermitida: e.target.checked})} color="warning"/>} label="Hora Extra Permitida" />
+																			<FormControlLabel sx={{justifyContent: "center"}} control={<Switch checked={this.state.horaExtraPermitida} disabled={(this.state.aprovada && this.props.me) || this.state.calling} onClick={(e) => this.setState({horaExtraPermitida: e.target.checked})} color="warning"/>} label="Hora Extra Permitida" />
 																		</FormGroup>
 																	</Grid>
 																	<Grid item xs={6}>
@@ -1100,6 +1135,7 @@ export default class RelatorioJornadaButton extends React.Component {
 																				value={this.state.observacao != null ? this.state.observacao : ""}
 																				label="Observação"
 																				onChange={(e) => this.setState({observacao: e.target.value})}
+																				disabled={(this.state.aprovada && this.props.me) || this.state.calling}
 																				>
 																				<MenuItem value="">Nenhuma</MenuItem>
 																				{this.observacaoList.map((observacao) => <MenuItem key={observacao.value} value={observacao.value}>{observacao.nome}</MenuItem>)}
@@ -1117,6 +1153,7 @@ export default class RelatorioJornadaButton extends React.Component {
 																			sx={{visibility: !(this.state.calling || this.state.observacao == "" || (this.state.observacao !== null && !this.observacaoByValue[this.state.observacao].ajusteHoraExtra)) ? "visible" : "hidden"}}
 																			error={"ajusteHoraExtra" in this.state.errors}
 																			helperText={"ajusteHoraExtra" in this.state.errors ? this.state.errors["ajusteHoraExtra"] : ""}
+																			disabled={(this.state.aprovada && this.props.me) || this.state.calling}
 																		/>
 																	</Grid>
 																	<Grid item xs={12}>
@@ -1128,10 +1165,15 @@ export default class RelatorioJornadaButton extends React.Component {
 																			multiline
 																			label="Justificativa"
 																			variant="outlined"
-																			disabled={this.state.calling}
 																			error={"justificativa" in this.state.errors}
 																			helperText={"justificativa" in this.state.errors ? this.state.errors["justificativa"] : ""}
+																			disabled={(this.state.aprovada && this.props.me) || this.state.calling}
 																		/>
+																	</Grid>
+																	<Grid item xs={12}>
+																		<FormGroup>
+																			<FormControlLabel sx={{justifyContent: "center"}} control={<Switch checked={this.state.aprovada} disabled={this.props.me || this.state.calling} onClick={(e) => this.setState({aprovada: e.target.checked})} color="warning"/>} label="Aprovada" />
+																		</FormGroup>
 																	</Grid>
 																</Grid>
 															</React.Fragment>}
@@ -1147,35 +1189,35 @@ export default class RelatorioJornadaButton extends React.Component {
 									{this.state.report !== null ?
 									<Box ref={this.folhaPontoRef} className="folhaPonto">
 										<img src="/assets/image/folha_ponto_logo.png" style={{width: "6cm"}}/>
-										<h1 style={{fontWeight: "bold", margin: "3mm 0 3mm 0", textAlign: "center"}}>
+										<h3 style={{fontWeight: "bold", margin: "3mm 0 3mm 0", textAlign: "center"}}>
 											FOLHA DE PONTO - PERÍODO: {this.meses[this.state.report.mes - 1].toUpperCase()}/{this.state.report.ano}
-										</h1>
+										</h3>
 										<span style={{marginBottom: "1mm", fontWeight: "bold", fontSize: "12pt"}}>
 											Colaborador(a)
 										</span>
-										<table class="colaboradorInfo">
+										<table className="colaboradorInfo">
 											<tr>
 												<td>
-													<span class="name">Nome</span>
-													<span class="value">{this.state.report.usuario.nome}</span>
+													<span className="name">Nome</span>
+													<span className="value">{this.state.report.usuario.nome}</span>
 												</td>
 												<td>
-													<span class="name">CPF</span>
-													<span class="value">{this.state.report.usuario.cpf ?? ""}</span>
+													<span className="name">CPF</span>
+													<span className="value">{this.state.report.usuario.cpf ?? ""}</span>
 												</td>
 											</tr>
 											<tr>
 												<td>
-													<span class="name">Cargo</span>
-													<span class="value">{this.state.report.usuario.cargo?.nome ?? ""}</span>
+													<span className="name">Cargo</span>
+													<span className="value">{this.state.report.usuario.cargo?.nome ?? ""}</span>
 												</td>
 												<td>
-													<span class="name">CTPS</span>
-													<span class="value"></span>
+													<span className="name">CTPS</span>
+													<span className="value"></span>
 												</td>
 											</tr>
 										</table>
-										<table class="dias">
+										<table className="dias">
 											<tr>
 												<th style={{width: "5%"}}>DIA</th>
 												<th>ENTRADA</th>
@@ -1197,34 +1239,34 @@ export default class RelatorioJornadaButton extends React.Component {
 												</tr>
 											)}
 										</table>
-										<div class="totais">
+										<div className="totais">
 											<div>TOTAIS</div>
 											<div>
-												<span class="name">Hora Extra</span>
-												<span class="value">{dayjs.duration(this.state.totalHoraExtra, 'seconds').format("HH[h]mm[m]")}</span>
+												<span className="name">Hora Extra</span>
+												<span className="value">{dayjs.duration(this.state.totalHoraExtra, 'seconds').format("HH[h]mm[m]")}</span>
 											</div>
 											<div>
-												<span class="name">Dias Trabalhados</span>
-												<span class="value">{this.state.totalDiasTrabalhados}</span>
+												<span className="name">Dias Trabalhados</span>
+												<span className="value">{this.state.totalDiasTrabalhados}</span>
 											</div>
 											<div>
-												<span class="name">Faltas</span>
-												<span class="value">{this.state.totalFaltas}</span>
+												<span className="name">Faltas</span>
+												<span className="value">{this.state.totalFaltas}</span>
 											</div>
 											<div>
-												<span class="name">Folgas</span>
-												<span class="value">{this.state.totalFolgas}</span>
+												<span className="name">Folgas</span>
+												<span className="value">{this.state.totalFolgas}</span>
 											</div>
 											<div>
-												<span class="name">Atestados</span>
-												<span class="value">{this.state.totalAtestados}</span>
+												<span className="name">Atestados</span>
+												<span className="value">{this.state.totalAtestados}</span>
 											</div>
 											<div>
-												<span class="name">Atestados (em dias não trabalhados)</span>
-												<span class="value">{this.state.totalAtestadosNaoTrabalhados}</span>
+												<span className="name">Atestados (em dias não trabalhados)</span>
+												<span className="value">{this.state.totalAtestadosNaoTrabalhados}</span>
 											</div>
 										</div>
-										<div class="assinatura">
+										<div className="assinatura">
 											ASSINATURA DO(A) EMPREGADO(A)
 										</div>
 									</Box> : ""}

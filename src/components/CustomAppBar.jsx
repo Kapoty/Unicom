@@ -32,6 +32,7 @@ import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 import ApartmentIcon from '@mui/icons-material/Apartment';
 
 const JornadaChip = React.lazy(() => import('./JornadaChip'));
+const RelatorioJornadaButton = React.lazy(() => import('../components/RelatorioJornadaButton'));
 
 import api from "../services/api";
 
@@ -196,8 +197,8 @@ class CustomAppBar extends React.Component {
 							</ListItemIcon>
 							Testar notificação
 				        </MenuItem>
-				        
-				        <Divider />
+				        {this.props.usuario !==null && this.props.usuario.permissaoList.includes("Jornada.Read.All") ? <RelatorioJornadaButton usuario={this.props.usuario} me={true}/> : ""}
+				        <Divider/>
 				        <MenuItem onClick={this.props.logout}>
 							<ListItemIcon>
 								<Logout fontSize="small" />

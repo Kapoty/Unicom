@@ -15,7 +15,7 @@ export class DurationInput extends React.Component {
 				"9": "[0-9]",
 			}}
 		>
-			{(inputProps) => <TextField {...inputProps}/>}
+			{(inputProps) => <TextField {...inputProps} disabled={this.props.disabled}/>}
 		</InputMask>
 	}
 }
