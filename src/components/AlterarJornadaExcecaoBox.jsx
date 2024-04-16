@@ -283,8 +283,8 @@ export default class AlterarJornadaBox extends React.Component {
 								<Grid container spacing={3}>
 									<Grid item xs={12}>
 										<ButtonGroup sx={{marginBottom: 3}}>
-											<LoadingButton variant="contained" color="error" size="large" startIcon={<DeleteIcon />} loadingPosition="start" loading={this.state.deletando} disabled={this.state.calling} onClick={this.deleteJornada}>Deletar</LoadingButton>
 											<LoadingButton variant="contained" size="large" startIcon={<SaveIcon />} loadingPosition="start" loading={this.state.saving} disabled={this.state.calling} onClick={this.saveJornada}>Salvar</LoadingButton>
+											<LoadingButton variant="contained" color="error" size="large" startIcon={<DeleteIcon />} loadingPosition="start" loading={this.state.deletando} disabled={this.state.calling} onClick={this.deleteJornada}>Deletar</LoadingButton>
 										</ButtonGroup>
 									</Grid>
 									<Grid item xs={12}>

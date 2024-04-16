@@ -39,6 +39,7 @@ class CustomNavigation extends React.Component {
 
 			usuarioModuleOpen: false,
 			minhaEquipeModuleOpen: false,
+			equipeModuleOpen: false,
 		}
 
 		this.handleIframeContextMenu = this.handleIframeContextMenu.bind(this);
@@ -64,6 +65,8 @@ class CustomNavigation extends React.Component {
 			this.setState({usuarioModuleOpen: true});
 		if (this.props.location.pathname.startsWith("/minha-equipe"))
 			this.setState({minhaEquipeModuleOpen: true});
+		if (this.props.location.pathname.startsWith("/equipes"))
+			this.setState({equipeModuleOpen: true});
 	}
 
 	handleIframeContextMenu(iframe, event) {
@@ -177,7 +180,7 @@ class CustomNavigation extends React.Component {
 										</List>
 									</Collapse>
 								</React.Fragment> : ""}
-								{this.props.usuario.permissaoList.includes("Equipe.Read.All") ?
+								{this.props.usuario.permissaoList.includes("MinhaEquipe.Read.All") ?
 								<React.Fragment>
 									<ListItemButton onClick={() => this.setState({minhaEquipeModuleOpen: !this.state.minhaEquipeModuleOpen})}>
 										<ListItemIcon>
@@ -231,6 +234,40 @@ class CustomNavigation extends React.Component {
 														<Icon sx={{ color: "red"}}>person_add</Icon>
 													</ListItemIcon>
 													<ListItemText primary={"Novo Usuário"}/>
+												</ListItemButton>
+											</ListItem>
+										</List>
+									</Collapse>
+								</React.Fragment> : ""}
+								{this.props.usuario.permissaoList.includes("Equipe.Read.All") ?
+								<React.Fragment>
+									<ListItemButton onClick={() => this.setState({equipeModuleOpen: !this.state.equipeModuleOpen})}>
+										<ListItemIcon>
+											<Icon>groups</Icon>
+										</ListItemIcon>
+										<ListItemText primary={"Equipes"} sx={{wordBreak: "break-all"}}/>
+										{this.state.equipeModuleOpen ? <ExpandLess /> : <ExpandMore />}
+									</ListItemButton>
+									<Collapse in={this.state.equipeModuleOpen}>
+										<List component="div" disablePadding>
+											<ListItem disablePadding>
+												<ListItemButton onClick={() => {this.props.navigate(`equipes`)}} sx={{ pl: 3 }}
+													selected={this.props.location.pathname == `/equipes`}
+													>
+													<ListItemIcon>
+														<Icon sx={{ color: "red"}}>groups</Icon>
+													</ListItemIcon>
+													<ListItemText primary={"Equipes"}/>
+												</ListItemButton>
+											</ListItem>
+											<ListItem disablePadding>
+												<ListItemButton onClick={() => {this.props.navigate(`equipes/novo`)}} sx={{ pl: 3 }}
+													selected={/^\/equipes\/(\d|(novo))+$/.test(this.props.location.pathname)}
+													>
+													<ListItemIcon>
+														<Icon sx={{ color: "red"}}>group_add</Icon>
+													</ListItemIcon>
+													<ListItemText primary={"Nova Equipe"}/>
 												</ListItemButton>
 											</ListItem>
 										</List>

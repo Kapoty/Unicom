@@ -20,12 +20,20 @@ const IframesModule = React.lazy(() => import('../modules/IframesModule'));
 const UsuariosModule = React.lazy(() => import('../modules/UsuariosModule'));
 const CreateEditUsuarioModule = React.lazy(() => import('../modules/CreateEditUsuarioModule'));
 const MinhaEquipeModule = React.lazy(() => import('../modules/MinhaEquipeModule'));
+const EquipesModule = React.lazy(() => import('../modules/EquipesModule'));
+const CreateEditEquipeModule = React.lazy(() => import('../modules/CreateEditEquipeModule'));
 
 const RegistroPontoModule = React.lazy(() => import('../modules/RegistroPontoModule'));
 
 import { useNavigate, useLocation, useSearchParams, useParams } from "react-router-dom";
 
 import dayjs from 'dayjs';
+
+const CreateEditEquipeModuleWrapper = () => {
+  const {equipeId} = useParams();
+
+  return <CreateEditEquipeModule key={equipeId} />
+};
 
 const CreateEditUsuarioModuleWrapper = () => {
   const {usuarioId} = useParams();
@@ -91,7 +99,7 @@ class PainelRoute extends React.Component {
 				this.setState({isAuth: true, usuario: response.data});
 				if (response.data.permissaoList.includes("Iframe.Read.All"))
 					this.getIframeCategoryListFromApi();
-				if (response.data.permissaoList.includes("Equipe.Read.All"))
+				if (response.data.permissaoList.includes("MinhaEquipe.Read.All"))
 					this.getMinhaEquipeListFromApi();
 			})
 			.catch((err) => {
@@ -282,7 +290,9 @@ class PainelRoute extends React.Component {
 								{this.state.usuario !== null && this.state.usuario.permissaoList.includes("Usuario.Read.All") ? <Route path="/usuarios/" element={<UsuariosModule usuario={this.state.usuario}/>} /> : null}
 								{this.state.usuario !== null && this.state.usuario.permissaoList.includes("Usuario.Read.All") ? <Route path="/usuarios/:usuarioId" element={<CreateEditUsuarioModuleWrapper/>} /> : null}
 								{this.state.usuario !== null && this.state.usuario.permissaoList.includes("Ponto.Read.All") ? <Route path="/registro-ponto/" element={<RegistroPontoModule usuario={this.state.usuario}/>} /> : null}
-								{this.state.usuario !== null && this.state.usuario.permissaoList.includes("Equipe.Read.All") ? <Route path="/minha-equipe/:equipeId" element={<MinhaEquipeModuleWrapper usuario={this.state.usuario}/>} /> : null}
+								{this.state.usuario !== null && this.state.usuario.permissaoList.includes("MinhaEquipe.Read.All") ? <Route path="/minha-equipe/:equipeId" element={<MinhaEquipeModuleWrapper usuario={this.state.usuario}/>} /> : null}
+								{this.state.usuario !== null && this.state.usuario.permissaoList.includes("Equipe.Read.All") ? <Route path="/equipes/" element={<EquipesModule usuario={this.state.usuario}/>} /> : null}
+								{this.state.usuario !== null && this.state.usuario.permissaoList.includes("Equipe.Read.All") ? <Route path="/equipes/:equipeId" element={<CreateEditEquipeModuleWrapper/>} /> : null}
 							</Routes>
 					</Suspense>
 				</Box>

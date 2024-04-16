@@ -45,9 +45,10 @@ class UsuariosModule extends React.Component {
 
 		this.columns = [
 			//{ field: 'usuarioId', headerName: 'ID', minWidth: 100, flex: 1},
-			{ field: 'fotoPerfil', 'headerName': "", renderCell: (params) => 
-				<Avatar src={params.row.fotoPerfilUrl}>{params.row.nome.charAt(0)}</Avatar>},
-			{ field: 'nome', headerName: 'Nome', minWidth: 100, flex: 1 },
+			{ field: 'nome', headerName: 'Nome', minWidth: 100, flex: 1, renderCell: (params) => <Stack direction="row" spacing={1} alignItems="center">
+					<Avatar src={params.row.fotoPerfilUrl}>{params.row.nome.charAt(0)}</Avatar>
+					<div>{params.row.nome}</div>
+				</Stack>},
 			{ field: 'matricula', headerName: 'Matrícula', minWidth: 100, flex: 1 },
 			{ field: 'email', headerName: 'Email', minWidth: 100, flex: 1 },
 			{ field: 'departamento', headerName: 'Departamento', minWidth: 100, flex: 1 },
