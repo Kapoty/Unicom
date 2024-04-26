@@ -40,6 +40,7 @@ class CustomNavigation extends React.Component {
 			usuarioModuleOpen: false,
 			minhaEquipeModuleOpen: false,
 			equipeModuleOpen: false,
+			vendaModuleOpen: false,
 		}
 
 		this.handleIframeContextMenu = this.handleIframeContextMenu.bind(this);
@@ -67,6 +68,8 @@ class CustomNavigation extends React.Component {
 			this.setState({minhaEquipeModuleOpen: true});
 		if (this.props.location.pathname.startsWith("/equipes"))
 			this.setState({equipeModuleOpen: true});
+		if (this.props.location.pathname.startsWith("/vendas"))
+			this.setState({vendaModuleOpen: true});
 	}
 
 	handleIframeContextMenu(iframe, event) {
@@ -111,7 +114,7 @@ class CustomNavigation extends React.Component {
 				      role="presentation"
 				    >
 				     <List>
-					      <ListItem disablePadding>
+					      {/*<ListItem disablePadding>
 								<ListItemButton onClick={() => {this.props.navigate(`/`)}}
 									selected={this.props.location.pathname == "/"}
 									>
@@ -120,10 +123,10 @@ class CustomNavigation extends React.Component {
 									</ListItemIcon>
 									<ListItemText primary={"Início"}/>
 								</ListItemButton>
-							</ListItem>
+							</ListItem>*/}
 						{this.props.usuario !== null ?
 							<React.Fragment>
-						      	{this.props.usuario.permissaoList.includes("Iframe.Read.All") ?
+						      	{this.props.usuario.permissaoList.includes("VER_MODULO_IFRAME") ?
 						      	<React.Fragment>
 								 	<ListItemButton onClick={() => this.setState({iframeListOpen: !this.state.iframeListOpen})}>
 										<ListItemIcon>
@@ -180,21 +183,21 @@ class CustomNavigation extends React.Component {
 										</List>
 									</Collapse>
 								</React.Fragment> : ""}
-								{this.props.usuario.permissaoList.includes("MinhaEquipe.Read.All") ?
+								{this.props.usuario.permissaoList.includes("VER_MODULO_MINHA_EQUIPE") ?
 								<React.Fragment>
 									<ListItemButton onClick={() => this.setState({minhaEquipeModuleOpen: !this.state.minhaEquipeModuleOpen})}>
 										<ListItemIcon>
 											<Icon>groups</Icon>
 										</ListItemIcon>
-										<ListItemText primary={"Minha Equipe"} sx={{wordBreak: "break-all"}}/>
+										<ListItemText primary={"Minhas Equipes"} sx={{wordBreak: "break-all"}}/>
 										{this.state.minhaEquipeModuleOpen ? <ExpandLess /> : <ExpandMore />}
 									</ListItemButton>
 									<Collapse in={this.state.minhaEquipeModuleOpen}>
 										<List component="div" disablePadding>
 											{this.props.minhaEquipeList !== null ?
 												this.props.minhaEquipeList.map((equipe) => <ListItem disablePadding key={equipe.equipeId}>
-													<ListItemButton onClick={() => {this.props.navigate(`minha-equipe/${equipe.equipeId}`)}} sx={{ pl: 3 }}
-														selected={this.props.location.pathname == `/minha-equipe/${equipe.equipeId}`}
+													<ListItemButton onClick={() => {this.props.navigate(`minhas-equipes/${equipe.equipeId}`)}} sx={{ pl: 3 }}
+														selected={this.props.location.pathname == `/minhas-equipes/${equipe.equipeId}`}
 														>
 														<ListItemIcon>
 															<Icon sx={{ color: "red"}}>groups</Icon>
@@ -205,7 +208,7 @@ class CustomNavigation extends React.Component {
 										</List>
 									</Collapse>
 								</React.Fragment> : ""}
-								{this.props.usuario.permissaoList.includes("Usuario.Read.All") ?
+								{this.props.usuario.permissaoList.includes("CADASTRAR_USUARIOS") ?
 								<React.Fragment>
 									<ListItemButton onClick={() => this.setState({usuarioModuleOpen: !this.state.usuarioModuleOpen})}>
 										<ListItemIcon>
@@ -239,7 +242,7 @@ class CustomNavigation extends React.Component {
 										</List>
 									</Collapse>
 								</React.Fragment> : ""}
-								{this.props.usuario.permissaoList.includes("Equipe.Read.All") ?
+								{this.props.usuario.permissaoList.includes("CADASTRAR_EQUIPES") ?
 								<React.Fragment>
 									<ListItemButton onClick={() => this.setState({equipeModuleOpen: !this.state.equipeModuleOpen})}>
 										<ListItemIcon>
@@ -268,6 +271,40 @@ class CustomNavigation extends React.Component {
 														<Icon sx={{ color: "red"}}>group_add</Icon>
 													</ListItemIcon>
 													<ListItemText primary={"Nova Equipe"}/>
+												</ListItemButton>
+											</ListItem>
+										</List>
+									</Collapse>
+								</React.Fragment> : ""}
+								{this.props.usuario.permissaoList.includes("CADASTRAR_VENDAS") ?
+								<React.Fragment>
+									<ListItemButton onClick={() => this.setState({vendaModuleOpen: !this.state.vendaModuleOpen})}>
+										<ListItemIcon>
+											<Icon>paid</Icon>
+										</ListItemIcon>
+										<ListItemText primary={"Vendas"} sx={{wordBreak: "break-all"}}/>
+										{this.state.vendaModuleOpen ? <ExpandLess /> : <ExpandMore />}
+									</ListItemButton>
+									<Collapse in={this.state.vendaModuleOpen}>
+										<List component="div" disablePadding>
+											<ListItem disablePadding>
+												<ListItemButton onClick={() => {this.props.navigate(`vendas`)}} sx={{ pl: 3 }}
+													selected={this.props.location.pathname == `/vendas`}
+													>
+													<ListItemIcon>
+														<Icon sx={{ color: "red"}}>paid</Icon>
+													</ListItemIcon>
+													<ListItemText primary={"Vendas"}/>
+												</ListItemButton>
+											</ListItem>
+											<ListItem disablePadding>
+												<ListItemButton onClick={() => {this.props.navigate(`vendas/novo`)}} sx={{ pl: 3 }}
+													selected={/^\/vendas\/(\d|(novo))+$/.test(this.props.location.pathname)}
+													>
+													<ListItemIcon>
+														<Icon sx={{ color: "red"}}>add</Icon>
+													</ListItemIcon>
+													<ListItemText primary={"Nova Venda"}/>
 												</ListItemButton>
 											</ListItem>
 										</List>

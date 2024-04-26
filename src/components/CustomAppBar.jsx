@@ -78,7 +78,7 @@ class CustomAppBar extends React.Component {
 		           			</Box>
 		           		</Link>
 		           	</Box>
-		           	{this.props.usuario !== null && this.props.usuario.permissaoList.includes("Iframe.Read.All") && this.props.location.pathname.startsWith("/i/") ? <React.Fragment>
+		           	{this.props.usuario !== null && this.props.usuario.permissaoList.includes("VER_MODULO_IFRAME") && this.props.location.pathname.startsWith("/i/") ? <React.Fragment>
 			           	<Tooltip title="Recarregar">
 				           	<span><IconButton sx={{color: "#FFFFFF"}} onClick={() => {document.querySelector(".currentIframe").src += ""}}>
 					        	<Icon>refresh</Icon>
@@ -102,7 +102,7 @@ class CustomAppBar extends React.Component {
 				        	<Icon>{this.props.fullscreen ? "fullscreen_exit" : "fullscreen"}</Icon>
 			      		</IconButton></span>
 			      	</Tooltip>
-			      	{this.props.usuario !==null && this.props.usuario.permissaoList.includes("Jornada.Read.All") ? <JornadaChip usuario={this.props.usuario} me/> : ""}
+			      	{this.props.usuario !==null && this.props.usuario.permissaoList.includes("REGISTRAR_JORNADA") ? <JornadaChip usuario={this.props.usuario} me/> : ""}
 			      	<Chip
 			      		clickable
 			      		avatar={<Avatar src={this.props.usuario !== null ? api.defaults.baseURL + "/usuario/" + this.props.usuario.usuarioId + "/foto-perfil?versao=" + this.props.usuario.fotoPerfilVersao : ""}>{this.props.usuario !== null ? this.props.usuario.nome.charAt(0) : "?"}</Avatar>}
@@ -197,7 +197,7 @@ class CustomAppBar extends React.Component {
 							</ListItemIcon>
 							Testar notificação
 				        </MenuItem>
-				        {this.props.usuario !==null && this.props.usuario.permissaoList.includes("Jornada.Read.All") ? <RelatorioJornadaButton usuario={this.props.usuario} me={true}/> : ""}
+				        {this.props.usuario !==null && this.props.usuario.permissaoList.includes("REGISTRAR_JORNADA") ? <RelatorioJornadaButton usuario={this.props.usuario} me={true}/> : ""}
 				        <Divider/>
 				        <MenuItem onClick={this.props.logout}>
 							<ListItemIcon>

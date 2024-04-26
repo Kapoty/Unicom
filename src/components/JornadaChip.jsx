@@ -557,7 +557,7 @@ export default class JornadaChip extends React.Component {
 									{status.nome}: {dayjs.duration(status.duracao, 'seconds').format('HH[h]mm[m]')} {status.maxDuracao !== null && status.maxUso !== null && status.duracao > status.maxDuracao * status.maxUso ? ` (-${dayjs.duration(status.duracao - status.maxDuracao * status.maxUso, 'seconds').minutes()}m)` : ""}
 								</Typography>) : ""}
 						</React.Fragment> : ""}
-						{this.props.usuario !== null && this.props.usuario.permissaoList.includes("Jornada.Write.All") ?
+						{this.props.usuario !== null && this.props.usuario.permissaoList.includes("AUTORIZAR_DISPOSITIVO") ?
 						<LoadingButton
 						 	variant="contained"
 						 	loading={this.state.authenticating}

@@ -1,0 +1,7 @@
+{
+    "apps": [{
+        "name": "Frontend",
+        "script": "server.js",
+        "autorestart": true,
+    }]
+}
