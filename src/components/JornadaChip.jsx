@@ -30,6 +30,7 @@ import Modal from '@mui/material/Modal';
 import WarningIcon from '@mui/icons-material/Warning';
 import Paper from '@mui/material/Paper';
 import CircleIcon from '@mui/icons-material/Circle';
+import LinearProgress from '@mui/material/LinearProgress';
 
 import { grey, green, yellow, blue, red } from '@mui/material/colors';
 
@@ -62,8 +63,6 @@ export default class JornadaChip extends React.Component {
 			refreshing: false,
 			logando: false,
 			deslogando: false,
-			iniciandoHoraExtra: false,
-			togglingHoraExtraAuto: false,
 			togglingHoraExtraPermitida: false,
 			tellingImHere: false,
 			alterandoStatus: false,
@@ -75,7 +74,6 @@ export default class JornadaChip extends React.Component {
 
 		this.notifyAlertAusente = true;
 		this.notifyAusente = true;
-		this.notifyHoraExtra = false;
 		this.notifyLogado = false;
 		this.notifyDeslogado = false;
 
@@ -93,8 +91,6 @@ export default class JornadaChip extends React.Component {
 		this.validateToken = this.validateToken.bind(this);
 		this.logar = this.logar.bind(this);
 		this.deslogar = this.deslogar.bind(this);
-		this.iniciarHoraExtra = this.iniciarHoraExtra.bind(this);
-		this.toggleHoraExtraAuto = this.toggleHoraExtraAuto.bind(this);
 		this.toggleHoraExtraPermitida = this.toggleHoraExtraPermitida.bind(this);
 		this.imHere = this.imHere.bind(this);
 		this.handleAlterarStatus = this.handleAlterarStatus.bind(this);
@@ -132,8 +128,7 @@ export default class JornadaChip extends React.Component {
 				let registroJornada = response.data;
 				if (registroJornada.statusOptionList !== null && registroJornada.statusAtual !== null && registroJornada.completo) {
 					registroJornada.statusOptionList = registroJornada.statusOptionList.filter((status) => {
-						if (status.jornadaStatusId == registroJornada.statusRegularId && !registroJornada.emHoraExtra ||
-							status.jornadaStatusId == registroJornada.statusHoraExtraId && registroJornada.emHoraExtra)
+						if (status.jornadaStatusId == registroJornada.statusRegularId)
 							return 1;
 						if (status.jornadaStatusId == registroJornada.statusAtual.jornadaStatusId)
 							return 1;
@@ -143,7 +138,7 @@ export default class JornadaChip extends React.Component {
 							return status.supervisorPodeAtivar;
 					});
 					registroJornada.statusOptionList.sort((a, b) => {
-						return (b.jornadaStatusId == registroJornada.statusRegularId || b.jornadaStatusId == registroJornada.statusHoraExtraId) - (a.jornadaStatusId == registroJornada.statusRegularId || a.jornadaStatusId == registroJornada.statusHoraExtraId) ||
+						return (b.jornadaStatusId == registroJornada.statusRegularId) - (a.jornadaStatusId == registroJornada.statusRegularId) ||
 							b.usuarioPodeAtivar - a.usuarioPodeAtivar;
 					});
 				}
@@ -271,25 +266,6 @@ export default class JornadaChip extends React.Component {
 			});
 	}
 
-	iniciarHoraExtra() {
-		this.setState({iniciandoHoraExtra: true})
-		api.post(`/registro-jornada/${this.usuarioId}/iniciar-hora-extra`, {
-				token: getToken(),
-			}, {redirect403: false})
-			.then((response) => {
-				this.openAlert("success", "Hora extra iniciada com sucesso!");
-				this.getUsuarioRegistroJornadaFromApi();
-			})
-			.catch((err) => {
-				this.openAlert("error", "Falha ao iniciar hora extra!");
-			})
-			.finally(() => {
-				this.setState({
-					iniciandoHoraExtra: false,
-				});
-			});
-	}
-
 	toggleHoraExtraPermitida() {
 		this.setState({togglingHoraExtraPermitida: true})
 		api.post(`/registro-jornada/${this.usuarioId}/toggle-hora-extra-permitida`, {
@@ -303,23 +279,6 @@ export default class JornadaChip extends React.Component {
 			.finally(() => {
 				this.setState({
 					togglingHoraExtraPermitida: false,
-				});
-			});
-	}
-
-	toggleHoraExtraAuto() {
-		this.setState({togglingHoraExtraAuto: true})
-		api.post(`/registro-jornada/${this.usuarioId}/toggle-hora-extra-auto`, {
-				token: getToken(),
-			}, {redirect403: false})
-			.then((response) => {
-				this.getUsuarioRegistroJornadaFromApi();
-			})
-			.catch((err) => {
-			})
-			.finally(() => {
-				this.setState({
-					togglingHoraExtraAuto: false,
 				});
 			});
 	}
@@ -515,6 +474,12 @@ export default class JornadaChip extends React.Component {
 								</Typography>
 							</Stack>
 							{this.state.registroJornada.emHoraExtra && this.state.registroJornada.statusAtual != null ? <Alert severity="warning">Hora Extra</Alert> : ""}
+							{this.state.registroJornada.statusAtual !== null ? <Stack gap={1}>
+								<LinearProgress variant={!this.state.registroJornada.emHoraExtra ? "determinate" : "indeterminate"} color={!this.state.registroJornada.emHoraExtra ? "success" : "warning"} value={this.state.registroJornada.horasTrabalhadas / this.state.registroJornada.horasATrabalhar * 100}/>
+								<Typography variant="caption" gutterBottom align="center">
+									{dayjs.duration(this.state.registroJornada.horasTrabalhadas, 'seconds').format('HH[h]mm[m]') + " / " + dayjs.duration(this.state.registroJornada.horasATrabalhar, 'seconds').format('HH[h]mm[m]')}
+								</Typography>
+							</Stack> : "" }
 							{this.state.registroJornada.statusAtual != null ? <FormControl fullWidth>
 								<Select
 									id="status"
@@ -530,26 +495,19 @@ export default class JornadaChip extends React.Component {
 											disabled={
 												(!this.state.registroJornada.statusAtual.usuarioPodeAtivar && this.props.me) ||
 												(!this.state.registroJornada.statusAtual.supervisorPodeAtivar && !this.props.me && this.state.registroJornada.statusAtual.jornadaStatusId !== this.state.registroJornada.statusAusenteId) ||
-												(status.maxUso !==null && status.usos >= status.maxUso && this.props.me) ||
-												(status.jornadaStatusId == this.state.registroJornada.statusRegularId && this.state.registroJornada.emHoraExtra) ||
-												(status.jornadaStatusId == this.state.registroJornada.statusHoraExtraId && !this.state.registroJornada.emHoraExtra)
+												(status.maxUso !==null && status.usos >= status.maxUso && this.props.me)
 											}
 										>
 											{status.nome + ( (status.maxUso != null) ? ` (${status.usos}/${status.maxUso})`: "")}
 										</MenuItem>)}
 								</Select>
 							</FormControl> : ""}
-							{this.state.registroJornada.statusAtual !== null && this.state.registroJornada.canUsuarioIniciarHoraExtra ? <LoadingButton loading={this.state.iniciandoHoraExtra} variant="contained" color="warning" startIcon={<MoreTimeIcon />} onClick={this.iniciarHoraExtra}>Iniciar Hora Extra</LoadingButton> : ""}
-							{((this.state.registroJornada.canUsuarioLogar && this.props.me) || (this.state.registroJornada.canSupervisorLogar && !this.props.me)) ? !this.state.registroJornada.canUsuarioIniciarHoraExtra ? 
-								<LoadingButton loading={this.state.logando} variant="contained" color="success" loadingPosition="start" startIcon={<LoginIcon />} onClick={this.logar}>Logar</LoadingButton>
-								: <LoadingButton loading={this.state.logando} variant="contained" color="warning" loadingPosition="start" startIcon={<MoreTimeIcon />} onClick={this.logar}>Logar (hora extra)</LoadingButton> : ""}
+							{((this.state.registroJornada.canUsuarioLogar && this.props.me) || (this.state.registroJornada.canSupervisorLogar && !this.props.me)) ? 
+								<LoadingButton loading={this.state.logando} variant="contained" color="success" loadingPosition="start" startIcon={<LoginIcon />} onClick={this.logar}>Logar</LoadingButton> : ""}
 							{this.state.registroJornada.canUsuarioDeslogar ? <LoadingButton loading={this.state.deslogando} variant="contained" color="error" startIcon={<LogoutIcon />} onClick={this.deslogar}>Deslogar</LoadingButton> : ""}
 							{((!this.state.registroJornada.canUsuarioLogar && this.props.me) || (!this.state.registroJornada.canSupervisorLogar && !this.props.me)) && this.state.registroJornada.statusAtual == null ? <Alert severity="warning">Fora da jornada</Alert> : ""}
 							{!this.props.me ? <FormGroup>
 									<FormControlLabel sx={{justifyContent: "center"}} control={<Switch checked={this.state.registroJornada.horaExtraPermitida} disabled={this.state.togglingHoraExtraPermitida} onClick={this.toggleHoraExtraPermitida} color="warning"/>} label="Hora Extra Permitida" />
-								</FormGroup> : ""}
-							{this.state.registroJornada.statusAtual !== null && !this.state.registroJornada.emHoraExtra && this.state.registroJornada.horaExtraPermitida ? <FormGroup>
-									<FormControlLabel sx={{justifyContent: "center"}} control={<Switch checked={this.state.registroJornada.horaExtraAuto} disabled={this.state.togglingHoraExtraAuto} onClick={this.toggleHoraExtraAuto} color="warning"/>} label="Hora Extra Auto" />
 								</FormGroup> : ""}
 							<Divider/>
 							{(this.state.registroJornada.statusGroupedList !== null) ? this.state.registroJornada.statusGroupedList.map(status =>

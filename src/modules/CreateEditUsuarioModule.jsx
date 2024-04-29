@@ -80,7 +80,7 @@ class CreateEditUsuarioModule extends React.Component {
 			senha: "",
 			confirmaSenha: "",
 			ativo: true,
-			papelIdList: [],
+			papelId: null,
 			dataNascimento: null,
 			cpf: "",
 			telefoneCelular: "",
@@ -157,7 +157,7 @@ class CreateEditUsuarioModule extends React.Component {
 					email: usuario.email,
 					matricula: usuario.matricula,
 					ativo: usuario.ativo,
-					papelIdList: usuario.papelList.map(papel => papel.papelId),
+					papelId: usuario.papelId,
 					errors: {},
 					senha: "",
 					confirmaSenha: "",
@@ -305,7 +305,7 @@ class CreateEditUsuarioModule extends React.Component {
 			email: this.state.email,
 			matricula: this.state.matricula,
 			ativo: this.state.ativo,
-			papelIdList: this.state.papelIdList,
+			papelId: this.state.papelId,
 			dataNascimento: this.state.dataNascimento,
 			cpf: this.state.cpf != "" ? this.state.cpf : null,
 			telefoneCelular:  this.state.telefoneCelular != "" ? this.state.telefoneCelular : null,
@@ -387,7 +387,7 @@ class CreateEditUsuarioModule extends React.Component {
 							<Button variant="outlined" size="large" startIcon={<ArrowBackIcon />}  onClick={() => this.props.navigate(-1)}>Voltar</Button>
 							<LoadingButton variant="contained" size="large" startIcon={<SaveIcon />} loadingPosition="start" loading={this.state.saving} disabled={this.state.calling} onClick={this.saveUsuario}>Salvar</LoadingButton>
 					</ButtonGroup>
-					<Box sx={{ flexGrow: 1 }}>
+					<Box sx={{ width: "100%", display: "flex", justifyContent: "center", marginBottom: 3}}>
 						{((!this.state.createMode && this.state.usuario == null) ||
 							this.state.papelList == null ||
 							this.state.cargoList == null ||
@@ -395,7 +395,7 @@ class CreateEditUsuarioModule extends React.Component {
 							this.state.departamentoList == null ||
 							this.state.equipeList == null
 							) ? <Box width="100%" display="flex" justifyContent="center" m={3}><CircularProgress/></Box> :
-						<Grid container spacing={3} sx={{margin: 0}}>
+						<Grid container spacing={3} sx={{margin: 0, maxWidth: 1200}}>
 							<Grid item xs>
 								<Stack gap={1} justifyContent="center" alignItems="center">
 									{!this.state.createMode ? <React.Fragment>
@@ -408,7 +408,10 @@ class CreateEditUsuarioModule extends React.Component {
 									</React.Fragment> : <Avatar variant="square" sx={{ width: "128px", height: "128px"}} >{this.state.nome.charAt(0)}</Avatar>}
 								</Stack>
 							</Grid>
-							<Grid item xs={11}>
+							<Grid item xs={12}>
+								<Divider><Chip icon={<PersonIcon />} label="Informações Pessoais" /></Divider>
+							</Grid>
+							<Grid item xs={12}>
 								<form onSubmit={(e) => e.preventDefault()} disabled={this.state.createMode && this.state.usuario == null}>
 									<Grid container spacing={3}>
 										<Grid item xs={6}>
@@ -454,21 +457,22 @@ class CreateEditUsuarioModule extends React.Component {
 											/>
 										</Grid>
 										<Grid item xs={6}>
-											{this.state.papelList != null ? <Autocomplete
-												multiple
-												id="papel-list"
+											<Autocomplete
+												id="papel"
 												options={Object.keys(this.state.papelByPapelId).map(key => parseInt(key))}
 												getOptionLabel={(option) => this.state.papelByPapelId[option].nome}
-												value={this.state.papelIdList}
-												onChange={(event, value) => this.setState({papelIdList: value})}
+												value={this.state.papelId}
+												onChange={(event, value) => this.setState({papelId: value})}
 												renderInput={(params) => (
 													<TextField
-													{...params}
+													error={"papelId" in this.state.errors}
+													helperText={this.state.errors?.papelId}
+														{...params}
 												variant="outlined"
-												label="Papéis"
+												label="Papel"
 												/>
 												)}
-											/> : null}
+											/>
 										</Grid>
 										<Grid item xs={6}>
 											<TextField
@@ -644,79 +648,8 @@ class CreateEditUsuarioModule extends React.Component {
 												</Select>
 											</FormControl>
 										</Grid>
-										<Grid container item xs={10} spacing={3}>
-											<Grid container item xs={3}>
-												<TimePicker
-													id="jornada-entrada"
-													value={this.state.jornadaEntrada}
-													onChange={(newValue) => this.setState({jornadaEntrada: newValue})}
-													label="Entrada"
-													slotProps={{
-														field: { clearable: true },
-														textField: {
-															fullWidth: true,
-															error: "jornada.entrada" in this.state.errors || "jornada.jornadaOrderValid" in this.state.errors,
-															helperText: "jornada.entrada" in this.state.errors ? this.state.errors["jornada.entrada"] : "jornada.jornadaOrderValid" in this.state.errors ? this.state.errors["jornada.jornadaOrderValid"] : ""
-														},
-													}}
-													variant="outlined"
-													disabled={this.state.calling}
-												/>
-											</Grid>
-											<Grid container item xs={3}>
-												<TimePicker
-													id="jornada-intervalo-inicio"
-													value={this.state.jornadaIntervaloInicio}
-													onChange={(newValue) => this.setState({jornadaIntervaloInicio: newValue})}
-													label="Início do Intervalo"
-													slotProps={{
-														field: { clearable: true },
-														textField: {
-															fullWidth: true,
-															error: "jornada.intervaloInicio" in this.state.errors,
-															helperText: "jornada.intervaloInicio" in this.state.errors ? this.state.errors["jornada.intervaloInicio"] : ""
-														},
-													}}
-													variant="outlined"
-													disabled={this.state.calling}
-												/>
-											</Grid>
-											<Grid container item xs={3}>
-												<TimePicker
-													id="jornada-intervalo-fim"
-													value={this.state.jornadaIntervaloFim}
-													onChange={(newValue) => this.setState({jornadaIntervaloFim: newValue})}
-													label="Fim do Intervalo"
-													slotProps={{
-														field: { clearable: true },
-														textField: {
-															fullWidth: true,
-															error: "jornada.intervaloFim" in this.state.errors,
-															helperText: "jornada.intervaloFim" in this.state.errors ? this.state.errors["jornada.intervaloFim"] : ""
-														},
-													}}
-													variant="outlined"
-													disabled={this.state.calling}
-												/>
-											</Grid>
-											<Grid container item xs={3}>
-												<TimePicker
-													id="jornada-saida"
-													value={this.state.jornadaSaida}
-													onChange={(newValue) => this.setState({jornadaSaida: newValue})}
-													label="Saída"
-													slotProps={{
-														field: { clearable: true },
-														textField: {
-															fullWidth: true,
-															error: "jornada.saida" in this.state.errors,
-															helperText: "jornada.saida" in this.state.errors ? this.state.errors["jornada.saida"] : ""
-														},
-													}}
-													variant="outlined"
-													disabled={this.state.calling}
-												/>
-											</Grid>
+										<Grid item xs={12}>
+											<Divider><Chip icon={<KeyIcon />} label="Acesso" /></Divider>
 										</Grid>
 										<Grid item xs={4}>
 											<TextField

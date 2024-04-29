@@ -169,7 +169,7 @@ class CustomAppBar extends React.Component {
 							      		<ListItemIcon>
 											<VerifiedUserIcon/>
 										</ListItemIcon>
-										<ListItemText  primaryTypographyProps={{ style: { whiteSpace: "normal" } }} primary={this.props.usuario.papelList.map(p => <div key={p.papelId}>{p.nome}</div>)} />
+										<ListItemText  primaryTypographyProps={{ style: { whiteSpace: "normal" } }} primary={this.props.usuario.papel.nome} />
 									</ListItem>
 								</List> : <Box width="100%" display="flex" justifyContent="center"><CircularProgress/></Box>}
 					      	</MenuItem> 

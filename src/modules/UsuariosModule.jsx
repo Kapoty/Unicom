@@ -53,10 +53,8 @@ class UsuariosModule extends React.Component {
 			{ field: 'email', headerName: 'Email', minWidth: 100, flex: 1 },
 			{ field: 'departamento', headerName: 'Departamento', minWidth: 100, flex: 1 },
 			{ field: 'cargo', headerName: 'Cargo', minWidth: 100, flex: 1 },
-			{ field: 'papelList', headerName: 'Papéis', minWidth: 200, flex: 1, renderCell: (params) => 
-				<Stack direction="row" spacing={1} sx={{"overflow": "auto"}}>
-					{params.value.map(papel=> <Chip key={papel} label={papel} variant="outlined" />)}
-				</Stack>
+			{ field: 'papel', headerName: 'Papel', minWidth: 200, flex: 1, renderCell: (params) => 
+				<Chip label={params.value.nome} variant="outlined" />
 			},
 			{ field: 'ativo', headerName: 'Status', width: 100, renderCell: (params) =>
 				<Chip label={params.value ? "Ativo" : "Inativo"} color={params.value ? "success" : "error"} /> },
@@ -106,7 +104,7 @@ class UsuariosModule extends React.Component {
 					nome: usuario.nome,
 					matricula: usuario.matricula,
 					email: usuario.email,
-					papelList: usuario.papelList.map(papel => papel.nome),
+					papel: usuario.papel,
 					departamento: usuario.departamento !== null ? usuario.departamento.nome : "",
 					cargo: usuario.cargo !== null ? usuario.cargo.nome : "",
 					ativo: usuario.ativo

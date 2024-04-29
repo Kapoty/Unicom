@@ -68,6 +68,7 @@ class CreateEditEquipeModule extends React.Component {
 
 			nome: "",
 			supervisorId: null,
+			gerenteId: null,
 
 			saving: false,
 			deletando: false,
@@ -118,6 +119,7 @@ class CreateEditEquipeModule extends React.Component {
 					equipe: equipe,
 					nome: equipe.nome,
 					supervisorId: equipe.supervisorId,
+					gerenteId: equipe.gerenteId,
 					calling: false});
 			})
 			.catch((err) => {
@@ -192,6 +194,7 @@ class CreateEditEquipeModule extends React.Component {
 		let data = {
 			nome: this.state.nome,
 			supervisorId: this.state.supervisorId,
+			gerenteId: this.state.gerenteId,
 		};
 
 		if (this.state.createMode)
@@ -267,25 +270,29 @@ class CreateEditEquipeModule extends React.Component {
 													)}
 												/>
 											</Grid>
-											{/*<Grid item xs={6}>
-												<FormControl fullWidth>
-													<InputLabel>Supervisor</InputLabel>
-													<Select
-														id="supervisor"
-														value={this.state.supervisorId}
-														label="supervisor"
-														onChange={(e) => this.setState({supervisorId: e.target.value})}
-														>
-														<MenuItem key={"nenhum"} value={null}>Nenhum</MenuItem>
-														{this.state.usuarioList.map((usuario) => <MenuItem key={usuario.usuarioId} value={usuario.usuarioId}>
-															<Stack direction="row" spacing={1} alignItems="center">
-																<Avatar src={usuario.fotoPerfil ? api.defaults.baseURL + "/usuario/" + usuario.usuarioId + "/foto-perfil?versao=" + usuario.fotoPerfilVersao : ""}>{usuario.nome.charAt(0)}</Avatar>
-																<div>{usuario.nome}</div>
-															</Stack>
-														</MenuItem>)}
-													</Select>
-												</FormControl>
-											</Grid>*/}
+											<Grid item xs={6}>
+												 <Autocomplete
+													id="gerente"
+													options={Object.keys(this.state.usuarioByUsuarioId).map(key => parseInt(key))}
+													getOptionLabel={(option) => this.state.usuarioByUsuarioId[option].nome}
+													renderOption={(props, option) => <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props}>
+																<Stack direction="row" spacing={1} alignItems="center">
+																	<Avatar src={this.state.usuarioByUsuarioId[option].fotoPerfil ? api.defaults.baseURL + "/usuario/" + this.state.usuarioByUsuarioId[option].usuarioId + "/foto-perfil?versao=" + this.state.usuarioByUsuarioId[option].fotoPerfilVersao : ""}>{this.state.usuarioByUsuarioId[option].nome.charAt(0)}</Avatar>
+																	<div>{this.state.usuarioByUsuarioId[option].nome}</div>
+																	<div>#{this.state.usuarioByUsuarioId[option].matricula}</div>
+																</Stack>
+															</Box>}
+													value={this.state.gerenteId}
+													onChange={(event, value) => this.setState({gerenteId: value})}
+													renderInput={(params) => (
+														<TextField
+														{...params}
+													variant="outlined"
+													label="Gerente"
+													/>
+													)}
+												/>
+											</Grid>
 										</Grid>
 									</form>
 								}

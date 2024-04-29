@@ -48,6 +48,10 @@ class EquipesModule extends React.Component {
 					<Avatar src={params.row.supervisorFotoPerfilUrl}>{params.row.supervisor.charAt(0)}</Avatar>
 					<div>{params.row.supervisor}</div>
 				</Stack>},
+			{ field: 'gerente', headerName: 'Gerente', minWidth: 100, flex: 1, renderCell: (params) => <Stack direction="row" spacing={1} alignItems="center">
+					<Avatar src={params.row.gerenteFotoPerfilUrl}>{params.row.gerente.charAt(0)}</Avatar>
+					<div>{params.row.gerente}</div>
+				</Stack>},
 			{ field: "actions", headerName: "Ações", width: 300, renderCell: (params) => <Stack direction="row" spacing={1}>
 				<Tooltip title="Editar" onClick={() => this.props.navigate("/equipes/" + params.row.equipeId)}>
 					<IconButton color="warning">
@@ -77,6 +81,8 @@ class EquipesModule extends React.Component {
 					nome: equipe.nome,
 					supervisor: equipe.supervisor?.nome ?? "",
 					supervisorFotoPerfilUrl: equipe.supervisor?.fotoPerfil ? api.defaults.baseURL + "/usuario/" + equipe.supervisor?.usuarioId + "/foto-perfil?versao=" + equipe.supervisor?.fotoPerfilVersao : "",
+					gerente: equipe.gerente?.nome ?? "",
+					gerenteFotoPerfilUrl: equipe.gerente?.fotoPerfil ? api.defaults.baseURL + "/usuario/" + equipe.gerente?.usuarioId + "/foto-perfil?versao=" + equipe.gerente?.fotoPerfilVersao : "",
 				}})
 				this.setState({equipeList: response.data, equipeRows: equipeRows, calling: false});
 			})
