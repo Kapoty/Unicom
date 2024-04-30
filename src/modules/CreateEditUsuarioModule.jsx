@@ -183,7 +183,7 @@ class CreateEditUsuarioModule extends React.Component {
 	}
 
 	getPapelListFromApi() {
-		api.get("/empresa/me/papel")
+		api.get("/usuario/me/papel-list")
 			.then((response) => {
 				let papelList = response.data;
 				let papelByPapelId = {};
@@ -239,7 +239,7 @@ class CreateEditUsuarioModule extends React.Component {
 	}
 
 	getEquipeListFromApi() {
-		api.get("/empresa/me/equipe")
+		api.get("/usuario/me/minha-equipe")
 			.then((response) => {
 				let equipeList = response.data;
 				let equipeByEquipeId = {};

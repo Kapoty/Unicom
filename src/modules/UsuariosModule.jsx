@@ -95,7 +95,7 @@ class UsuariosModule extends React.Component {
 
 	getUsuarioListFromApi() {
 		this.setState({calling: true})
-		api.get("/empresa/me/usuario")
+		api.get("/usuario/me/usuario-list")
 			.then((response) => {
 				let usuarioRows = response.data.map((usuario) => {return {
 					id: usuario.usuarioId,

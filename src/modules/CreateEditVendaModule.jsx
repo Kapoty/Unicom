@@ -48,6 +48,7 @@ import SmartphoneIcon from '@mui/icons-material/Smartphone';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import AttachmentIcon from '@mui/icons-material/Attachment';
+import RefreshIcon from '@mui/icons-material/Refresh';
 
 import dayjs from 'dayjs';
 
@@ -298,26 +299,29 @@ class CreateEditVendaModule extends React.Component {
 											</Grid>
 											{!this.state.createMode ? <React.Fragment>
 												<Grid item xs={12}>
-													<LoadingButton component="label" variant="contained" startIcon={<CloudUploadIcon />} loadingPosition="start" loading={this.state.uploadingAnexo} disabled={this.state.updatingAnexoList}>
-														Adicionar Anexo
-														<input type="file" id="foto-perfil" hidden onChange={this.handleUploadAnexoChange}/>
-													</LoadingButton>
+													<ButtonGroup sx={{marginBottom: 3}}>
+														<LoadingButton component="label" variant="outlined" startIcon={<RefreshIcon />} loadingPosition="start" loading={this.state.updatingAnexoList} disabled={this.state.updatingAnexoList} onClick={this.getAnexoListFromApi}>
+															Atualizar
+														</LoadingButton>
+														<LoadingButton component="label" variant="contained" startIcon={<CloudUploadIcon />} loadingPosition="start" loading={this.state.uploadingAnexo} disabled={this.state.updatingAnexoList}>
+															Adicionar Anexo
+															<input type="file" id="anexo" hidden onChange={this.handleUploadAnexoChange}/>
+														</LoadingButton>
+													</ButtonGroup>
 												</Grid>
 												<Grid item xs={12}>
-													{this.state.anexoList == null ? <Box width="100%" display="flex" justifyContent="center" m={3}><CircularProgress/></Box> :
-														<Stack direction="row" spacing={1}>
-															{this.state.anexoList.map((anexo) =>
-																<Chip
-																	key={anexo.id}
-																	component="a"
-																	clickable
-																	target="_blank"
-																	label={anexo.name}
-																	href={api.defaults.baseURL + "/anexo/download/" + anexo.id}
-																	onDelete={(e) => {e.preventDefault();this.deleteAnexo(anexo.id)}}
-																/>)}
-														</Stack>
-													}
+													<Stack direction="row" spacing={1}>
+														{(this.state?.anexoList ?? []).map((anexo) =>
+															<Chip
+																key={anexo.id}
+																component="a"
+																clickable
+																target="_blank"
+																label={anexo.name}
+																href={api.defaults.baseURL + "/anexo/download/" + anexo.id}
+																onDelete={(e) => {e.preventDefault();this.deleteAnexo(anexo.id)}}
+															/>)}
+													</Stack>
 												</Grid>
 											</React.Fragment> : ""}
 										</Grid>
