@@ -124,7 +124,7 @@ class MinhaEquipeModule extends React.Component {
 										{usuario.nome}
 									</Typography>
 									<JornadaChip usuario={this.props.usuario} me={false} usuarioId={usuario.usuarioId}/>
-									<AlterarJornadaButton usuarioId={usuario.usuarioId}/>
+									<AlterarJornadaButton usuario={this.props.usuario} usuarioId={usuario.usuarioId}/>
 									<RelatorioJornadaButton usuario={this.props.usuario} usuarioId={usuario.usuarioId} me={false}/>
 								</Paper>
 							)}

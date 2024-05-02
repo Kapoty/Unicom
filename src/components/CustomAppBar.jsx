@@ -31,8 +31,8 @@ import NotificationsOffIcon from '@mui/icons-material/NotificationsOff';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 import ApartmentIcon from '@mui/icons-material/Apartment';
 
-const JornadaChip = React.lazy(() => import('./JornadaChip'));
-const RelatorioJornadaButton = React.lazy(() => import('../components/RelatorioJornadaButton'));
+import JornadaChip from './JornadaChip';
+import RelatorioJornadaButton from './RelatorioJornadaButton';
 
 import api from "../services/api";
 

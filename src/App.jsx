@@ -30,7 +30,13 @@ const theme = createTheme({
 				 default: "#000000",
 				 paper: "#000000",
 			 },
-			 green: green
+			green: green,
+			grey: {
+				light: grey[300],
+				main: grey[500],
+				dark: grey[700],
+				contrastText: "#111",
+			}
 	 },
 	},
 	ptBR,

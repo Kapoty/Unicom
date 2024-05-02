@@ -23,7 +23,6 @@ import CloseIcon from '@mui/icons-material/Close';
 import IconButton from '@mui/material/IconButton';
 
 import AlterarJornadaBox from "./AlterarJornadaBox";
-import AlterarJornadaExcecaoBox from "./AlterarJornadaExcecaoBox";
 
 import dayjs from 'dayjs';
 
@@ -48,45 +47,29 @@ export default class AlterarJornadaButton extends React.Component {
 				<Button variant="contained" startIcon={<CalendarMonthIcon />} onClick={() => this.setState({dialogOpen: true})} fullWidth>
 					Alterar Jornada
 				</Button>
-				<Dialog
-					fullWidth={true}
-        			maxWidth={"lg"}
-					onClose={() => this.setState({dialogOpen: false})}
-					open={this.state.dialogOpen}
-				>
-      				<DialogTitle>Alterar Jornada</DialogTitle>
-      				<IconButton
-						onClick={() => this.setState({dialogOpen: false})}
-						sx={{
-							position: 'absolute',
-								right: 8,
-							top: 8,
-							color: (theme) => theme.palette.grey[500],
-						}}
+				{this.state.dialogOpen ?
+					<Dialog
+						fullWidth={true}
+	        			maxWidth={"lg"}
+						onClose={() => this.setState({dialogOpen: false})}
+						open={this.state.dialogOpen}
 					>
-					<CloseIcon />
-					</IconButton>
-      				<DialogContent dividers>
-						{this.state.dialogOpen ? <React.Fragment>
-							<Accordion defaultExpanded>
-								<AccordionSummary expandIcon={<ExpandMoreIcon />} >
-									Exceções
-								</AccordionSummary>
-								<AccordionDetails>
-									<AlterarJornadaExcecaoBox usuarioId={this.props.usuarioId}/>
-								</AccordionDetails>
-							</Accordion>
-							<Accordion>
-								<AccordionSummary expandIcon={<ExpandMoreIcon />} >
-									Jornada Padrão
-								</AccordionSummary>
-								<AccordionDetails>
-									<AlterarJornadaBox usuarioId={this.props.usuarioId}/>
-								</AccordionDetails>
-							</Accordion>
-						</React.Fragment> : ""}
-					</DialogContent>
-				</Dialog>
+	      				<DialogTitle>Alterar Jornada</DialogTitle>
+	      				<IconButton
+							onClick={() => this.setState({dialogOpen: false})}
+							sx={{
+								position: 'absolute',
+									right: 8,
+								top: 8,
+								color: (theme) => theme.palette.grey[500],
+							}}
+						>
+						<CloseIcon />
+						</IconButton>
+	      				<DialogContent dividers>
+							<AlterarJornadaBox usuario={this.props.usuario} usuarioId={this.props.usuarioId}/>
+						</DialogContent>
+					</Dialog> : ""}
 		    </React.Fragment>
 		  );
 	}
