@@ -50,7 +50,7 @@ export default class AlterarJornadaButton extends React.Component {
 				{this.state.dialogOpen ?
 					<Dialog
 						fullWidth={true}
-	        			maxWidth={"lg"}
+	        			maxWidth={"xl"}
 						onClose={() => this.setState({dialogOpen: false})}
 						open={this.state.dialogOpen}
 					>

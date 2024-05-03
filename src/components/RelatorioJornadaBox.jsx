@@ -601,7 +601,6 @@ export default class RelatorioJornadaBox extends React.Component {
 					rowSelected: rowSelected,
 					errors: {},
 					calling: false,
-					refreshingJornadaExcecao: false,
 				}, () => {
 					this.calculateRows();
 					this.setCorrecaoFieldsFromRowSelected();
