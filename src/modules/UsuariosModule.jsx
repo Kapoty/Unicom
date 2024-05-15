@@ -160,9 +160,6 @@ class UsuariosModule extends React.Component {
 						<DataGrid
 							rows={this.state.usuarioRows}
 							columns={this.columns}
-							disableColumnFilter
-							disableColumnMenu
-							disableColumnSelector
 							disableRowSelectionOnClick
 							autoHeight
 							initialState={{

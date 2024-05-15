@@ -114,9 +114,6 @@ class EquipesModule extends React.Component {
 						<DataGrid
 							rows={this.state.equipeRows}
 							columns={this.columns}
-							disableColumnFilter
-							disableColumnMenu
-							disableColumnSelector
 							disableRowSelectionOnClick
 							autoHeight
 							initialState={{

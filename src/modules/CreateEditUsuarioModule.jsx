@@ -47,6 +47,7 @@ import NumbersIcon from '@mui/icons-material/Numbers';
 import SmartphoneIcon from '@mui/icons-material/Smartphone';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 
 import dayjs from 'dayjs';
 
@@ -72,6 +73,8 @@ class CreateEditUsuarioModule extends React.Component {
 			departamentoByDepartamentoId: null,
 			equipeList: null,
 			equipeListByEquipeId: null,
+			jornadaStatusGrupoList: null,
+			jornadaStatusGrupoById: null,
 
 			usuarioId: "",
 			nome: "",
@@ -89,10 +92,7 @@ class CreateEditUsuarioModule extends React.Component {
 			cargoId: null,
 			contratoId: null,
 			departamentoId: null,
-			jornadaEntrada: null,
-			jornadaIntervaloInicio: null,
-			jornadaIntervaloFim: null,
-			jornadaSaida: null,
+			jornadaStatusGrupoId: null,
 
 			showSenha: false,
 
@@ -113,6 +113,7 @@ class CreateEditUsuarioModule extends React.Component {
 		this.getContratoListFromApi = this.getContratoListFromApi.bind(this);
 		this.getDepartamentoListFromApi = this.getDepartamentoListFromApi.bind(this);
 		this.getEquipeListFromApi = this.getEquipeListFromApi.bind(this);
+		this.getJornadaStatusGrupoListFromApi = this.getJornadaStatusGrupoListFromApi.bind(this);
 
 		this.saveUsuario = this.saveUsuario.bind(this);
 		this.patchUsuario = this.patchUsuario.bind(this);
@@ -132,6 +133,7 @@ class CreateEditUsuarioModule extends React.Component {
 		this.getContratoListFromApi();
 		this.getDepartamentoListFromApi();
 		this.getEquipeListFromApi();
+		this.getJornadaStatusGrupoListFromApi();
 		if (this.props.searchParams.get("novo") !== null) {
 			this.openAlert("success", 'Usuário criado com sucesso!');
 		}
@@ -170,10 +172,7 @@ class CreateEditUsuarioModule extends React.Component {
 					contratoId: usuario.contratoId,
 					departamentoId: usuario.departamentoId,
 					equipeId: usuario.equipeId,
-					jornadaEntrada: usuario.jornada !== null ? dayjs(usuario.jornada.entrada, "HH:mm:ss") : null,
-					jornadaIntervaloInicio: usuario.jornada !== null ? dayjs(usuario.jornada.intervaloInicio, "HH:mm:ss") : null,
-					jornadaIntervaloFim: usuario.jornada !== null ? dayjs(usuario.jornada.intervaloFim, "HH:mm:ss") : null,
-					jornadaSaida: usuario.jornada !== null ? dayjs(usuario.jornada.saida, "HH:mm:ss") : null,
+					jornadaStatusGrupoId: usuario.jornadaStatusGrupoId,
 					calling: false});
 			})
 			.catch((err) => {
@@ -252,6 +251,20 @@ class CreateEditUsuarioModule extends React.Component {
 			});
 	}
 
+	getJornadaStatusGrupoListFromApi() {
+		api.get("/empresa/me/jornada-status-grupo")
+			.then((response) => {
+				let jornadaStatusGrupoList = response.data;
+				let jornadaStatusGrupoById = {};
+				jornadaStatusGrupoList.forEach((jornadaStatusGrupo) => jornadaStatusGrupoById[jornadaStatusGrupo.jornadaStatusGrupoId] = jornadaStatusGrupo);
+				this.setState({jornadaStatusGrupoList: jornadaStatusGrupoList, jornadaStatusGrupoById: jornadaStatusGrupoById});
+			})
+			.catch((err) => {
+				console.log(err);
+				setTimeout(this.getJornadaStatusGrupoListFromApi, 3000);
+			});
+	}
+
 	openAlert(severity, message) {
 		this.setState({alert: <Alert severity={severity} onClose={this.closeAlert}>{message}</Alert>, alertOpen: true});
 	}
@@ -315,12 +328,7 @@ class CreateEditUsuarioModule extends React.Component {
 			contratoId: this.state.contratoId,
 			departamentoId: this.state.departamentoId,
 			equipeId: this.state.equipeId,
-			jornada: (this.state.jornadaEntrada == null && this.state.jornadaIntervaloInicio == null && this.state.jornadaIntervaloFim == null && this.state.jornadaSaida == null) ? null : {
-				entrada: this.state.jornadaEntrada !== null ? dayjs(this.state.jornadaEntrada).format("HH:mm:ss") : null,
-				intervaloInicio: this.state.jornadaIntervaloInicio !== null ? dayjs(this.state.jornadaIntervaloInicio).format("HH:mm:ss") : null,
-				intervaloFim: this.state.jornadaIntervaloFim !== null ? dayjs(this.state.jornadaIntervaloFim).format("HH:mm:ss") : null,
-				saida: this.state.jornadaSaida !== null ? dayjs(this.state.jornadaSaida).format("HH:mm:ss") : null
-			},
+			jornadaStatusGrupoId: this.state.jornadaStatusGrupoId,
 		};
 
 		if (this.state.senha != "") {
@@ -645,6 +653,23 @@ class CreateEditUsuarioModule extends React.Component {
 													>
 													<MenuItem key={"nenhum"} value={null}>Nenhum</MenuItem>
 													{this.state.contratoList.map((contrato) => <MenuItem key={contrato.contratoId} value={contrato.contratoId}>{contrato.nome}</MenuItem>)}
+												</Select>
+											</FormControl>
+										</Grid>
+										<Grid item xs={12}>
+											<Divider><Chip icon={<CalendarMonthIcon />} label="Jornada" /></Divider>
+										</Grid>
+										<Grid item xs={12}>
+											<FormControl fullWidth>
+												<InputLabel>Grupo de Status</InputLabel>
+												<Select
+													id="jornada-status-grupo"
+													value={this.state.jornadaStatusGrupoId}
+													label="Grupo de Status"
+													onChange={(e) => this.setState({jornadaStatusGrupoId: e.target.value})}
+													>
+													<MenuItem key={"nenhum"} value={null}>Nenhum</MenuItem>
+													{this.state.jornadaStatusGrupoList.map((jornadaStatusGrupo) => <MenuItem key={jornadaStatusGrupo.jornadaStatusGrupoId} value={jornadaStatusGrupo.jornadaStatusGrupoId}>{jornadaStatusGrupo.nome}</MenuItem>)}
 												</Select>
 											</FormControl>
 										</Grid>

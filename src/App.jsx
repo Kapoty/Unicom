@@ -21,10 +21,18 @@ import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 import 'dayjs/locale/pt';
 
+import dayjs from 'dayjs';
+dayjs.locale('pt')
+
+var localizedFormat = require('dayjs/plugin/localizedFormat')
+dayjs.extend(localizedFormat)
+
 const theme = createTheme({
 	palette: {
 			mode: "dark",
-			primary: grey,
+			primary: {
+				main: "#00c853"
+			},
 			secondary: red,
 			background: {
 				 default: "#000000",
