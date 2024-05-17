@@ -66,12 +66,27 @@ import RequestQuoteIcon from '@mui/icons-material/RequestQuote';
 import ChatIcon from '@mui/icons-material/Chat';
 import UpdateIcon from '@mui/icons-material/Update';
 import AddIcon from '@mui/icons-material/Add';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
+import Snackbar from '@mui/material/Snackbar';
+import Tabs from '@mui/material/Tabs';
+import Tab from '@mui/material/Tab';
+import ApartmentIcon from '@mui/icons-material/Apartment';
+import RouterIcon from '@mui/icons-material/Router';
+import Link from '@mui/material/Link';
 
 import CPFInput from "../components/CPFInput";
 import CNPJInput from "../components/CNPJInput";
 import PhoneInput from "../components/PhoneInput";
 import CEPInput from "../components/CEPInput";
+import MoneyInput from "../components/MoneyInput";
 import UsuarioDisplayStack from "../components/UsuarioDisplayStack";
+
+import VendaStatusCategoriaMap from "../model/VendaStatusCategoriaMap";
+
+import axios from "axios";
 
 import dayjs from 'dayjs';
 
@@ -97,6 +112,8 @@ class CreateEditVendaModule extends React.Component {
 
 			anexoList: null,
 
+			tab: "TIPO_DA_VENDA",
+
 			// tipo da venda
 
 			tipoPessoa: null,
@@ -106,7 +123,7 @@ class CreateEditVendaModule extends React.Component {
 
 			cpf: "",
 			nome: "",
-			dataDeNascimento: null,
+			dataNascimento: null,
 			genero: null,
 			rg: "",
 			rgOrgaoEmissor: "",
@@ -145,6 +162,7 @@ class CreateEditVendaModule extends React.Component {
 			// produtos
 			vendaProdutoList: [],
 			addProdutoId: null,
+			addProdutoDialogOpen: false,
 
 			// dados contrato ambos
 
@@ -155,6 +173,7 @@ class CreateEditVendaModule extends React.Component {
 			auditorId: null,
 			origem: "",
 			dataVenda: null,
+			safra: null,
 
 			// dados contrato movel
 
@@ -172,7 +191,7 @@ class CreateEditVendaModule extends React.Component {
 
 			//pagamento
 			formaDePagamento: null,
-			vencimento: null,
+			vencimento: 1,
 			agencia: "",
 			conta: "",
 			banco: "",
@@ -181,18 +200,21 @@ class CreateEditVendaModule extends React.Component {
 			statusId: null,
 			relato: "",
 
+			//faturas
+			faturaList: [],
+
 			//observacao
 			observacao: "",
+
+			//atualização
+			atualizacaoList: null,
+			atualizacaoRows: [],
 
 			saving: false,
 			calling: false,
 			updatingAnexoList: false,
 			uploadingAnexo: false,
 			deletingAnexo: false,
-
-			//atualização
-			atualizacaoList: null,
-			atualizacaoRows: [],
 
 			alertOpen: false,
 			alert: null,
@@ -222,7 +244,12 @@ class CreateEditVendaModule extends React.Component {
 			{nome: "Debito Automático", value: "DEBITO_AUTOMATICO"},
 			{nome: "Cartão de Crédito", value: "CARTAO_CREDITO"},
 		];
-		this.vencimentoEnum = ["1", "3", "7", "10"];
+		this.vencimentoEnum = [1, 3, 7, 10];
+		this.faturaStatusEnum = [
+			{nome: "NA", value: "NA"},
+			{nome: "A Vencer", value: "A_VENCER"},
+			{nome: "Paga", value: "PAGA"},
+		];
 
 		this.atualizacaoColumns = [
 			{ field: 'statusNome', headerName: 'Status', minWidth: 100, flex: 1, renderCell: (params) => <Chip
@@ -242,6 +269,9 @@ class CreateEditVendaModule extends React.Component {
 		this.getVendaStatusListFromApi = this.getVendaStatusListFromApi.bind(this);
 		this.getProdutoListFromApi = this.getProdutoListFromApi.bind(this);
 
+		this.getCepInfoFromApi = this.getCepInfoFromApi.bind(this);
+		this.updateCep = this.updateCep.bind(this);
+
 		this.calculateAtualizacaoRows = this.calculateAtualizacaoRows.bind(this);
 
 		this.addProduto = this.addProduto.bind(this);
@@ -251,6 +281,10 @@ class CreateEditVendaModule extends React.Component {
 		this.addPortabilidade = this.addPortabilidade.bind(this);
 		this.updatePortabilidade = this.updatePortabilidade.bind(this);
 		this.deletePortabilidade = this.deletePortabilidade.bind(this);
+
+		this.addFatura = this.addFatura.bind(this);
+		this.updateFatura = this.updateFatura.bind(this);
+		this.deleteFatura = this.deleteFatura.bind(this);
 
 		this.saveVenda = this.saveVenda.bind(this);
 		this.patchVenda = this.patchVenda.bind(this);
@@ -291,14 +325,110 @@ class CreateEditVendaModule extends React.Component {
 		api.get("/venda/" + this.state.vendaId)
 			.then((response) => {
 				let venda = response.data;
+
+				venda.faturaList.forEach((fatura) => {
+					fatura.mes = dayjs(fatura.mes, "YYYY-MM-DD")
+				})
+
 				this.setState({
 					venda: venda,
-					tipoProduto: venda.tipoProduto,
+
+					// tipo da venda
+
 					tipoPessoa: venda.tipoPessoa,
-					atualizacaoList: venda.atualizacaoList,
+					tipoProduto: venda.tipoProduto,
+
+					// dados pessoa cpf
+
+					cpf: venda.cpf,
+					nome: venda.nome,
+					dataNascimento: venda.dataNascimento !== null ? dayjs(venda.dataNascimento, "YYYY-MM-DD") : null,
+					genero: venda.genero,
+					rg: venda.rg,
+					rgOrgaoEmissor: venda.rgOrgaoEmissor,
+					rgDataEmissao: venda.rgDataEmissao !== null ? dayjs(venda.rgDataEmissao, "YYYY-MM-DD") : null,
+					nomeDaMae: venda.nomeDaMae,
+
+					// dados pessoa cnpj
+
+					cnpj: venda.cnpj,
+					porte: venda.porte,
+					razaoSocial: venda.razaoSocial,
+					dataConstituicao: venda.dataConstituicao !== null ? dayjs(venda.dataConstituicao, "YYYY-MM-DD") : null,
+					dataEmissao: venda.dataEmissao !== null ? dayjs(venda.dataEmissao, "YYYY-MM-DD") : null,
+					representanteLegal: venda.representanteLegal,
+					cpfRepresentanteLegal: venda.cpfRepresentanteLegal,
+
+					// contato
+
+					nomeContato: venda.nomeContato,
+					telefoneCelular: venda.telefoneCelular,
+					telefoneWhatsapp: venda.telefoneWhatsapp,
+					telefoneResidencial: venda.telefoneResidencial,
+					email: venda.email,
+
+					// endereco
+
+					cep: venda.cep,
+					logradouro: venda.logradouro,
+					numero: venda.numero,
+					complemento: venda.complemento,
+					bairro: venda.bairro,
+					referencia: venda.referencia,
+					cidade: venda.cidade,
+					uf: venda.uf,
+
+					// produtos
 					vendaProdutoList: venda.produtoList,
+
+					// dados contrato ambos
+
+					os: venda.os,
+					sistema: venda.sistema,
+					supervisorId: venda.supervisorId,
+					vendedorId: venda.vendedorId,
+					auditorId: venda.auditorId,
+					origem: venda.origem,
+					dataVenda: venda.dataVenda !== null ? dayjs(new Date(venda.dataVenda)) : null,
+					safra: venda.safra !== null ? dayjs(venda.safra, "YYYY-MM-DD") : null,
+
+					// dados contrato movel
+
+					dataAtivacao: venda.dataAtivacao !== null ? dayjs(new Date(venda.dataAtivacao)) : null,
+					prints: venda.prints,
+
+					// dados contrato fibra
+
+					dataAgendamento: venda.dataAgendamento !== null ? dayjs(new Date(venda.dataAgendamento)) : null,
+					dataInstalacao: venda.dataInstalacao !== null ? dayjs(new Date(venda.dataInstalacao)) : null,
+					pdv: venda.pdv,
+					vendaOriginal: venda.vendaOriginal,
+					brscan: venda.brscan,
+					loginVendedor: venda.loginVendedor,
+
+					//pagamento
+					formaDePagamento: venda.formaDePagamento,
+					vencimento: venda.vencimento,
+					agencia: venda.agencia,
+					conta: venda.conta,
+					banco: venda.banco,
+
+					//status
+					statusId: venda.statusId,
+					relato: "",
+
+					//faturas
+					faturaList: venda.faturaList,
+
+					//observacao
+					observacao: venda.observacao,
+
+					//atualização
+					atualizacaoList: venda.atualizacaoList,
+
 					calling: false
 				}, () => this.calculateAtualizacaoRows());
+				console.log(venda);
 			})
 			.catch((err) => {
 				console.log(err);
@@ -377,6 +507,36 @@ class CreateEditVendaModule extends React.Component {
 			});
 	}
 
+	updateCep(cep) {
+		this.setState({cep: cep}, () => {
+			if (this.state.cep.replace(/\D/g, "").length == 8)
+				this.getCepInfoFromApi();
+		});
+	}
+
+	getCepInfoFromApi() {
+		axios.get(`https://viacep.com.br/ws/${this.state.cep.replace(/\D/g, "")}/json`)
+			.then((response) => {
+				if (response?.data?.erro) {
+					this.openAlert("warning", "CEP não encontrado.");
+					return;
+				}
+
+				this.setState({
+					logradouro: response.data?.logradouro ?? "",
+					complemento: response.data?.complemento ?? "",
+					bairro: response.data?.bairro ?? "",
+					cidade: response.data?.localidade ?? "",
+					uf: response.data?.uf ?? ""
+				})
+
+				this.openAlert("success", "CEP encontrado.");
+			})
+			.catch((err) => {
+				this.openAlert("warning", "Falha ao buscar CEP.");
+			});
+	}
+
 	addProduto() {
 		let vendaProdutoList = this.state.vendaProdutoList;
 
@@ -393,14 +553,15 @@ class CreateEditVendaModule extends React.Component {
 			nome: nome,
 			valor: 0,
 			quantidade: 1,
-			telefoneFixo: 0,
+			telefoneFixo: false,
 			valorTelefoneFixo: 0,
-			portabilidade: 0,
+			portabilidade: false,
 			portabilidadeList: [],
 		})
 
 		this.setState({
-			vendaProdutoList: vendaProdutoList
+			vendaProdutoList: vendaProdutoList,
+			addProdutoDialogOpen: false,
 		})
 	}
 
@@ -465,12 +626,53 @@ class CreateEditVendaModule extends React.Component {
 
 	}
 
+	addFatura() {
+		let faturaList = this.state.faturaList;
+
+		faturaList.push({
+			mes: dayjs().set('date', 1),
+			status: "NA",
+			valor: 0,
+		})
+
+		this.setState({
+			faturaList: faturaList
+		})
+	}
+
+	updateFatura(faturaIndex, atributo, valor) {
+
+		let faturaList = this.state.faturaList;
+
+		let fatura = faturaList[faturaIndex];
+
+		fatura[atributo] = valor;
+
+		this.setState({faturaList: faturaList});
+	}
+
+	deleteFatura(faturaIndex) {
+
+		let faturaList = this.state.faturaList;
+
+		faturaList.splice(faturaIndex, 1);
+
+		this.setState({faturaList: faturaList});
+
+	}
+
 	openAlert(severity, message) {
-		this.setState({alert: <Alert severity={severity} onClose={this.closeAlert}>{message}</Alert>, alertOpen: true});
+		this.setState({alert: <Alert severity={severity} onClose={this.closeAlert} sx={{ whiteSpace: 'pre-line' }}>{message}</Alert>, alertOpen: true});
 	}
 
 	closeAlert() {
 		this.setState({alertOpen: false});
+	}
+
+	errorsFormat(errors) {
+		let msg = "----------------\n";
+		Object.keys(errors).forEach((key) => msg += `${key}: ${errors[key]}\n`)
+		return msg;
 	}
 
 	postVenda(data) {
@@ -480,13 +682,8 @@ class CreateEditVendaModule extends React.Component {
 				this.props.navigate("/vendas/" + response.data.vendaId + "?novo");
 			})
 			.catch((err) => {
-				let errors = {};
-				if ("response" in err && "errors" in err.response.data) {
-					errors = err.response.data.errors;
-					this.openAlert("error", "Falha ao criar venda!");
-				}
-				else
-					this.openAlert("error", "Erro inesperado");
+				let errors = err?.response?.data?.errors ?? {};
+				this.openAlert("error", "Falha ao salvar venda!\n" + this.errorsFormat(errors));
 				this.setState({calling: false, saving: false, errors: errors});
 			})
 	}
@@ -500,21 +697,124 @@ class CreateEditVendaModule extends React.Component {
 				this.setState({calling: false, saving: false, errors: {}});
 			})
 			.catch((err) => {
-				let errors = {};
-				if ("response" in err && "errors" in err.response.data) {
-					errors = err.response.data.errors;
-					this.openAlert("error", "Falha ao salvar venda!");
-				}
-				else
-					this.openAlert("error", "Erro inesperado");
+				let errors = err?.response?.data?.errors ?? {};
+				this.openAlert("error", "Falha ao salvar venda!\n" + this.errorsFormat(errors));
 				this.setState({calling: false, saving: false, errors: errors});
 			})
 	}
 
 	saveVenda() {
 
+		let produtoList = JSON.parse(JSON.stringify(this.state.vendaProdutoList));
+
+		produtoList.forEach(produto => {
+
+			produto.portabilidadeList.forEach(portabilidade => {
+				portabilidade.telefone = portabilidade.telefone.replace(/\D/g, "");
+			})
+
+		});
+
+		let faturaList = [];
+
+		this.state.faturaList.forEach((fatura) => {
+			faturaList.push({
+				mes: fatura.mes.set('date', 1).format("YYYY-MM-DD"),
+				status: fatura.status,
+				valor: fatura.valor,
+			})
+		})
+
 		let data = {
+			// tipo da venda
+
+			tipoPessoa: this.state.tipoPessoa,
+			tipoProduto: this.state.tipoProduto,
+
+			// dados pessoa cpf
+
+			cpf: this.state.cpf.replace(/\D/g, ""),
 			nome: this.state.nome,
+			dataNascimento: this.state.dataNascimento !== null ? this.state.dataNascimento.format("YYYY-MM-DD") : null,
+			genero: this.state.genero,
+			rg: this.state.rg,
+			rgOrgaoEmissor: this.state.rgOrgaoEmissor,
+			rgDataEmissao: this.state.rgDataEmissao !== null ? this.state.rgDataEmissao.format("YYYY-MM-DD") : null,
+			nomeDaMae: this.state.nomeDaMae,
+
+			// dados pessoa cnpj
+
+			cnpj: this.state.cnpj.replace(/\D/g, ""),
+			porte: this.state.porte,
+			razaoSocial: this.state.razaoSocial,
+			dataConstituicao: this.state.dataConstituicao !== null ? this.state.dataConstituicao.format("YYYY-MM-DD") : null,
+			dataEmissao: this.state.dataEmissao !== null ? this.state.dataEmissao.format("YYYY-MM-DD") : null,
+			representanteLegal: this.state.representanteLegal,
+			cpfRepresentanteLegal: this.state.cpfRepresentanteLegal.replace(/\D/g, ""),
+
+			// contato
+
+			nomeContato: this.state.nomeContato,
+			telefoneCelular: this.state.telefoneCelular.replace(/\D/g, ""),
+			telefoneWhatsapp: this.state.telefoneWhatsapp.replace(/\D/g, ""),
+			telefoneResidencial: this.state.telefoneResidencial.replace(/\D/g, ""),
+			email: this.state.email,
+
+			// endereco
+
+			cep: this.state.cep.replace(/\D/g, ""),
+			logradouro: this.state.logradouro,
+			numero: this.state.numero,
+			complemento: this.state.complemento,
+			bairro: this.state.bairro,
+			referencia: this.state.referencia,
+			cidade: this.state.cidade,
+			uf: this.state.uf,
+
+			// produtos
+			produtoList: produtoList,
+
+			// dados contrato ambos
+
+			os: this.state.os,
+			sistema: this.state.sistema,
+			supervisorId: this.state.supervisorId,
+			vendedorId: this.state.vendedorId,
+			auditorId: this.state.auditorId,
+			origem: this.state.origem,
+			dataVenda: this.state.dataVenda !== null ? this.state.dataVenda.format("YYYY-MM-DDTHH:mm:ss") : null,
+			safra: this.state.safra !== null ? this.state.safra.format("YYYY-MM-DD") : null,
+
+			// dados contrato movel
+
+			dataAtivacao: this.state.dataAtivacao !== null ? this.state.dataAtivacao.format("YYYY-MM-DDTHH:mm:ss") : null,
+			prints: this.state.prints,
+
+			// dados contrato fibra
+
+			dataAgendamento: this.state.dataAgendamento !== null ? this.state.dataAgendamento.format("YYYY-MM-DDTHH:mm:ss") : null,
+			dataInstalacao: this.state.dataInstalacao !== null ? this.state.dataInstalacao.format("YYYY-MM-DDTHH:mm:ss") : null,
+			pdv: this.state.pdv,
+			vendaOriginal: this.state.vendaOriginal,
+			brscan: this.state.brscan,
+			loginVendedor: this.state.loginVendedor,
+
+			//pagamento
+			formaDePagamento: this.state.formaDePagamento,
+			vencimento: this.state.vencimento,
+			agencia: this.state.agencia,
+			conta: this.state.conta,
+			banco: this.state.banco,
+
+			//status
+			statusId: this.state.statusId,
+			relato: this.state.relato,
+
+			//faturas
+			faturaList: faturaList,
+
+			//observacao
+			observacao: this.state.observacao,
 		};
 
 		if (this.state.createMode)
@@ -574,43 +874,63 @@ class CreateEditVendaModule extends React.Component {
 					<Box display="flex" justifyContent="center">
 						{((!this.state.createMode && this.state.venda == null)
 							) ? <Box width="100%" display="flex" justifyContent="center" m={3}><CircularProgress/></Box> :
-									<Grid container spacing={3} sx={{margin: 0, maxWidth: 1200}}>
+									<Grid container spacing={3} sx={{margin: 0, width: "100%"}}>
 										<Grid item xs={12}>
-											<Divider><Chip icon={<DescriptionIcon />} label="Tipo do Produto" /></Divider>
-										</Grid>
-										<Grid item xs={12}>
-											<ToggleButtonGroup
-												id="tipoProduto"
-												fullWidth
-												color="primary"
-												value={this.state.tipoProduto}
-												exclusive
-												onChange={(event, value) => this.setState({tipoProduto: value})}
-												aria-label="Tipo do Produto"
+											<Tabs
+												value={this.state.tab}
+												onChange={(e, newValue) => this.setState({tab: newValue})}
+												variant="scrollable"
+												scrollButtons
+												allowScrollButtonsMobile
+												aria-label="scrollable auto tabs example"
 											>
-												{this.tipoProdutoEnum.map((tipoProduto) => <ToggleButton key={tipoProduto} value={tipoProduto}>{tipoProduto}</ToggleButton>)}
-											</ToggleButtonGroup>
+												<Tab icon={<DescriptionIcon />} value="TIPO_DA_VENDA" label="Tipo da Venda" />
+												<Tab icon={<PersonIcon />} value="DADOS_DO_CLIENTE" label="Dados do Cliente" />
+												<Tab icon={<LocalPhoneIcon />} value="CONTATO" label="Contato" />
+												<Tab icon={<PlaceIcon />} value="ENDERECO" label="Endereço" />
+												<Tab icon={<DescriptionIcon />} value="PRODUTOS" label="Produtos" />
+												<Tab icon={<GavelIcon />} value="DADOS_DO_CONTRATO" label="Dados do Contrato" />
+												<Tab icon={<PaidIcon />} value="PAGAMENTO" label="Pagamento" />
+												<Tab icon={<RequestQuoteIcon />} value="FATURAS" label="Faturas" />
+												<Tab icon={<ChatIcon />} value="OBSERVACAO" label="Observação" />
+												<Tab icon={<InfoIcon />} value="STATUS" label="Status / Salvar" />
+												<Tab icon={<AttachmentIcon />} value="ANEXOS" label="Anexos" />
+												<Tab icon={<UpdateIcon />} value="ATUALIZACOES" label="Atualizações" />
+											</Tabs>
 										</Grid>
-										<Grid item xs={12}>
-											<Divider><Chip icon={<SwitchAccountIcon />} label="Tipo da Pessoa" /></Divider>
-										</Grid>
-										<Grid item xs={12}>
-											<ToggleButtonGroup
-												id="tipoPessoa"
-												fullWidth
-												color="primary"
-												value={this.state.tipoPessoa}
-												exclusive
-												onChange={(event, value) => this.setState({tipoPessoa: value})}
-												aria-label="Tipo da Pessoa"
-											>
-												{this.tipoPessoaEnum.map((tipoPessoa) => <ToggleButton key={tipoPessoa} value={tipoPessoa}>{tipoPessoa}</ToggleButton>)}
-											</ToggleButtonGroup>
-										</Grid>
-										{this.state.tipoProduto !== null && this.state.tipoPessoa !== null ? <React.Fragment>
+
+										{this.state.tab == "TIPO_DA_VENDA" ? <React.Fragment>
 											<Grid item xs={12}>
-												<Divider><Chip icon={<PersonIcon />} label="Dados do Cliente" /></Divider>
+												<ToggleButtonGroup
+													id="tipoProduto"
+													fullWidth
+													color="primary"
+													value={this.state.tipoProduto}
+													exclusive
+													onChange={(event, value) => this.setState({tipoProduto: value})}
+													aria-label="Tipo do Produto"
+												>
+													<ToggleButton value={"FIBRA"} sx={{display: "flex", flexDirection: "row", gap: 1}}><RouterIcon/>FIBRA</ToggleButton>
+													<ToggleButton value={"MOVEL"} sx={{display: "flex", flexDirection: "row", gap: 1}}><SmartphoneIcon/>MOVEL</ToggleButton>
+												</ToggleButtonGroup>
 											</Grid>
+											<Grid item xs={12}>
+												<ToggleButtonGroup
+													id="tipoPessoa"
+													fullWidth
+													color="primary"
+													value={this.state.tipoPessoa}
+													exclusive
+													onChange={(event, value) => this.setState({tipoPessoa: value})}
+													aria-label="Tipo da Pessoa"
+												>
+													<ToggleButton value={"CPF"} sx={{display: "flex", flexDirection: "row", gap: 1}}><PersonIcon/>CPF</ToggleButton>
+													<ToggleButton value={"CNPJ"} sx={{display: "flex", flexDirection: "row", gap: 1}}><ApartmentIcon/>CNPJ</ToggleButton>
+												</ToggleButtonGroup>
+											</Grid>
+										</React.Fragment> : ""}
+
+										{this.state.tab == "DADOS_DO_CLIENTE" ? <React.Fragment>
 											{this.state.tipoPessoa == "CPF" ? <React.Fragment>
 												<Grid item xs={6}>
 													<CPFInput
@@ -619,7 +939,6 @@ class CreateEditVendaModule extends React.Component {
 														onChange={(e) => this.setState({cpf: e.target.value})}
 														fullWidth
 														label="CPF"
-														required
 														variant="outlined"
 														disabled={this.state.calling}
 														error={"nome" in this.state.errors}
@@ -633,7 +952,6 @@ class CreateEditVendaModule extends React.Component {
 														onChange={(e) => this.setState({nome: e.target.value})}
 														fullWidth
 														label="Nome"
-														required
 														variant="outlined"
 														disabled={this.state.calling}
 														error={"nome" in this.state.errors}
@@ -646,14 +964,14 @@ class CreateEditVendaModule extends React.Component {
 												<Grid item xs={6}>
 													<DatePicker
 														label="Data de Nascimento"
-														value={this.state.dataDeNascimento}
-														onChange={(newValue) => this.setState({dataDeNascimento: newValue})}
+														value={this.state.dataNascimento}
+														onChange={(newValue) => this.setState({dataNascimento: newValue})}
 														slotProps={{
 															field: { clearable: true },
 															textField: {
 																fullWidth: true,
-																error: "dataDeNascimento" in this.state.errors,
-																helperText: this.state.errors?.dataDeNascimento ?? "",
+																error: "dataNascimento" in this.state.errors,
+																helperText: this.state.errors?.dataNascimento ?? "",
 															},
 														}}
 													/>
@@ -679,7 +997,6 @@ class CreateEditVendaModule extends React.Component {
 														onChange={(e) => this.setState({rg: e.target.value})}
 														fullWidth
 														label="RG"
-														required
 														variant="outlined"
 														disabled={this.state.calling}
 														error={"rg" in this.state.errors}
@@ -696,7 +1013,6 @@ class CreateEditVendaModule extends React.Component {
 														onChange={(e) => this.setState({rgOrgaoEmissor: e.target.value})}
 														fullWidth
 														label="Órgão Emissor"
-														required
 														variant="outlined"
 														disabled={this.state.calling}
 														error={"rgOrgaoEmissor" in this.state.errors}
@@ -728,7 +1044,6 @@ class CreateEditVendaModule extends React.Component {
 														onChange={(e) => this.setState({nomeDaMae: e.target.value})}
 														fullWidth
 														label="Nome da Mãe"
-														required
 														variant="outlined"
 														disabled={this.state.calling}
 														error={"nomeDaMae" in this.state.errors}
@@ -746,7 +1061,6 @@ class CreateEditVendaModule extends React.Component {
 														onChange={(e) => this.setState({cnpj: e.target.value})}
 														fullWidth
 														label="CNPJ"
-														required
 														variant="outlined"
 														disabled={this.state.calling}
 														error={"cnpj" in this.state.errors}
@@ -774,7 +1088,6 @@ class CreateEditVendaModule extends React.Component {
 														onChange={(e) => this.setState({razaoSocial: e.target.value})}
 														fullWidth
 														label="Razão Social"
-														required
 														variant="outlined"
 														disabled={this.state.calling}
 														error={"razaoSocial" in this.state.errors}
@@ -821,7 +1134,6 @@ class CreateEditVendaModule extends React.Component {
 														onChange={(e) => this.setState({representanteLegal: e.target.value})}
 														fullWidth
 														label="Representante Legal"
-														required
 														variant="outlined"
 														disabled={this.state.calling}
 														error={"representanteLegal" in this.state.errors}
@@ -838,7 +1150,6 @@ class CreateEditVendaModule extends React.Component {
 														onChange={(e) => this.setState({cpfRepresentanteLegal: e.target.value})}
 														fullWidth
 														label="CPF do Representante Legal"
-														required
 														variant="outlined"
 														disabled={this.state.calling}
 														error={"cpfRepresentanteLegal" in this.state.errors}
@@ -846,9 +1157,9 @@ class CreateEditVendaModule extends React.Component {
 													/>
 												</Grid>
 											</React.Fragment>}
-											<Grid item xs={12}>
-												<Divider><Chip icon={<LocalPhoneIcon />} label="Contato" /></Divider>
-											</Grid>
+										</React.Fragment> : ""}
+
+										{this.state.tab == "CONTATO" ? <React.Fragment>
 											<Grid item xs={12}>
 												<TextField
 													id="nome-contato"
@@ -856,7 +1167,6 @@ class CreateEditVendaModule extends React.Component {
 													onChange={(e) => this.setState({nomeContato: e.target.value})}
 													fullWidth
 													label="Nome Contato"
-													required
 													variant="outlined"
 													disabled={this.state.calling}
 													error={"nomeContato" in this.state.errors}
@@ -873,7 +1183,6 @@ class CreateEditVendaModule extends React.Component {
 													onChange={(e) => this.setState({telefoneCelular: e.target.value})}
 													fullWidth
 													label="Telefone Celular"
-													required
 													variant="outlined"
 													disabled={this.state.calling}
 													error={"telefoneCelular" in this.state.errors}
@@ -887,7 +1196,6 @@ class CreateEditVendaModule extends React.Component {
 													onChange={(e) => this.setState({telefoneWhatsapp: e.target.value})}
 													fullWidth
 													label="Whatsapp"
-													required
 													variant="outlined"
 													disabled={this.state.calling}
 													error={"telefoneWhatsapp" in this.state.errors}
@@ -901,7 +1209,6 @@ class CreateEditVendaModule extends React.Component {
 													onChange={(e) => this.setState({telefoneResidencial: e.target.value})}
 													fullWidth
 													label="Telefone Residencial"
-													required
 													variant="outlined"
 													disabled={this.state.calling}
 													error={"telefoneResidencial" in this.state.errors}
@@ -915,7 +1222,6 @@ class CreateEditVendaModule extends React.Component {
 													onChange={(e) => this.setState({email: e.target.value})}
 													fullWidth
 													label="Email"
-													required
 													variant="outlined"
 													disabled={this.state.calling}
 													error={"email" in this.state.errors}
@@ -925,22 +1231,22 @@ class CreateEditVendaModule extends React.Component {
 													}}
 												/>
 											</Grid>
-											<Grid item xs={12}>
-												<Divider><Chip icon={<PlaceIcon />} label="Endereço" /></Divider>
-											</Grid>
-											<Grid item xs={4}>
+										</React.Fragment> : ""}
+
+										{this.state.tab == "ENDERECO" ? <React.Fragment>
+											<Grid item container xs={4} display="flex" gap={1} flexDirection="column">
 												<CEPInput
 													id="cep"
 													value={this.state.cep}
-													onChange={(e) => this.setState({cep: e.target.value})}
+													onChange={(e) => this.updateCep(e.target.value)}
 													fullWidth
 													label="CEP"
-													required
 													variant="outlined"
 													disabled={this.state.calling}
 													error={"cep" in this.state.errors}
 													helperText={this.state.errors?.cep ?? ""}
 												/>
+												<Link href="https://buscacepinter.correios.com.br/app/endereco/index.php" target="_blank" sx={{alignSelf: "end"}}>Descobrir CEP</Link>
 											</Grid>
 											<Grid item xs={4}>
 												<TextField
@@ -949,7 +1255,6 @@ class CreateEditVendaModule extends React.Component {
 													onChange={(e) => this.setState({logradouro: e.target.value})}
 													fullWidth
 													label="Logradouro"
-													required
 													variant="outlined"
 													disabled={this.state.calling}
 													error={"logradouro" in this.state.errors}
@@ -966,7 +1271,6 @@ class CreateEditVendaModule extends React.Component {
 													onChange={(e) => this.setState({numero: e.target.value})}
 													fullWidth
 													label="Número"
-													required
 													variant="outlined"
 													disabled={this.state.calling}
 													error={"numero" in this.state.errors}
@@ -983,7 +1287,6 @@ class CreateEditVendaModule extends React.Component {
 													onChange={(e) => this.setState({complemento: e.target.value})}
 													fullWidth
 													label="Complemento"
-													required
 													variant="outlined"
 													disabled={this.state.calling}
 													error={"complemento" in this.state.errors}
@@ -1000,7 +1303,6 @@ class CreateEditVendaModule extends React.Component {
 													onChange={(e) => this.setState({bairro: e.target.value})}
 													fullWidth
 													label="Bairro"
-													required
 													variant="outlined"
 													disabled={this.state.calling}
 													error={"bairro" in this.state.errors}
@@ -1017,7 +1319,6 @@ class CreateEditVendaModule extends React.Component {
 													onChange={(e) => this.setState({referencia: e.target.value})}
 													fullWidth
 													label="Referência"
-													required
 													variant="outlined"
 													disabled={this.state.calling}
 													error={"referencia" in this.state.errors}
@@ -1034,7 +1335,6 @@ class CreateEditVendaModule extends React.Component {
 													onChange={(e) => this.setState({cidade: e.target.value})}
 													fullWidth
 													label="Cidade"
-													required
 													variant="outlined"
 													disabled={this.state.calling}
 													error={"cidade" in this.state.errors}
@@ -1051,7 +1351,6 @@ class CreateEditVendaModule extends React.Component {
 													onChange={(e) => this.setState({uf: e.target.value})}
 													fullWidth
 													label="UF"
-													required
 													variant="outlined"
 													disabled={this.state.calling}
 													error={"uf" in this.state.errors}
@@ -1061,11 +1360,12 @@ class CreateEditVendaModule extends React.Component {
 													}}
 												/>
 											</Grid>
-											<Grid item xs={12}>
-												<Divider><Chip icon={<DescriptionIcon />} label="Produtos" /></Divider>
-											</Grid>
+										</React.Fragment> : ""}
+
+										{this.state.tab == "PRODUTOS" ? <React.Fragment>
 											<Grid item xs={12}>
 												<Box display="flex" flexDirection="column" gap={3}>
+													{this.state.vendaProdutoList.length == 0 ? <Alert severity="info">Os produtos que você adicionar aparecerão aqui.</Alert> : ""}
 													{this.state.vendaProdutoList.map((produto, i) => 
 														<Paper key={i} sx={{padding: 1}}>
 															<Grid container spacing={3}>
@@ -1075,7 +1375,6 @@ class CreateEditVendaModule extends React.Component {
 																		onChange={(e) => this.updateProduto(i, "nome", e.target.value)}
 																		fullWidth
 																		label="Nome"
-																		required
 																		variant="outlined"
 																		disabled={this.state.calling}
 																		inputProps={{
@@ -1096,12 +1395,11 @@ class CreateEditVendaModule extends React.Component {
 																	</FormControl>
 																</Grid>
 																<Grid item xs={6}>
-																	<TextField
+																	<MoneyInput
 																		value={produto.valor}
 																		onChange={(e) => this.updateProduto(i, "valor", e.target.value)}
 																		fullWidth
 																		label="Valor"
-																		required
 																		variant="outlined"
 																		disabled={this.state.calling}
 																	/>
@@ -1112,7 +1410,6 @@ class CreateEditVendaModule extends React.Component {
 																		onChange={(e) => this.updateProduto(i, "quantidade", e.target.value)}
 																		fullWidth
 																		label="Quantidade"
-																		required
 																		variant="outlined"
 																		disabled={this.state.calling}
 																	/>
@@ -1136,8 +1433,9 @@ class CreateEditVendaModule extends React.Component {
 																	{String(produto.portabilidade) == "true" ? <React.Fragment>
 																		<Grid item xs={12}>
 																			<Box display="flex" flexDirection="column" gap={3}>
+																				{produto.portabilidadeList.length == 0 ? <Alert severity="info">As portabilidades que você adicionar aparecerão aqui.</Alert> : ""}
 																				{produto.portabilidadeList.map((portabilidade, j) => 
-																					<Paper elevation={2} key={i} sx={{padding: 1}}>
+																					<Paper elevation={2} key={j} sx={{padding: 1}}>
 																						<Grid container spacing={3}>
 																							<Grid item xs={5}>
 																								<PhoneInput
@@ -1145,7 +1443,6 @@ class CreateEditVendaModule extends React.Component {
 																									onChange={(e) => this.updatePortabilidade(i, j, "telefone", e.target.value)}
 																									fullWidth
 																									label="Número"
-																									required
 																									variant="outlined"
 																									disabled={this.state.calling}
 																								/>
@@ -1156,7 +1453,6 @@ class CreateEditVendaModule extends React.Component {
 																									onChange={(e) => this.updatePortabilidade(i, j, "operadora", e.target.value)}
 																									fullWidth
 																									label="Operadora"
-																									required
 																									variant="outlined"
 																									disabled={this.state.calling}
 																								/>
@@ -1169,12 +1465,12 @@ class CreateEditVendaModule extends React.Component {
 																				)}
 																			</Box>
 																		</Grid>
-																		<Grid item xs={12}>
+																		<Grid item xs={12} container display="flex" justifyContent="flex-end">
 																			<Button variant="contained" size="large" startIcon={<AddIcon />} onClick={() => this.addPortabilidade(i)}>Adicionar Portabilidade</Button>
 																		</Grid>
 																	</React.Fragment> : ""}
 																</React.Fragment> : <React.Fragment>
-																	<Grid item xs={6}>
+																	<Grid item xs={3}>
 																		<FormControl>
 																			<FormLabel id={"telefone-fixo" + i}>Telefone Fixo</FormLabel>
 																			<RadioGroup
@@ -1190,50 +1486,31 @@ class CreateEditVendaModule extends React.Component {
 																		</FormControl>
 																	</Grid>
 																	{String(produto.telefoneFixo) == "true" ?
-																		<Grid item xs={6}>
-																			<TextField
+																		<Grid item xs={3}>
+																			<MoneyInput
 																				value={produto.valorTelefoneFixo}
 																				onChange={(e) => this.updateProduto(i, "valorTelefoneFixo", e.target.value)}
 																				fullWidth
 																				label="Valor Telefone Fixo"
-																				required
 																				variant="outlined"
 																				disabled={this.state.calling}
 																			/>
 																		</Grid> : ""}
 																</React.Fragment>}
 																<Grid item xs={12}>
-																	<Button fullWidth color="error" variant="contained" size="large" startIcon={<AddIcon />} onClick={() => this.deleteProduto(i)}>Remover Produto</Button>
+																	<Button color="error" variant="contained" size="large" startIcon={<DeleteIcon />} onClick={() => this.deleteProduto(i)}>Remover Produto</Button>
 																</Grid>
 															</Grid>
 														</Paper>
 													)}
 												</Box>
 											</Grid>
-											<Grid item xs={12}>
-												<Autocomplete
-													id="add-produto"
-													loading={this.state.produtoList == null}
-													options={Object.keys(this.state.produtoByProdutoId ?? {}).map(key => parseInt(key))}
-													getOptionLabel={(option) => `${this.state.produtoByProdutoId[option].nome} - ${this.state.produtoByProdutoId[option].tipo}`}
-													value={this.state.addProdutoId}
-													onChange={(event, value) => this.setState({addProdutoId: value})}
-													renderInput={(params) => (
-														<TextField
-															{...params}
-															variant="outlined"
-															label="Novo Produto"
-															helperText={this.state.addProdutoId == null ? "produto personalizado" : ""}
-														/>
-													)}
-												/>
+											<Grid item xs={12} container display="flex" justifyContent="flex-end">
+												<Button variant="contained" size="large" startIcon={<AddIcon />} onClick={() => this.setState({addProdutoDialogOpen: true})}>Adicionar Produto</Button>
 											</Grid>
-											<Grid item xs={12}>
-												<Button fullWidth variant="contained" size="large" startIcon={<AddIcon />} onClick={this.addProduto}>Adicionar Produto</Button>
-											</Grid>
-											<Grid item xs={12}>
-												<Divider><Chip icon={<GavelIcon />} label="Dados do Contrato" /></Divider>
-											</Grid>
+										</React.Fragment> : ""}
+
+										{this.state.tab == "DADOS_DO_CONTRATO" ? <React.Fragment>
 											<Grid item xs={6}>
 												<TextField
 													id="os"
@@ -1241,7 +1518,6 @@ class CreateEditVendaModule extends React.Component {
 													onChange={(e) => this.setState({os: e.target.value})}
 													fullWidth
 													label="OS"
-													required
 													variant="outlined"
 													disabled={this.state.calling}
 													error={"os" in this.state.errors}
@@ -1265,14 +1541,13 @@ class CreateEditVendaModule extends React.Component {
 													</Select>
 												</FormControl>
 											</Grid>
-											<Grid item xs={6}>
+											<Grid item xs={4}>
 												<TextField
 													id="origem"
 													value={this.state.origem}
 													onChange={(e) => this.setState({origem: e.target.value})}
 													fullWidth
 													label="Mailing/Origem"
-													required
 													variant="outlined"
 													disabled={this.state.calling}
 													error={"origem" in this.state.errors}
@@ -1282,27 +1557,43 @@ class CreateEditVendaModule extends React.Component {
 													}}
 												/>
 											</Grid>
-											<Grid item xs={6}>
-													<DateTimePicker
-														label="Data da Venda"
-														value={this.state.dataVenda}
-														onChange={(newValue) => this.setState({dataVenda: newValue})}
-														slotProps={{
-															field: { clearable: true },
-															textField: {
-																fullWidth: true,
-																error: "dataVenda" in this.state.errors,
-																helperText: this.state.errors?.dataVenda ?? this.state.dataVenda == null ? "agora" : "outra data",
-															},
-														}}
-													/>
-												</Grid>
+											<Grid item xs={4}>
+												<DatePicker
+													label="Safra"
+													views={['month', 'year']}
+													value={this.state.safra}
+													onChange={(newValue) => this.setState({safra: newValue})}
+													slotProps={{
+														field: { clearable: true },
+														textField: {
+															fullWidth: true,
+															error: "safra" in this.state.errors,
+															helperText: this.state.errors?.safra ?? "",
+														},
+													}}
+												/>
+											</Grid>
+											<Grid item xs={4}>
+												<DateTimePicker
+													label="Data da Venda"
+													value={this.state.dataVenda}
+													onChange={(newValue) => this.setState({dataVenda: newValue})}
+													slotProps={{
+														field: { clearable: true },
+														textField: {
+															fullWidth: true,
+															error: "dataVenda" in this.state.errors,
+															helperText: this.state.errors?.dataVenda ?? (this.state.createMode ? (this.state.dataVenda == null ? "agora" : "outra data") : ""),
+														},
+													}}
+												/>
+											</Grid>
 											{!this.state.createMode ? <React.Fragment>
 												<Grid item xs={4}>
 													<Autocomplete
 														id="vendedor"
 														options={Object.keys(this.state.usuarioByUsuarioId ?? {}).map(key => parseInt(key))}
-														getOptionLabel={(option) => this.state.usuarioByUsuarioId[option].nome}
+														getOptionLabel={(option) => this.state.usuarioByUsuarioId?.[option]?.nome}
 														renderOption={(props, option) => <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props}>
 																	<Stack direction="row" spacing={1} alignItems="center">
 																		<Avatar src={this.state.usuarioByUsuarioId[option].fotoPerfil ? api.defaults.baseURL + "/usuario/" + this.state.usuarioByUsuarioId[option].usuarioId + "/foto-perfil?versao=" + this.state.usuarioByUsuarioId[option].fotoPerfilVersao : ""}>{this.state.usuarioByUsuarioId[option].nome.charAt(0)}</Avatar>
@@ -1320,14 +1611,14 @@ class CreateEditVendaModule extends React.Component {
 															/>
 														)}
 														loading={this.state.usuarioList == null}
-														readOnly
+														readOnly={!this.props.usuario.permissaoList.includes("ALTERAR_VENDEDOR")}
 													/>
 												</Grid>
 												<Grid item xs={4}>
 													<Autocomplete
 														id="supervisor"
 														options={Object.keys(this.state.usuarioByUsuarioId ?? {}).map(key => parseInt(key))}
-														getOptionLabel={(option) => this.state.usuarioByUsuarioId[option].nome}
+														getOptionLabel={(option) => this.state.usuarioByUsuarioId?.[option]?.nome}
 														renderOption={(props, option) => <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props}>
 																	<Stack direction="row" spacing={1} alignItems="center">
 																		<Avatar src={this.state.usuarioByUsuarioId[option].fotoPerfil ? api.defaults.baseURL + "/usuario/" + this.state.usuarioByUsuarioId[option].usuarioId + "/foto-perfil?versao=" + this.state.usuarioByUsuarioId[option].fotoPerfilVersao : ""}>{this.state.usuarioByUsuarioId[option].nome.charAt(0)}</Avatar>
@@ -1345,14 +1636,14 @@ class CreateEditVendaModule extends React.Component {
 															/>
 														)}
 														loading={this.state.usuarioList == null}
-														readOnly
+														readOnly={!this.props.usuario.permissaoList.includes("ALTERAR_VENDEDOR")}
 													/>
 												</Grid>
 												<Grid item xs={4}>
 													<Autocomplete
 														id="auditor"
 														options={Object.keys(this.state.usuarioByUsuarioId).map(key => parseInt(key))}
-														getOptionLabel={(option) => this.state.usuarioByUsuarioId[option].nome}
+														getOptionLabel={(option) => this.state.usuarioByUsuarioId?.[option]?.nome}
 														renderOption={(props, option) => <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props}>
 																	<Stack direction="row" spacing={1} alignItems="center">
 																		<Avatar src={this.state.usuarioByUsuarioId[option].fotoPerfil ? api.defaults.baseURL + "/usuario/" + this.state.usuarioByUsuarioId[option].usuarioId + "/foto-perfil?versao=" + this.state.usuarioByUsuarioId[option].fotoPerfilVersao : ""}>{this.state.usuarioByUsuarioId[option].nome.charAt(0)}</Avatar>
@@ -1370,7 +1661,7 @@ class CreateEditVendaModule extends React.Component {
 															/>
 														)}
 														loading={this.state.usuarioList == null}
-														readOnly
+														readOnly={!this.props.usuario.permissaoList.includes("ALTERAR_AUDITOR")}
 													/>
 												</Grid>
 											</React.Fragment> : ""}
@@ -1443,7 +1734,6 @@ class CreateEditVendaModule extends React.Component {
 														onChange={(e) => this.setState({pdv: e.target.value})}
 														fullWidth
 														label="PDV"
-														required
 														variant="outlined"
 														disabled={this.state.calling}
 														error={"pdv" in this.state.errors}
@@ -1490,7 +1780,6 @@ class CreateEditVendaModule extends React.Component {
 														onChange={(e) => this.setState({loginVendedor: e.target.value})}
 														fullWidth
 														label="Login Vendedor"
-														required
 														variant="outlined"
 														disabled={this.state.calling}
 														error={"loginVendedor" in this.state.errors}
@@ -1501,9 +1790,9 @@ class CreateEditVendaModule extends React.Component {
 													/>
 												</Grid>
 											</React.Fragment>}
-											<Grid item xs={12}>
-												<Divider><Chip icon={<PaidIcon />} label="Pagamento" /></Divider>
-											</Grid>
+										</React.Fragment> : ""}
+
+										{this.state.tab == "PAGAMENTO" ? <React.Fragment>
 											<Grid item xs={12}>
 												<FormControl fullWidth>
 													<InputLabel>Forma de Pagamento</InputLabel>
@@ -1520,18 +1809,23 @@ class CreateEditVendaModule extends React.Component {
 											</Grid>
 											{this.state.formaDePagamento == "BOLETO" ?
 												<Grid item xs={12}>
-													<FormControl fullWidth>
-														<InputLabel>Vencimento</InputLabel>
-														<Select
-															id="vencimento"
-															value={this.state.vencimento}
-															label="Vencimento"
-															onChange={(e) => this.setState({vencimento: e.target.value})}
-															>
-															<MenuItem key={"nenhum"} value={null}>Nenhum</MenuItem>
-															{this.vencimentoEnum.map((vencimento) => <MenuItem key={vencimento} value={vencimento}>{vencimento}</MenuItem>)}
-														</Select>
-													</FormControl>
+													<Autocomplete
+														id="vencimento"
+														freeSolo
+														disableClearable
+														options={this.vencimentoEnum}
+														value={this.state.vencimento}
+														onChange={(event, value) => this.setState({vencimento: value})}
+														renderInput={(params) => (
+															<TextField
+																{...params}
+																variant="outlined"
+																label="Vencimento"
+																error={"vencimento" in this.state.errors}
+																helperText={this.state.errors?.vencimento ?? ""}
+															/>
+														)}
+													/>
 												</Grid>
 											: this.state.formaDePagamento == "DEBITO_AUTOMATICO" ? <React.Fragment>
 												<Grid item xs={4}>
@@ -1541,7 +1835,6 @@ class CreateEditVendaModule extends React.Component {
 														onChange={(e) => this.setState({agencia: e.target.value})}
 														fullWidth
 														label="Agência"
-														required
 														variant="outlined"
 														disabled={this.state.calling}
 														error={"agencia" in this.state.errors}
@@ -1558,7 +1851,6 @@ class CreateEditVendaModule extends React.Component {
 														onChange={(e) => this.setState({conta: e.target.value})}
 														fullWidth
 														label="Conta"
-														required
 														variant="outlined"
 														disabled={this.state.calling}
 														error={"conta" in this.state.errors}
@@ -1575,7 +1867,6 @@ class CreateEditVendaModule extends React.Component {
 														onChange={(e) => this.setState({banco: e.target.value})}
 														fullWidth
 														label="Banco"
-														required
 														variant="outlined"
 														disabled={this.state.calling}
 														error={"banco" in this.state.errors}
@@ -1586,12 +1877,64 @@ class CreateEditVendaModule extends React.Component {
 													/>
 												</Grid>
 											</React.Fragment> : ""}
+										</React.Fragment> : ""}
+
+										{this.state.tab == "FATURAS" ? <React.Fragment>
 											<Grid item xs={12}>
-												<Divider><Chip icon={<RequestQuoteIcon />} label="Faturas" /></Divider>
+												<Box display="flex" flexDirection="column" gap={3}>
+													{this.state.faturaList.length == 0 ? <Alert severity="info">As faturas que você adicionar aparecerão aqui.</Alert> : ""}
+													{this.state.faturaList.map((fatura, i) => 
+														<Paper key={i} sx={{padding: 1}}>
+															<Grid container spacing={3}>
+																<Grid item xs={3}>
+																	<DatePicker
+																		label="Mês"
+																		views={['month', 'year']}
+																		value={fatura.mes}
+																		onChange={(newValue) => this.updateFatura(i, "mes", newValue)}
+																		slotProps={{
+																			textField: {
+																				fullWidth: true,
+																			}
+																		}}
+																	/>
+																</Grid>
+																<Grid item xs={3}>
+																	<FormControl fullWidth>
+																		<InputLabel>Status</InputLabel>
+																		<Select
+																			value={fatura.status}
+																			label="Status"
+																			onChange={(e) => this.updateFatura(i, "status", e.target.value)}
+																			>
+																			{this.faturaStatusEnum.map((status) => <MenuItem key={status.value} value={status.value}>{status.nome}</MenuItem>)}
+																		</Select>
+																	</FormControl>
+																</Grid>
+																<Grid item xs={3}>
+																	<MoneyInput
+																		value={fatura.valor}
+																		onChange={(e) => this.updateFatura(i, "valor", e.target.value)}
+																		fullWidth
+																		label="Valor"
+																		variant="outlined"
+																		disabled={this.state.calling}
+																	/>
+																</Grid>
+																<Grid item xs={3}>
+																	<Button fullWidth color="error" variant="contained" size="large" startIcon={<DeleteIcon />} onClick={() => this.deleteFatura(i)}>Remover</Button>
+																</Grid>
+															</Grid>
+														</Paper>
+													)}
+												</Box>
 											</Grid>
-											<Grid item xs={12}>
-												<Divider><Chip icon={<ChatIcon />} label="Observação" /></Divider>
+											<Grid item xs={12} container display="flex" justifyContent="flex-end">
+												<Button variant="contained" size="large" startIcon={<AddIcon />} onClick={this.addFatura}>Adicionar Fatura</Button>
 											</Grid>
+										</React.Fragment> : ""}
+
+										{this.state.tab == "OBSERVACAO" ? <React.Fragment>
 											<Grid item xs={12}>
 												<TextField
 													id="observacao"
@@ -1599,7 +1942,6 @@ class CreateEditVendaModule extends React.Component {
 													onChange={(e) => this.setState({observacao: e.target.value})}
 													fullWidth
 													label="Observação"
-													required
 													variant="outlined"
 													disabled={this.state.calling}
 													error={"observacao" in this.state.errors}
@@ -1611,15 +1953,16 @@ class CreateEditVendaModule extends React.Component {
 													rows={4}
 												/>
 											</Grid>
-											<Grid item xs={12}>
-												<Divider><Chip icon={<InfoIcon />} label="Status" /></Divider>
-											</Grid>
+										</React.Fragment> : ""}
+
+										{this.state.tab == "STATUS" ? <React.Fragment>
 											<Grid item xs={6}>
 												<Autocomplete
 													id="status"
 													loading={this.state.vendaStatusList == null}
-													options={Object.keys(this.state.vendaStatusByVendaStatusId ?? {}).map(key => parseInt(key))}
-													getOptionLabel={(option) => this.state.vendaStatusByVendaStatusId[option].nome}
+													options={(this.state.vendaStatusList ?? []).map((vendaStatus) => vendaStatus.vendaStatusId).sort((a, b) => this.state.vendaStatusByVendaStatusId[a].ordem - this.state.vendaStatusByVendaStatusId[b].ordem)}
+													groupBy={(option) => VendaStatusCategoriaMap?.[this.state.vendaStatusByVendaStatusId?.[option]?.categoria] ?? "Sem Categoria"}
+													getOptionLabel={(option) => this.state.vendaStatusByVendaStatusId?.[option]?.nome ?? ""}
 													value={this.state.statusId}
 													onChange={(event, value) => this.setState({statusId: value})}
 													renderInput={(params) => (
@@ -1656,7 +1999,6 @@ class CreateEditVendaModule extends React.Component {
 													onChange={(e) => this.setState({relato: e.target.value})}
 													fullWidth
 													label="Relato"
-													required
 													variant="outlined"
 													disabled={this.state.calling}
 													error={"relato" in this.state.errors}
@@ -1671,9 +2013,9 @@ class CreateEditVendaModule extends React.Component {
 											<Grid item xs={12}>
 												<LoadingButton fullWidth variant="contained" size="large" startIcon={<SaveIcon />} loadingPosition="start" loading={this.state.saving} disabled={this.state.calling} onClick={this.saveVenda}>Salvar Venda</LoadingButton>
 											</Grid>
-											<Grid item xs={12}>
-												<Divider><Chip icon={<AttachmentIcon />} label="Anexos" /></Divider>
-											</Grid>
+										</React.Fragment> : ""}
+
+										{this.state.tab == "ANEXOS" ? <React.Fragment>
 											{!this.state.createMode ? <React.Fragment>
 												<Grid item xs={12}>
 													<ButtonGroup sx={{marginBottom: 3}}>
@@ -1687,6 +2029,7 @@ class CreateEditVendaModule extends React.Component {
 													</ButtonGroup>
 												</Grid>
 												<Grid item xs={12}>
+													{(this.state?.anexoList ?? []).length == 0 ? <Alert severity="info">Os anexos que você adicionar aparecerão aqui.</Alert> : ""}
 													<Stack direction="row" spacing={1}>
 														{(this.state?.anexoList ?? []).map((anexo) =>
 															<Chip
@@ -1701,10 +2044,10 @@ class CreateEditVendaModule extends React.Component {
 													</Stack>
 												</Grid>
 											</React.Fragment> : <Grid item xs={12}><Alert severity="info">Você poderá enviar anexos após salvar a venda.</Alert></Grid>}
+										</React.Fragment> : ""}
+
+										{this.state.tab == "ATUALIZACOES" ? <React.Fragment>
 											{!this.state.createMode ? <React.Fragment>
-												<Grid item xs={12}>
-													<Divider><Chip icon={<UpdateIcon />} label="Atualizações" /></Divider>
-												</Grid>
 												<Grid item xs={12}>
 													<DataGrid
 														rows={this.state.atualizacaoRows}
@@ -1723,20 +2066,49 @@ class CreateEditVendaModule extends React.Component {
 														sx={{marginBottom: 3}}
 													/>
 												</Grid>
-											</React.Fragment> : ""}
-											{/*<Grid item xs={12}>
-												<pre>
-													{JSON.stringify(this.state.venda, null, "\t")}
-												</pre>
-											</Grid>*/}
-										</React.Fragment> : <Grid item xs={12}><Alert severity="info">Selecione o tipo do produto e o tipo da pessoa da venda.</Alert></Grid>}
+											</React.Fragment> : <Grid item xs={12}><Alert severity="info">Você poderá ver as atualizações da venda após salva-la.</Alert></Grid>}
+										</React.Fragment> : ""}
+
 									</Grid>
 								}
 							</Box>
-					<Collapse in={this.state.alertOpen}>
-						{this.state.alert}
-					</Collapse>
 				</Paper>
+				<Snackbar open={this.state.alertOpen} onClose={(e, reason) => (reason !== "clickaway") ? this.closeAlert() : ""} anchorOrigin={{vertical: "bottom", horizontal: "right"}}>
+					{this.state.alert}
+				</Snackbar>
+				<Dialog
+					disableEscapeKeyDown
+					open={this.state.addProdutoDialogOpen}
+					onClose={() => this.setState({addProdutoDialogOpen: false})}
+					fullWidth={true}
+        			maxWidth={"md"}
+				>
+					<DialogTitle>Adicionar Produto</DialogTitle>
+					<DialogContent dividers>
+						<Box>
+							<Autocomplete
+								id="add-produto"
+								loading={this.state.produtoList == null}
+								options={Object.keys(this.state.produtoByProdutoId ?? {}).map(key => parseInt(key))}
+								getOptionLabel={(option) => `${this.state.produtoByProdutoId[option].nome} - ${this.state.produtoByProdutoId[option].tipo}`}
+								value={this.state.addProdutoId}
+								onChange={(event, value) => this.setState({addProdutoId: value})}
+								renderInput={(params) => (
+									<TextField
+										{...params}
+										variant="outlined"
+										label="Novo Produto"
+										helperText={this.state.addProdutoId == null ? "produto personalizado" : ""}
+									/>
+								)}
+							/>
+						</Box>
+					</DialogContent>
+					<DialogActions>
+						<Button variant="outlined" onClick={() => this.setState({addProdutoDialogOpen: false})}>Cancelar</Button>
+						<Button variant="contained" onClick={this.addProduto}>Adicionar</Button>
+					</DialogActions>
+				</Dialog>
 		    </React.Fragment>
 		  );
 	}

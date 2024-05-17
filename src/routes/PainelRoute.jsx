@@ -302,7 +302,7 @@ class PainelRoute extends React.Component {
 								{this.state.usuario !== null && this.state.usuario.permissaoList.includes("CADASTRAR_EQUIPES") ? <Route path="/equipes/" element={<EquipesModule usuario={this.state.usuario}/>} /> : null}
 								{this.state.usuario !== null && this.state.usuario.permissaoList.includes("CADASTRAR_EQUIPES") ? <Route path="/equipes/:equipeId" element={<CreateEditEquipeModuleWrapper/>} /> : null}
 								{this.state.usuario !== null && this.state.usuario.permissaoList.includes("CADASTRAR_VENDAS") ? <Route path="/vendas/" element={<VendasModule usuario={this.state.usuario}/>} /> : null}
-								{this.state.usuario !== null && this.state.usuario.permissaoList.includes("CADASTRAR_VENDAS") ? <Route path="/vendas/:vendaId" element={<CreateEditVendaModuleWrapper/>} /> : null}
+								{this.state.usuario !== null && this.state.usuario.permissaoList.includes("CADASTRAR_VENDAS") ? <Route path="/vendas/:vendaId" element={<CreateEditVendaModuleWrapper usuario={this.state.usuario}/>} /> : null}
 							</Routes>
 					</Suspense>
 				</Box>

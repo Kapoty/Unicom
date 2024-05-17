@@ -32,6 +32,7 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import Autocomplete from '@mui/material/Autocomplete';
 import TextField from '@mui/material/TextField';
 import Icon from '@mui/material/Icon';
+import VendaStatusCategoriaMap from "../model/VendaStatusCategoriaMap";
 
 import dayjs from 'dayjs';
 
@@ -226,7 +227,8 @@ class VendasModule extends React.Component {
 								disableListWrap
 								id="venda-status"
 								loading={this.state.vendaStatusList == null}
-								options={Object.keys(this.state.vendaStatusByVendaStatusId ?? {}).map(key => parseInt(key))}
+								options={(this.state.vendaStatusList ?? []).map((vendaStatus) => vendaStatus.vendaStatusId).sort((a, b) => this.state.vendaStatusByVendaStatusId[a].ordem - this.state.vendaStatusByVendaStatusId[b].ordem)}
+								groupBy={(option) => VendaStatusCategoriaMap?.[this.state.vendaStatusByVendaStatusId?.[option]?.categoria] ?? "Sem Categoria"}
 								getOptionLabel={(option) => this.state.vendaStatusByVendaStatusId[option].nome}
 								value={this.state.statusIdList}
 								onChange={(event, value) => this.setState({statusIdList: value})}

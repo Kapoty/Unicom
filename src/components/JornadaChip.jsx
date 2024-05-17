@@ -79,7 +79,8 @@ export default class JornadaChip extends React.Component {
 
 		this.alertAusenteSeconds = 300;
 
-		this.refreshTimeoutTime = 10000;
+		this.refreshTimeoutTimeMe = 60000;
+		this.refreshTimeoutTimeNotMe = 60000;
 		this.refreshTimeout = null;
 
 		this.chipRef = React.createRef();
@@ -183,7 +184,7 @@ export default class JornadaChip extends React.Component {
 	startRefreshTimeout() {
 		if (this.refreshTimeout !== null)
 			this.stopRefreshTimeout();
-		this.refreshTimeout = setTimeout(this.getUsuarioRegistroJornadaFromApi, this.refreshTimeoutTime);
+		this.refreshTimeout = setTimeout(this.getUsuarioRegistroJornadaFromApi, this.props.me ? this.refreshTimeoutTimeMe : this.refreshTimeoutTimeNotMe);
 	}
 
 	stopRefreshTimeout() {
