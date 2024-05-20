@@ -401,7 +401,8 @@ class CreateEditUsuarioModule extends React.Component {
 							this.state.cargoList == null ||
 							this.state.contratoList == null ||
 							this.state.departamentoList == null ||
-							this.state.equipeList == null
+							this.state.equipeList == null ||
+							this.state.jornadaStatusGrupoList == null
 							) ? <Box width="100%" display="flex" justifyContent="center" m={3}><CircularProgress/></Box> :
 						<Grid container spacing={3} sx={{margin: 0, maxWidth: 1200}}>
 							<Grid item xs>

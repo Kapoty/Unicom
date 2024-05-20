@@ -66,15 +66,15 @@ class VendasModule extends React.Component {
 		}
 
 		this.columns = [
-			{ field: 'statusNome', headerName: 'Status', minWidth: 100, flex: 1, renderCell: (params) => <Chip
+			{ field: 'statusNome', headerName: 'Status', valueGetter: (value, row) => this.state.vendaStatusByVendaStatusId?.[value]?.nome, minWidth: 200, flex: 1, renderCell: (params) => <Chip
 				color="primary"
 				variant="contained"
-				label={params.row.status.nome}
-				icon={<Icon>{params.row.status.icon}</Icon>}
+				label={this.state.vendaStatusByVendaStatusId?.[params.row.statusId]?.nome}
+				icon={<Icon>{this.state.vendaStatusByVendaStatusId?.[params.row.statusId]?.icon}</Icon>}
 				onClick={() => this.props.navigate("/vendas/" + params.row.vendaId)}
 			/>},
 			{ field: 'cpf', headerName: 'CPF/CNPJ', minWidth: 200, flex: 1 },
-			{ field: 'nome', headerName: 'Nome', minWidth: 200, flex: 1 },
+			{ field: 'nome', headerName: 'Nome/Razão Social', minWidth: 200, flex: 1 },
 			{ field: 'tipoProduto', headerName: 'Tipo', minWidth: 100, flex: 1 },
 			{ field: 'dataVenda', headerName: 'Data da Venda', minWidth: 200, flex: 1, type: 'date', renderCell: (params) => params.value !== null ? dayjs(params.value).format('L LTS') : "" },
 			{ field: 'dataStatus', headerName: 'Data do Status', minWidth: 200, flex: 1, type: 'date', renderCell: (params) => params.value !== null ? dayjs(params.value).format('L LTS') : "" },
@@ -143,10 +143,9 @@ class VendasModule extends React.Component {
 			return {
 				id: venda.vendaId,
 				vendaId: venda.vendaId,
-				status: venda.status,
-				statusNome: venda.status.nome,
+				statusId: venda.statusId,
 				cpf: venda.tipoPessoa == "CPF" ? venda.cpf : venda.cnpj,
-				nome: venda.nome,
+				nome: venda.tipoPessoa == "CPF" ? venda.nome : venda.razaoSocial,
 				tipoProduto: venda.tipoProduto,
 				dataVenda: venda.dataVenda !== null ? new Date(venda.dataVenda) : null,
 				dataStatus: venda.dataStatus !== null ? new Date(venda.dataStatus) : null,
@@ -170,7 +169,7 @@ class VendasModule extends React.Component {
 	render() {
 		return (
 			<React.Fragment>
-				<Paper elevation={3} sx={{flexGrow: 1, padding: 5, minHeight: "100%", minWidth: "800px", boxSizing: "border-box", display: "flex", flexDirection: "column", aligmItems: "center", justifyContent: "start", gap: 3}} className="modulePaper">
+				<Paper elevation={3} sx={{flexGrow: 1, padding: 5, minHeight: "100%", minWidth: "1000px", boxSizing: "border-box", display: "flex", flexDirection: "column", aligmItems: "center", justifyContent: "start", gap: 3}} className="modulePaper">
 					<Typography variant="h3">
 						Vendas
 					</Typography>

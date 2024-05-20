@@ -252,13 +252,13 @@ class CreateEditVendaModule extends React.Component {
 		];
 
 		this.atualizacaoColumns = [
-			{ field: 'statusNome', headerName: 'Status', minWidth: 100, flex: 1, renderCell: (params) => <Chip
+			{ field: 'statusId', headerName: 'Status', valueGetter: (value, row) => this.state.vendaStatusByVendaStatusId?.[value]?.nome, minWidth: 100, flex: 1, renderCell: (params) => <Chip
 				color="primary"
 				variant="contained"
-				label={params.row.status.nome}
-				icon={<Icon>{params.row.status.icon}</Icon>}
+				label={this.state.vendaStatusByVendaStatusId?.[params.row.statusId]?.nome}
+				icon={<Icon>{this.state.vendaStatusByVendaStatusId?.[params.row.statusId]?.icon}</Icon>}
 			/>},
-			{ field: 'usuarioNome', headerName: 'Usuário', minWidth: 100, flex: 1, renderCell: (params) => <UsuarioDisplayStack usuario={params.row.usuario}/>},
+			{ field: 'usuarioId', headerName: 'Usuário', valueGetter: (value, row) => this.state.usuarioByUsuarioId?.[value]?.nome, minWidth: 100, flex: 1, renderCell: (params) => <UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[params.row.usuarioId]}/>},
 			{ field: 'data', headerName: 'Data', minWidth: 150, flex: 1, type: 'date', renderCell: (params) => params.value !== null ? dayjs(params.value).format('L LTS') : "" },
 			{ field: 'relato', headerName: 'Relato', minWidth: 400, flex: 1, renderCell: (params) => <pre>{params.value.replace(/(\\n)/g, "\n")}</pre> },
 		];
@@ -440,10 +440,8 @@ class CreateEditVendaModule extends React.Component {
 		let atualizacaoRows = this.state.venda.atualizacaoList.map((atualizacao) => {
 			return {
 				id: atualizacao.vendaAtualizacaoId,
-				status: atualizacao.status,
-				statusNome: atualizacao.status.nome,
-				usuario: atualizacao.usuario,
-				usuarioNome: atualizacao.usuario.nome,
+				statusId: atualizacao.statusId,
+				usuarioId: atualizacao.usuarioId,
 				data: new Date(atualizacao.data),
 				relato: atualizacao.relato,
 			}
@@ -864,7 +862,7 @@ class CreateEditVendaModule extends React.Component {
 	render() {
 		return (
 			<React.Fragment>
-				<Paper elevation={3} sx={{flexGrow: 1, padding: 5, minHeight: "100%", minWidth: "800px", boxSizing: "border-box", display: "flex", flexDirection: "column", justifyContent: "start"}} className="modulePaper">
+				<Paper elevation={3} sx={{flexGrow: 1, padding: 5, minHeight: "100%", minWidth: "1000px", boxSizing: "border-box", display: "flex", flexDirection: "column", justifyContent: "start"}} className="modulePaper">
 					<Typography variant="h3" gutterBottom>
 					{this.state.createMode ? "Nova Venda" : "Editar Venda"}
 					</Typography>
