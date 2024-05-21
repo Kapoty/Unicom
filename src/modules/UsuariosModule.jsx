@@ -3,7 +3,7 @@ import React from "react";
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import CircularProgress from '@mui/material/CircularProgress';
-import { DataGrid } from '@mui/x-data-grid';
+import { DataGridPremium, GridToolbar } from '@mui/x-data-grid-premium';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import ButtonGroup from '@mui/material/ButtonGroup';
@@ -22,6 +22,8 @@ import Tooltip from '@mui/material/Tooltip';
 import Alert from '@mui/material/Alert';
 import Collapse from '@mui/material/Collapse';
 import Avatar from '@mui/material/Avatar';
+
+import UsuarioDisplayStack from "../components/UsuarioDisplayStack";
 
 import api from "../services/api";
 
@@ -45,20 +47,18 @@ class UsuariosModule extends React.Component {
 
 		this.columns = [
 			//{ field: 'usuarioId', headerName: 'ID', minWidth: 100, flex: 1},
-			{ field: 'nome', headerName: 'Nome', minWidth: 100, flex: 1, renderCell: (params) => <Stack direction="row" spacing={1} alignItems="center">
-					<Avatar src={params.row.fotoPerfilUrl}>{params.row.nome.charAt(0)}</Avatar>
-					<div>{params.row.nome}</div>
-				</Stack>},
+			{ field: 'usuario', headerName: 'Nome', valueGetter: (value, row) => value?.nome, minWidth: 100, flex: 1, renderCell: (params) => <UsuarioDisplayStack usuario={params.row.usuario}/>},
 			{ field: 'matricula', headerName: 'Matrícula', minWidth: 100, flex: 1 },
 			{ field: 'email', headerName: 'Email', minWidth: 100, flex: 1 },
+			{ field: 'equipe', headerName: 'Equipe', valueGetter: (value, row) => value?.nome, minWidth: 200, flex: 1 },
 			{ field: 'departamento', headerName: 'Departamento', minWidth: 100, flex: 1 },
 			{ field: 'cargo', headerName: 'Cargo', minWidth: 100, flex: 1 },
-			{ field: 'papel', headerName: 'Papel', minWidth: 200, flex: 1, renderCell: (params) => 
-				<Chip label={params.value.nome} variant="outlined" />
+			{ field: 'papel', headerName: 'Papel', valueGetter: (value, row) => value.nome, minWidth: 200, flex: 1, renderCell: (params) => 
+				<Chip label={params.row.papel.nome} variant="outlined" />
 			},
-			{ field: 'ativo', headerName: 'Status', width: 100, renderCell: (params) =>
-				<Chip label={params.value ? "Ativo" : "Inativo"} color={params.value ? "success" : "error"} /> },
-			{ field: "actions", headerName: "Ações", width: 300, renderCell: (params) => <Stack direction="row" spacing={1}>
+			{ field: 'ativo', headerName: 'Status', valueGetter: (value, row) => value ? "Ativo" : "Inativo", width: 100, renderCell: (params) =>
+				<Chip label={params.value} color={params.row.ativo ? "success" : "error"} /> },
+			{ field: "actions", headerName: "Ações", width: 300, renderHeaderFilter: () => "", renderCell: (params) => <Stack direction="row" spacing={1}>
 				<Tooltip title="Editar" onClick={() => this.props.navigate("/usuarios/" + params.row.usuarioId)}>
 					<IconButton color="warning">
 						<EditIcon />
@@ -99,14 +99,14 @@ class UsuariosModule extends React.Component {
 			.then((response) => {
 				let usuarioRows = response.data.map((usuario) => {return {
 					id: usuario.usuarioId,
-					fotoPerfilUrl: usuario.fotoPerfil ? api.defaults.baseURL + "/usuario/" + usuario.usuarioId + "/foto-perfil?versao=" + usuario.fotoPerfilVersao : "",
+					usuario: usuario,
 					usuarioId: usuario.usuarioId,
-					nome: usuario.nome,
 					matricula: usuario.matricula,
 					email: usuario.email,
 					papel: usuario.papel,
 					departamento: usuario.departamento !== null ? usuario.departamento.nome : "",
 					cargo: usuario.cargo !== null ? usuario.cargo.nome : "",
+					equipe: usuario.equipe,
 					ativo: usuario.ativo
 				}})
 				this.setState({usuarioList: response.data, usuarioRows: usuarioRows, calling: false});
@@ -157,7 +157,7 @@ class UsuariosModule extends React.Component {
 							<Button variant="contained" size="large" startIcon={<PersonAddIcon />} onClick={() => this.props.navigate("/usuarios/novo")}>Novo Usuário</Button>
 					</ButtonGroup>
 					<Box sx={{ flexGrow: 1 }}>
-						<DataGrid
+						<DataGridPremium
 							rows={this.state.usuarioRows}
 							columns={this.columns}
 							disableRowSelectionOnClick
@@ -169,6 +169,13 @@ class UsuariosModule extends React.Component {
 							onRowSelectionModelChange={this.handleUsuarioSelected}
 							loading={this.state.usuarioList == null || this.state.calling}
 							sx={{marginBottom: 3}}
+							headerFilters
+							disableAggregation
+							slots={{
+								toolbar: GridToolbar,
+								headerFilterMenu: null,
+							}}
+							disableColumnFilter
 						/>
 					</Box>
 					<Collapse in={this.state.alertOpen}>

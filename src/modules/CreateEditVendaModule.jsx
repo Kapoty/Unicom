@@ -3,7 +3,7 @@ import React from "react";
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import CircularProgress from '@mui/material/CircularProgress';
-import { DataGrid } from '@mui/x-data-grid';
+import { DataGridPremium } from '@mui/x-data-grid-premium';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import ButtonGroup from '@mui/material/ButtonGroup';
@@ -38,8 +38,8 @@ import SaveIcon from '@mui/icons-material/Save';
 import Avatar from '@mui/material/Avatar';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
+import { DatePicker } from '@mui/x-date-pickers-pro';
+import { DateTimePicker } from '@mui/x-date-pickers-pro';
 import InputLabel from '@mui/material/InputLabel';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
@@ -47,7 +47,7 @@ import EmailIcon from '@mui/icons-material/Email';
 import NumbersIcon from '@mui/icons-material/Numbers';
 import SmartphoneIcon from '@mui/icons-material/Smartphone';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
-import { TimePicker } from '@mui/x-date-pickers/TimePicker';
+import { TimePicker } from '@mui/x-date-pickers-pro';
 import AttachmentIcon from '@mui/icons-material/Attachment';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import ToggleButton from '@mui/material/ToggleButton';
@@ -76,6 +76,7 @@ import Tab from '@mui/material/Tab';
 import ApartmentIcon from '@mui/icons-material/Apartment';
 import RouterIcon from '@mui/icons-material/Router';
 import Link from '@mui/material/Link';
+import GroupsIcon from '@mui/icons-material/Groups';
 
 import CPFInput from "../components/CPFInput";
 import CNPJInput from "../components/CNPJInput";
@@ -83,6 +84,7 @@ import PhoneInput from "../components/PhoneInput";
 import CEPInput from "../components/CEPInput";
 import MoneyInput from "../components/MoneyInput";
 import UsuarioDisplayStack from "../components/UsuarioDisplayStack";
+import VendaStatusChip from '../components/VendaStatusChip';
 
 import VendaStatusCategoriaMap from "../model/VendaStatusCategoriaMap";
 
@@ -167,6 +169,7 @@ class CreateEditVendaModule extends React.Component {
 			// dados contrato ambos
 
 			os: "",
+			custcode: "",
 			sistema: null,
 			supervisorId: null,
 			vendedorId: null,
@@ -187,6 +190,7 @@ class CreateEditVendaModule extends React.Component {
 			pdv: "",
 			vendaOriginal: false,
 			brscan: false,
+			suporte: false,
 			loginVendedor: "",
 
 			//pagamento
@@ -198,6 +202,7 @@ class CreateEditVendaModule extends React.Component {
 
 			//status
 			statusId: null,
+			novoStatusId: null,
 			relato: "",
 
 			//faturas
@@ -250,6 +255,7 @@ class CreateEditVendaModule extends React.Component {
 			{nome: "A Vencer", value: "A_VENCER"},
 			{nome: "Paga", value: "PAGA"},
 		];
+		this.pdvEnum = ["UNICOM DF", "UNICOM GO"]
 
 		this.atualizacaoColumns = [
 			{ field: 'statusId', headerName: 'Status', valueGetter: (value, row) => this.state.vendaStatusByVendaStatusId?.[value]?.nome, minWidth: 100, flex: 1, renderCell: (params) => <Chip
@@ -384,6 +390,7 @@ class CreateEditVendaModule extends React.Component {
 					// dados contrato ambos
 
 					os: venda.os,
+					custcode: venda.custcode,
 					sistema: venda.sistema,
 					supervisorId: venda.supervisorId,
 					vendedorId: venda.vendedorId,
@@ -404,6 +411,7 @@ class CreateEditVendaModule extends React.Component {
 					pdv: venda.pdv,
 					vendaOriginal: venda.vendaOriginal,
 					brscan: venda.brscan,
+					suporte: venda.suporte,
 					loginVendedor: venda.loginVendedor,
 
 					//pagamento
@@ -415,6 +423,7 @@ class CreateEditVendaModule extends React.Component {
 
 					//status
 					statusId: venda.statusId,
+					novoStatusId: null,
 					relato: "",
 
 					//faturas
@@ -775,6 +784,7 @@ class CreateEditVendaModule extends React.Component {
 			// dados contrato ambos
 
 			os: this.state.os,
+			custcode: this.state.custcode,
 			sistema: this.state.sistema,
 			supervisorId: this.state.supervisorId,
 			vendedorId: this.state.vendedorId,
@@ -792,20 +802,21 @@ class CreateEditVendaModule extends React.Component {
 
 			dataAgendamento: this.state.dataAgendamento !== null ? this.state.dataAgendamento.format("YYYY-MM-DDTHH:mm:ss") : null,
 			dataInstalacao: this.state.dataInstalacao !== null ? this.state.dataInstalacao.format("YYYY-MM-DDTHH:mm:ss") : null,
-			pdv: this.state.pdv,
+			pdv: this.state.pdv ?? "",
 			vendaOriginal: this.state.vendaOriginal,
 			brscan: this.state.brscan,
+			suporte: this.state.suporte,
 			loginVendedor: this.state.loginVendedor,
 
 			//pagamento
 			formaDePagamento: this.state.formaDePagamento,
-			vencimento: this.state.vencimento,
+			vencimento: this.state.vencimento ?? "",
 			agencia: this.state.agencia,
 			conta: this.state.conta,
 			banco: this.state.banco,
 
 			//status
-			statusId: this.state.statusId,
+			statusId: this.state.novoStatusId,
 			relato: this.state.relato,
 
 			//faturas
@@ -888,6 +899,7 @@ class CreateEditVendaModule extends React.Component {
 												<Tab icon={<PlaceIcon />} value="ENDERECO" label="Endereço" />
 												<Tab icon={<DescriptionIcon />} value="PRODUTOS" label="Produtos" />
 												<Tab icon={<GavelIcon />} value="DADOS_DO_CONTRATO" label="Dados do Contrato" />
+												<Tab icon={<GroupsIcon />} value="ATORES" label="Atores" />
 												<Tab icon={<PaidIcon />} value="PAGAMENTO" label="Pagamento" />
 												<Tab icon={<RequestQuoteIcon />} value="FATURAS" label="Faturas" />
 												<Tab icon={<ChatIcon />} value="OBSERVACAO" label="Observação" />
@@ -898,6 +910,9 @@ class CreateEditVendaModule extends React.Component {
 										</Grid>
 
 										{this.state.tab == "TIPO_DA_VENDA" ? <React.Fragment>
+											<Grid item xs={12}>
+												<Divider><Chip icon={<DescriptionIcon />} label="Tipo do Produto" /></Divider>
+											</Grid>
 											<Grid item xs={12}>
 												<ToggleButtonGroup
 													id="tipoProduto"
@@ -911,6 +926,9 @@ class CreateEditVendaModule extends React.Component {
 													<ToggleButton value={"FIBRA"} sx={{display: "flex", flexDirection: "row", gap: 1}}><RouterIcon/>FIBRA</ToggleButton>
 													<ToggleButton value={"MOVEL"} sx={{display: "flex", flexDirection: "row", gap: 1}}><SmartphoneIcon/>MOVEL</ToggleButton>
 												</ToggleButtonGroup>
+											</Grid>
+											<Grid item xs={12}>
+												<Divider><Chip icon={<PersonIcon />} label="Tipo da Pessoa" /></Divider>
 											</Grid>
 											<Grid item xs={12}>
 												<ToggleButtonGroup
@@ -929,7 +947,7 @@ class CreateEditVendaModule extends React.Component {
 										</React.Fragment> : ""}
 
 										{this.state.tab == "DADOS_DO_CLIENTE" ? <React.Fragment>
-											{this.state.tipoPessoa == "CPF" ? <React.Fragment>
+											{this.state.tipoPessoa == "CPF" && this.state.tipoProduto !== null ? <React.Fragment>
 												<Grid item xs={6}>
 													<CPFInput
 														id="cpf"
@@ -1051,7 +1069,7 @@ class CreateEditVendaModule extends React.Component {
 														}}
 													/>
 												</Grid>
-											</React.Fragment> : <React.Fragment>
+											</React.Fragment> : this.state.tipoPessoa == "CNPJ" && this.state.tipoProduto !== null ? <React.Fragment>
 												<Grid item xs={6}>
 													<CNPJInput
 														id="cnpj"
@@ -1154,7 +1172,7 @@ class CreateEditVendaModule extends React.Component {
 														helperText={this.state.errors?.cpfRepresentanteLegal ?? ""}
 													/>
 												</Grid>
-											</React.Fragment>}
+											</React.Fragment> : <Grid item xs={12}><Alert severity="info">Você poderá ver os dados do cliente após definir o tipo da venda.</Alert></Grid>}
 										</React.Fragment> : ""}
 
 										{this.state.tab == "CONTATO" ? <React.Fragment>
@@ -1509,7 +1527,7 @@ class CreateEditVendaModule extends React.Component {
 										</React.Fragment> : ""}
 
 										{this.state.tab == "DADOS_DO_CONTRATO" ? <React.Fragment>
-											<Grid item xs={6}>
+											<Grid item xs={4}>
 												<TextField
 													id="os"
 													value={this.state.os}
@@ -1525,7 +1543,23 @@ class CreateEditVendaModule extends React.Component {
 													}}
 												/>
 											</Grid>
-											<Grid item xs={6}>
+											<Grid item xs={4}>
+												<TextField
+													id="custcode"
+													value={this.state.custcode}
+													onChange={(e) => this.setState({custcode: e.target.value})}
+													fullWidth
+													label="Cust-Code"
+													variant="outlined"
+													disabled={this.state.calling}
+													error={"os" in this.state.errors}
+													helperText={this.state.errors?.custcode ?? ""}
+													inputProps={{
+														maxLength: 50,
+													}}
+												/>
+											</Grid>
+											<Grid item xs={4}>
 												<FormControl fullWidth>
 													<InputLabel>Sistema</InputLabel>
 													<Select
@@ -1586,83 +1620,6 @@ class CreateEditVendaModule extends React.Component {
 													}}
 												/>
 											</Grid>
-											{!this.state.createMode ? <React.Fragment>
-												<Grid item xs={4}>
-													<Autocomplete
-														id="vendedor"
-														options={Object.keys(this.state.usuarioByUsuarioId ?? {}).map(key => parseInt(key))}
-														getOptionLabel={(option) => this.state.usuarioByUsuarioId?.[option]?.nome}
-														renderOption={(props, option) => <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props}>
-																	<Stack direction="row" spacing={1} alignItems="center">
-																		<Avatar src={this.state.usuarioByUsuarioId[option].fotoPerfil ? api.defaults.baseURL + "/usuario/" + this.state.usuarioByUsuarioId[option].usuarioId + "/foto-perfil?versao=" + this.state.usuarioByUsuarioId[option].fotoPerfilVersao : ""}>{this.state.usuarioByUsuarioId[option].nome.charAt(0)}</Avatar>
-																		<div>{this.state.usuarioByUsuarioId[option].nome}</div>
-																		<div>#{this.state.usuarioByUsuarioId[option].matricula}</div>
-																	</Stack>
-																</Box>}
-														value={this.state.vendedorId}
-														onChange={(event, value) => this.setState({vendedorId: value})}
-														renderInput={(params) => (
-															<TextField
-															{...params}
-															variant="outlined"
-															label="Vendedor"
-															/>
-														)}
-														loading={this.state.usuarioList == null}
-														readOnly={!this.props.usuario.permissaoList.includes("ALTERAR_VENDEDOR")}
-													/>
-												</Grid>
-												<Grid item xs={4}>
-													<Autocomplete
-														id="supervisor"
-														options={Object.keys(this.state.usuarioByUsuarioId ?? {}).map(key => parseInt(key))}
-														getOptionLabel={(option) => this.state.usuarioByUsuarioId?.[option]?.nome}
-														renderOption={(props, option) => <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props}>
-																	<Stack direction="row" spacing={1} alignItems="center">
-																		<Avatar src={this.state.usuarioByUsuarioId[option].fotoPerfil ? api.defaults.baseURL + "/usuario/" + this.state.usuarioByUsuarioId[option].usuarioId + "/foto-perfil?versao=" + this.state.usuarioByUsuarioId[option].fotoPerfilVersao : ""}>{this.state.usuarioByUsuarioId[option].nome.charAt(0)}</Avatar>
-																		<div>{this.state.usuarioByUsuarioId[option].nome}</div>
-																		<div>#{this.state.usuarioByUsuarioId[option].matricula}</div>
-																	</Stack>
-																</Box>}
-														value={this.state.supervisorId}
-														onChange={(event, value) => this.setState({supervisorId: value})}
-														renderInput={(params) => (
-															<TextField
-															{...params}
-															variant="outlined"
-															label="Supervisor"
-															/>
-														)}
-														loading={this.state.usuarioList == null}
-														readOnly={!this.props.usuario.permissaoList.includes("ALTERAR_VENDEDOR")}
-													/>
-												</Grid>
-												<Grid item xs={4}>
-													<Autocomplete
-														id="auditor"
-														options={Object.keys(this.state.usuarioByUsuarioId).map(key => parseInt(key))}
-														getOptionLabel={(option) => this.state.usuarioByUsuarioId?.[option]?.nome}
-														renderOption={(props, option) => <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props}>
-																	<Stack direction="row" spacing={1} alignItems="center">
-																		<Avatar src={this.state.usuarioByUsuarioId[option].fotoPerfil ? api.defaults.baseURL + "/usuario/" + this.state.usuarioByUsuarioId[option].usuarioId + "/foto-perfil?versao=" + this.state.usuarioByUsuarioId[option].fotoPerfilVersao : ""}>{this.state.usuarioByUsuarioId[option].nome.charAt(0)}</Avatar>
-																		<div>{this.state.usuarioByUsuarioId[option].nome}</div>
-																		<div>#{this.state.usuarioByUsuarioId[option].matricula}</div>
-																	</Stack>
-																</Box>}
-														value={this.state.auditorId}
-														onChange={(event, value) => this.setState({auditorId: value})}
-														renderInput={(params) => (
-															<TextField
-															{...params}
-															variant="outlined"
-															label="Auditor"
-															/>
-														)}
-														loading={this.state.usuarioList == null}
-														readOnly={!this.props.usuario.permissaoList.includes("ALTERAR_AUDITOR")}
-													/>
-												</Grid>
-											</React.Fragment> : ""}
 											{this.state.tipoProduto == "MOVEL" ? <React.Fragment>
 												<Grid item xs={6}>
 													<DateTimePicker
@@ -1725,23 +1682,26 @@ class CreateEditVendaModule extends React.Component {
 															}}
 														/>
 												</Grid>
-												<Grid item xs={4}>
-													<TextField
+												<Grid item xs={3}>
+													<Autocomplete
 														id="pdv"
+														freeSolo
+														disableClearable
+														options={this.pdvEnum}
 														value={this.state.pdv}
-														onChange={(e) => this.setState({pdv: e.target.value})}
-														fullWidth
-														label="PDV"
-														variant="outlined"
-														disabled={this.state.calling}
-														error={"pdv" in this.state.errors}
-														helperText={this.state.errors?.pdv ?? ""}
-														inputProps={{
-															maxLength: 50,
-														}}
+														onInputChange={(event, value) => this.setState({pdv: value})}
+														renderInput={(params) => (
+															<TextField
+																{...params}
+																variant="outlined"
+																label="PDV"
+																error={"pdv" in this.state.errors}
+																helperText={this.state.errors?.pdv ?? ""}
+															/>
+														)}
 													/>
 												</Grid>
-												<Grid item xs={4}>
+												<Grid item xs={3}>
 													<FormControl>
 														<FormLabel id="venda-original">Venda Original</FormLabel>
 														<RadioGroup
@@ -1756,7 +1716,7 @@ class CreateEditVendaModule extends React.Component {
 														</RadioGroup>
 													</FormControl>
 												</Grid>
-												<Grid item xs={4}>
+												<Grid item xs={3}>
 													<FormControl>
 														<FormLabel id="brscan">BrScan</FormLabel>
 														<RadioGroup
@@ -1765,6 +1725,21 @@ class CreateEditVendaModule extends React.Component {
 															name="controlled-radio-buttons-group"
 															value={this.state.brscan}
 															onChange={(e) => this.setState({brscan: e.target.value})}
+														>
+														<FormControlLabel value={true} control={<Radio />} label="Sim" />
+														<FormControlLabel value={false} control={<Radio />} label="Não" />
+														</RadioGroup>
+													</FormControl>
+												</Grid>
+												<Grid item xs={3}>
+													<FormControl>
+														<FormLabel id="suporte">Suporte</FormLabel>
+														<RadioGroup
+															row
+															aria-labelledby="suporte"
+															name="controlled-radio-buttons-group"
+															value={this.state.suporte}
+															onChange={(e) => this.setState({suporte: e.target.value})}
 														>
 														<FormControlLabel value={true} control={<Radio />} label="Sim" />
 														<FormControlLabel value={false} control={<Radio />} label="Não" />
@@ -1790,6 +1765,78 @@ class CreateEditVendaModule extends React.Component {
 											</React.Fragment>}
 										</React.Fragment> : ""}
 
+										{this.state.tab == "ATORES" ? <React.Fragment>
+											{!this.state.createMode ? <React.Fragment>
+												<Grid item xs={4}>
+													<Autocomplete
+														id="vendedor"
+														options={Object.keys(this.state.usuarioByUsuarioId ?? {}).map(key => parseInt(key))}
+														getOptionLabel={(option) => this.state.usuarioByUsuarioId?.[option]?.nome}
+														renderOption={(props, option) => <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props}>
+																	<Stack direction="row" spacing={1} alignItems="center">
+																		<Avatar src={this.state.usuarioByUsuarioId[option].fotoPerfil ? api.defaults.baseURL + "/usuario/" + this.state.usuarioByUsuarioId[option].usuarioId + "/foto-perfil?versao=" + this.state.usuarioByUsuarioId[option].fotoPerfilVersao : ""}>{this.state.usuarioByUsuarioId[option].nome.charAt(0)}</Avatar>
+																		<div>{this.state.usuarioByUsuarioId[option].nome}</div>
+																		<div>#{this.state.usuarioByUsuarioId[option].matricula}</div>
+																	</Stack>
+																</Box>}
+														value={this.state.vendedorId}
+														onChange={(event, value) => this.setState({vendedorId: value})}
+														renderInput={(params) => (
+															<TextField
+															{...params}
+															variant="outlined"
+															label="Vendedor"
+															/>
+														)}
+														loading={this.state.usuarioList == null}
+														readOnly={!this.props.usuario.permissaoList.includes("ALTERAR_VENDEDOR")}
+													/>
+												</Grid>
+												<Grid item xs={4}>
+													<Autocomplete
+														id="supervisor"
+														options={Object.keys(this.state.usuarioByUsuarioId ?? {}).map(key => parseInt(key))}
+														getOptionLabel={(option) => this.state.usuarioByUsuarioId?.[option]?.nome}
+														renderOption={(props, option) => <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props}>
+																	<UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[option]}/>
+																</Box>}
+														value={this.state.supervisorId}
+														onChange={(event, value) => this.setState({supervisorId: value})}
+														renderInput={(params) => (
+															<TextField
+															{...params}
+															variant="outlined"
+															label="Supervisor"
+															/>
+														)}
+														loading={this.state.usuarioList == null}
+														readOnly={!this.props.usuario.permissaoList.includes("ALTERAR_VENDEDOR")}
+													/>
+												</Grid>
+												<Grid item xs={4}>
+													<Autocomplete
+														id="auditor"
+														options={Object.keys(this.state.usuarioByUsuarioId).map(key => parseInt(key))}
+														getOptionLabel={(option) => this.state.usuarioByUsuarioId?.[option]?.nome}
+														renderOption={(props, option) => <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props}>
+																	<UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[option]}/>
+																</Box>}
+														value={this.state.auditorId}
+														onChange={(event, value) => this.setState({auditorId: value})}
+														renderInput={(params) => (
+															<TextField
+															{...params}
+															variant="outlined"
+															label="Auditor"
+															/>
+														)}
+														loading={this.state.usuarioList == null}
+														readOnly={!this.props.usuario.permissaoList.includes("ALTERAR_AUDITOR")}
+													/>
+												</Grid>
+											</React.Fragment> : <Grid item xs={12}><Alert severity="info">Você poderá ver os atores da venda após salva-la.</Alert></Grid>}
+										</React.Fragment> : ""}
+
 										{this.state.tab == "PAGAMENTO" ? <React.Fragment>
 											<Grid item xs={12}>
 												<FormControl fullWidth>
@@ -1813,7 +1860,7 @@ class CreateEditVendaModule extends React.Component {
 														disableClearable
 														options={this.vencimentoEnum}
 														value={this.state.vencimento}
-														onChange={(event, value) => this.setState({vencimento: value})}
+														onInputChange={(event, value) => this.setState({vencimento: value})}
 														renderInput={(params) => (
 															<TextField
 																{...params}
@@ -1955,40 +2002,44 @@ class CreateEditVendaModule extends React.Component {
 
 										{this.state.tab == "STATUS" ? <React.Fragment>
 											<Grid item xs={6}>
-												<Autocomplete
-													id="status"
-													loading={this.state.vendaStatusList == null}
-													options={(this.state.vendaStatusList ?? []).map((vendaStatus) => vendaStatus.vendaStatusId).sort((a, b) => this.state.vendaStatusByVendaStatusId[a].ordem - this.state.vendaStatusByVendaStatusId[b].ordem)}
-													groupBy={(option) => VendaStatusCategoriaMap?.[this.state.vendaStatusByVendaStatusId?.[option]?.categoria] ?? "Sem Categoria"}
-													getOptionLabel={(option) => this.state.vendaStatusByVendaStatusId?.[option]?.nome ?? ""}
-													value={this.state.statusId}
-													onChange={(event, value) => this.setState({statusId: value})}
-													renderInput={(params) => (
-														<TextField
-															error={"statusId" in this.state.errors}
-															helperText={this.state.errors?.statusId}
-																{...params}
-															variant="outlined"
-															label="Status"
-														/>
-													)}
-													renderOption={(props, option) => <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props}>
-														<Stack direction="row" spacing={1} alignItems="center">
-															<Icon>{this.state.vendaStatusByVendaStatusId[option].icon}</Icon>
-															<div>{this.state.vendaStatusByVendaStatusId[option].nome}</div>
-														</Stack>
-													</Box>}
-													renderTags={(value, getTagProps) =>
-														value.map((option, index) => (
-														<Chip
-															variant="contained"
-															label={this.state.vendaStatusByVendaStatusId[option].nome}
-															icon={<Icon>{this.state.vendaStatusByVendaStatusId[option].icon}</Icon>}
-															{...getTagProps({ index })}
-														/>
-														))
-													}
-												/>
+												<Stack spacing={1}>
+													<Autocomplete
+														id="novo-status"
+														loading={this.state.vendaStatusList == null}
+														options={(this.state.vendaStatusList ?? []).map((vendaStatus) => vendaStatus.vendaStatusId).sort((a, b) => this.state.vendaStatusByVendaStatusId[a].ordem - this.state.vendaStatusByVendaStatusId[b].ordem)}
+														groupBy={(option) => VendaStatusCategoriaMap?.[this.state.vendaStatusByVendaStatusId?.[option]?.categoria] ?? "Sem Categoria"}
+														getOptionLabel={(option) => this.state.vendaStatusByVendaStatusId?.[option]?.nome ?? ""}
+														value={this.state.novoStatusId}
+														onChange={(event, value) => this.setState({novoStatusId: value})}
+														renderInput={(params) => (
+															<TextField
+																error={"statusId" in this.state.errors}
+																helperText={this.state.errors?.statusId}
+																	{...params}
+																variant="outlined"
+																label="Novo Status"
+															/>
+														)}
+														renderOption={(props, option) => <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props}>
+															<Stack direction="row" spacing={1} alignItems="center">
+																<Icon>{this.state.vendaStatusByVendaStatusId[option].icon}</Icon>
+																<div>{this.state.vendaStatusByVendaStatusId[option].nome}</div>
+															</Stack>
+														</Box>}
+														renderTags={(value, getTagProps) =>
+															value.map((option, index) => (
+															<VendaStatusChip
+																vendaStatus={this.state.vendaStatusByVendaStatusId[option]}
+																{...getTagProps({ index })}
+															/>
+															))
+														}
+													/>
+													{!this.state.createMode ? <Stack direction="row" spacing={1} justifyContent="center" alignItems="center">
+														<Typography>Status atual:</Typography>
+														<VendaStatusChip vendaStatus={this.state.vendaStatusByVendaStatusId?.[this.state.statusId]}/>
+													</Stack> : ""}
+												</Stack>
 											</Grid>
 											<Grid item xs={6}>
 												<TextField
@@ -2047,7 +2098,7 @@ class CreateEditVendaModule extends React.Component {
 										{this.state.tab == "ATUALIZACOES" ? <React.Fragment>
 											{!this.state.createMode ? <React.Fragment>
 												<Grid item xs={12}>
-													<DataGrid
+													<DataGridPremium
 														rows={this.state.atualizacaoRows}
 														columns={this.atualizacaoColumns}
 														disableRowSelectionOnClick
@@ -2062,6 +2113,7 @@ class CreateEditVendaModule extends React.Component {
 														pageSizeOptions={[5, 10, 15, 20]}
 														loading={this.state.calling}
 														sx={{marginBottom: 3}}
+														pagination
 													/>
 												</Grid>
 											</React.Fragment> : <Grid item xs={12}><Alert severity="info">Você poderá ver as atualizações da venda após salva-la.</Alert></Grid>}

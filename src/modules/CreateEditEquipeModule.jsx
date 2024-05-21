@@ -38,7 +38,7 @@ import SaveIcon from '@mui/icons-material/Save';
 import Avatar from '@mui/material/Avatar';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { DatePicker } from '@mui/x-date-pickers-pro';
 import InputLabel from '@mui/material/InputLabel';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
@@ -46,7 +46,9 @@ import EmailIcon from '@mui/icons-material/Email';
 import NumbersIcon from '@mui/icons-material/Numbers';
 import SmartphoneIcon from '@mui/icons-material/Smartphone';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
-import { TimePicker } from '@mui/x-date-pickers/TimePicker';
+import { TimePicker } from '@mui/x-date-pickers';
+
+import UsuarioDisplayStack from "../components/UsuarioDisplayStack";
 
 import dayjs from 'dayjs';
 
@@ -253,12 +255,8 @@ class CreateEditEquipeModule extends React.Component {
 													options={Object.keys(this.state.usuarioByUsuarioId).map(key => parseInt(key))}
 													getOptionLabel={(option) => this.state.usuarioByUsuarioId[option].nome}
 													renderOption={(props, option) => <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props}>
-																<Stack direction="row" spacing={1} alignItems="center">
-																	<Avatar src={this.state.usuarioByUsuarioId[option].fotoPerfil ? api.defaults.baseURL + "/usuario/" + this.state.usuarioByUsuarioId[option].usuarioId + "/foto-perfil?versao=" + this.state.usuarioByUsuarioId[option].fotoPerfilVersao : ""}>{this.state.usuarioByUsuarioId[option].nome.charAt(0)}</Avatar>
-																	<div>{this.state.usuarioByUsuarioId[option].nome}</div>
-																	<div>#{this.state.usuarioByUsuarioId[option].matricula}</div>
-																</Stack>
-															</Box>}
+																	<UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[option]}/>
+																</Box>}
 													value={this.state.supervisorId}
 													onChange={(event, value) => this.setState({supervisorId: value})}
 													renderInput={(params) => (
@@ -276,11 +274,7 @@ class CreateEditEquipeModule extends React.Component {
 													options={Object.keys(this.state.usuarioByUsuarioId).map(key => parseInt(key))}
 													getOptionLabel={(option) => this.state.usuarioByUsuarioId[option].nome}
 													renderOption={(props, option) => <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props}>
-																<Stack direction="row" spacing={1} alignItems="center">
-																	<Avatar src={this.state.usuarioByUsuarioId[option].fotoPerfil ? api.defaults.baseURL + "/usuario/" + this.state.usuarioByUsuarioId[option].usuarioId + "/foto-perfil?versao=" + this.state.usuarioByUsuarioId[option].fotoPerfilVersao : ""}>{this.state.usuarioByUsuarioId[option].nome.charAt(0)}</Avatar>
-																	<div>{this.state.usuarioByUsuarioId[option].nome}</div>
-																	<div>#{this.state.usuarioByUsuarioId[option].matricula}</div>
-																</Stack>
+																<UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[option]}/>
 															</Box>}
 													value={this.state.gerenteId}
 													onChange={(event, value) => this.setState({gerenteId: value})}

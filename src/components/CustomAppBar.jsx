@@ -34,6 +34,8 @@ import ApartmentIcon from '@mui/icons-material/Apartment';
 import JornadaChip from './JornadaChip';
 import RelatorioJornadaButton from './RelatorioJornadaButton';
 
+import UsuarioAvatar from "./UsuarioAvatar";
+
 import api from "../services/api";
 
 import { useNavigate, useLocation } from "react-router-dom";
@@ -105,7 +107,7 @@ class CustomAppBar extends React.Component {
 			      	{this.props.usuario !==null && this.props.usuario.permissaoList.includes("REGISTRAR_JORNADA") ? <JornadaChip usuario={this.props.usuario} me/> : ""}
 			      	<Chip
 			      		clickable
-			      		avatar={<Avatar src={this.props.usuario !== null ? api.defaults.baseURL + "/usuario/" + this.props.usuario.usuarioId + "/foto-perfil?versao=" + this.props.usuario.fotoPerfilVersao : ""}>{this.props.usuario !== null ? this.props.usuario.nome.charAt(0) : "?"}</Avatar>}
+			      		avatar={<UsuarioAvatar usuario={this.props.usuario}/>}
 			      		label={this.props.usuario !== null ? this.props.usuario.nome : "..."}
 			      		ref={this.usuarioMenuRef}
 			      		onClick={() => this.setState({usuarioMenuOpen: !this.props.usuarioMenuOpen})}

@@ -18,7 +18,7 @@ import Divider from '@mui/material/Divider';
 import Paper from '@mui/material/Paper';
 import ButtonGroup from '@mui/material/ButtonGroup';
 import AddIcon from '@mui/icons-material/Add';
-import { DataGrid } from '@mui/x-data-grid';
+import { DataGridPremium } from '@mui/x-data-grid-premium';
 import EditIcon from '@mui/icons-material/Edit';
 import Tooltip from '@mui/material/Tooltip';
 import IconButton from '@mui/material/IconButton';
@@ -28,14 +28,14 @@ import AccordionDetails from '@mui/material/AccordionDetails';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SaveIcon from '@mui/icons-material/Save';
-import { TimePicker } from '@mui/x-date-pickers/TimePicker';
+import { TimePicker } from '@mui/x-date-pickers-pro';
 import TextField from '@mui/material/TextField';
 import FormControl from '@mui/material/FormControl';
 import FormGroup from '@mui/material/FormGroup';
 import FormLabel from '@mui/material/FormLabel';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { DatePicker } from '@mui/x-date-pickers-pro';
 
 import dayjs from 'dayjs';
 
@@ -101,7 +101,7 @@ export default class AlterarJornadaBox extends React.Component {
 				</Stack> : <Chip label="NÃO REGISTRA" color="error" size="small" />
 			},
 			{ field: 'diasDaSemana', headerName: 'Dias da Semana', minWidth: 400, flex: 1, renderCell: (params) =>
-				<Stack gap={1} direction="row" justifyContent="start" alignItems="center">
+				<Stack gap={1} direction="row" justifyContent="start" alignItems="center" sx={{height: "100%"}}>
 					<Chip label="SEG" color={params.row.segunda ? "success" : "grey"} size="small" />
 					<Chip label="TER" color={params.row.terca ? "success" : "grey"} size="small" />
 					<Chip label="QUA" color={params.row.quarta ? "success" : "grey"} size="small" />
@@ -336,7 +336,7 @@ export default class AlterarJornadaBox extends React.Component {
 						{this.props.usuario.permissaoList.includes("VER_TODAS_EQUIPES") ? <LoadingButton variant="contained" color="warning" size="large" startIcon={<AddIcon />} loadingPosition="start" loading={this.state.adicionando} disabled={this.state.calling} onClick={() => this.addJornada(null)}>Nova Jornada Geral</LoadingButton> : ""}
 				</ButtonGroup>
 				<Box>
-					<DataGrid
+					<DataGridPremium
 						rows={this.state.jornadaRows}
 						columns={this.columns}
 						disableColumnFilter
@@ -349,6 +349,12 @@ export default class AlterarJornadaBox extends React.Component {
 						pageSizeOptions={[5, 10, 15, 20]}
 						onRowSelectionModelChange={this.handleRowSelected}
 						loading={this.state.jornadaList == null || this.state.calling}
+						pagination
+						disableAggregation
+						slots={{
+							headerFilterMenu: null,
+						}}
+						disableColumnFilter
 					/>
 				</Box>
 				{this.state.jornadaSelected == null ? <Alert severity="warning">Selecione uma jornada</Alert> :

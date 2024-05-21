@@ -3,7 +3,7 @@ import React from "react";
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import CircularProgress from '@mui/material/CircularProgress';
-import { DataGrid } from '@mui/x-data-grid';
+import { DataGridPremium, GridToolbar } from '@mui/x-data-grid-premium';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import ButtonGroup from '@mui/material/ButtonGroup';
@@ -28,11 +28,15 @@ import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { DatePicker } from '@mui/x-date-pickers-pro';
 import Autocomplete from '@mui/material/Autocomplete';
 import TextField from '@mui/material/TextField';
 import Icon from '@mui/material/Icon';
 import VendaStatusCategoriaMap from "../model/VendaStatusCategoriaMap";
+
+import { DateRangePicker } from '@mui/x-date-pickers-pro/DateRangePicker';
+
+import VendaStatusChip from '../components/VendaStatusChip';
 
 import dayjs from 'dayjs';
 
@@ -52,7 +56,8 @@ class VendasModule extends React.Component {
 
 			vendaRows: [],
 
-			tipoData: 'DATA_VENDA',
+			tipoData: null,
+			safra: dayjs().date(1),
 			dataInicio: dayjs().date(1),
 			dataFim: dayjs(),
 			statusIdList: [],
@@ -66,11 +71,8 @@ class VendasModule extends React.Component {
 		}
 
 		this.columns = [
-			{ field: 'statusNome', headerName: 'Status', valueGetter: (value, row) => this.state.vendaStatusByVendaStatusId?.[value]?.nome, minWidth: 200, flex: 1, renderCell: (params) => <Chip
-				color="primary"
-				variant="contained"
-				label={this.state.vendaStatusByVendaStatusId?.[params.row.statusId]?.nome}
-				icon={<Icon>{this.state.vendaStatusByVendaStatusId?.[params.row.statusId]?.icon}</Icon>}
+			{ field: 'statusId', headerName: 'Status', valueGetter: (value, row) => this.state.vendaStatusByVendaStatusId?.[value]?.nome, minWidth: 200, flex: 1, renderCell: (params) => <VendaStatusChip
+				vendaStatus={this.state.vendaStatusByVendaStatusId?.[params.row.statusId]}
 				onClick={() => this.props.navigate("/vendas/" + params.row.vendaId)}
 			/>},
 			{ field: 'cpf', headerName: 'CPF/CNPJ', minWidth: 200, flex: 1 },
@@ -110,6 +112,7 @@ class VendasModule extends React.Component {
 		this.setState({calling: true})
 		api.post("/venda/venda-list", {
 				tipoData: this.state.tipoData,
+				safra: this.state.safra !== null ? this.state.safra.format("YYYY-MM-DD") : null,
 				dataInicio: this.state.dataInicio.format("YYYY-MM-DD"),
 				dataFim: this.state.dataFim.format("YYYY-MM-DD"),
 				statusIdList: this.state.statusIdList,
@@ -144,7 +147,7 @@ class VendasModule extends React.Component {
 				id: venda.vendaId,
 				vendaId: venda.vendaId,
 				statusId: venda.statusId,
-				cpf: venda.tipoPessoa == "CPF" ? venda.cpf : venda.cnpj,
+				cpf: venda.tipoPessoa == "CPF" ? venda.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4") : venda.cnpj.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4.$5"),
 				nome: venda.tipoPessoa == "CPF" ? venda.nome : venda.razaoSocial,
 				tipoProduto: venda.tipoProduto,
 				dataVenda: venda.dataVenda !== null ? new Date(venda.dataVenda) : null,
@@ -179,6 +182,22 @@ class VendasModule extends React.Component {
 					<Divider/>
 					<Grid container spacing={3}>
 						<Grid item xs={2}>
+							<DatePicker
+								label="Safra"
+								views={['month', 'year']}
+								value={this.state.safra}
+								onChange={(newValue) => this.setState({safra: newValue})}
+								slotProps={{
+									field: { clearable: true },
+									textField: {
+										fullWidth: true,
+										error: "safra" in this.state.errors,
+										helperText: this.state.errors?.safra ?? "",
+									},
+								}}
+							/>
+						</Grid>
+						<Grid item xs={2}>
 							<FormControl fullWidth>
 								<InputLabel>Tipo de Data</InputLabel>
 								<Select
@@ -187,78 +206,80 @@ class VendasModule extends React.Component {
 									label="Grupo de Status"
 									onChange={(e) => this.setState({tipoData: e.target.value})}
 									>
+									<MenuItem key={"nenhum"} value={null}>Nenhum</MenuItem>
 									{this.tipoDataList.map((tipoData) => <MenuItem key={tipoData.value} value={tipoData.value}>{tipoData.nome}</MenuItem>)}
 								</Select>
 							</FormControl>
 						</Grid>
-						<Grid item xs={2}>
-							<DatePicker
-								label="Data Início"
-								value={this.state.dataInicio}
-								onChange={(newValue) => this.setState({dataInicio: newValue})}
-								slotProps={{
-									textField: {
-										fullWidth: true,
-										error: "dataInicio" in this.state.errors || "dataValid" in this.state.errors || "dataRangeValid" in this.state.errors,
-										helperText: this.state.errors?.dataInicio ?? this.state.errors?.dataValid ?? this.state.errors?.dataRangeValid ?? "",
-									},
-								}}
-							/>
-						</Grid>
-						<Grid item xs={2}>
-							<DatePicker
-								label="Data Fim"
-								value={this.state.dataFim}
-								onChange={(newValue) => this.setState({dataFim: newValue})}
-								slotProps={{
-									textField: {
-										fullWidth: true,
-										error: "dataFim" in this.state.errors,
-										helperText: this.state.errors?.dataFim ?? "",
-									},
-								}}
-							/>
-						</Grid>
-						<Grid item xs={4}>
-							<Autocomplete
-								multiple
-								limitTags={3}
-								disableListWrap
-								id="venda-status"
-								loading={this.state.vendaStatusList == null}
-								options={(this.state.vendaStatusList ?? []).map((vendaStatus) => vendaStatus.vendaStatusId).sort((a, b) => this.state.vendaStatusByVendaStatusId[a].ordem - this.state.vendaStatusByVendaStatusId[b].ordem)}
-								groupBy={(option) => VendaStatusCategoriaMap?.[this.state.vendaStatusByVendaStatusId?.[option]?.categoria] ?? "Sem Categoria"}
-								getOptionLabel={(option) => this.state.vendaStatusByVendaStatusId[option].nome}
-								value={this.state.statusIdList}
-								onChange={(event, value) => this.setState({statusIdList: value})}
-								renderInput={(params) => (
-									<TextField
-										error={"papelId" in this.state.errors}
-										helperText={this.state.errors?.papelId}
-											{...params}
-										variant="outlined"
-										label="Status"
+						<Grid item xs={3}>
+							{this.state.tipoData !== null ?
+								<Stack spacing={1}>
+									<DateRangePicker
+										localeText={{ start: 'Data Inicial', end: 'Data Final' }}
+										value={[this.state.dataInicio, this.state.dataFim]}
+										onChange={(newValue) => this.setState({dataInicio: newValue[0], dataFim: newValue[1]})}
+										calendars={1}
+										slotProps={{
+											textField: {
+												fullWidth: true,
+												error: "dataInicio" in this.state.errors || "dataValid" in this.state.errors || "dataRangeValid" in this.state.errors,
+												helperText: this.state.errors?.dataInicio ?? this.state.errors?.dataValid ?? this.state.errors?.dataRangeValid ?? "",
+											},
+										}}
 									/>
-								)}
-								renderOption={(props, option) => <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props}>
-									<Stack direction="row" spacing={1} alignItems="center">
-										<Icon>{this.state.vendaStatusByVendaStatusId[option].icon}</Icon>
-										<div>{this.state.vendaStatusByVendaStatusId[option].nome}</div>
-									</Stack>
-								</Box>}
-								renderTags={(value, getTagProps) =>
-									value.map((option, index) => (
-									<Chip
-										variant="contained"
-										label={this.state.vendaStatusByVendaStatusId[option].nome}
-										icon={<Icon>{this.state.vendaStatusByVendaStatusId[option].icon}</Icon>}
-										{...getTagProps({ index })}
-									/>
-									))
-								}
-							/>
+									<ButtonGroup variant="text" size="small">
+										<Button onClick={() => this.setState({dataInicio: dayjs(), dataFim: dayjs()})}>Hoje</Button>
+										<Button onClick={() => this.setState({dataInicio: dayjs().day(0), dataFim: dayjs()})}>Esta semana</Button>
+										<Button onClick={() => this.setState({dataInicio: dayjs().date(1), dataFim: dayjs()})}>Este mês</Button>
+										<Button onClick={() => this.setState({dataInicio: dayjs().subtract(3, 'month'), dataFim: dayjs()})}>Últimos 3 meses</Button>
+									</ButtonGroup>
+								</Stack>
+							: ""}
 						</Grid>
-						<Grid item xs={2} sx={{display: "flex", alignItems: "center"}}>
+						<Grid item xs={3}>
+							<Stack spacing={1}>
+								<Autocomplete
+									multiple
+									limitTags={3}
+									disableListWrap
+									id="venda-status"
+									loading={this.state.vendaStatusList == null}
+									options={(this.state.vendaStatusList ?? []).map((vendaStatus) => vendaStatus.vendaStatusId).sort((a, b) => this.state.vendaStatusByVendaStatusId[a].ordem - this.state.vendaStatusByVendaStatusId[b].ordem)}
+									groupBy={(option) => VendaStatusCategoriaMap?.[this.state.vendaStatusByVendaStatusId?.[option]?.categoria] ?? "Sem Categoria"}
+									getOptionLabel={(option) => this.state.vendaStatusByVendaStatusId[option].nome}
+									value={this.state.statusIdList}
+									onChange={(event, value) => this.setState({statusIdList: value})}
+									renderInput={(params) => (
+										<TextField
+											error={"papelId" in this.state.errors}
+											helperText={this.state.errors?.papelId}
+												{...params}
+											variant="outlined"
+											label="Status"
+										/>
+									)}
+									renderOption={(props, option) => <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props}>
+										<Stack direction="row" spacing={1} alignItems="center">
+											<Icon>{this.state.vendaStatusByVendaStatusId[option].icon}</Icon>
+											<div>{this.state.vendaStatusByVendaStatusId[option].nome}</div>
+										</Stack>
+									</Box>}
+									renderTags={(value, getTagProps) =>
+										value.map((option, index) => (
+										<VendaStatusChip
+											vendaStatus={this.state.vendaStatusByVendaStatusId[option]}
+											{...getTagProps({ index })}
+										/>
+										))
+									}
+								/>
+								<ButtonGroup variant="text" size="small">
+									<Button onClick={() => this.setState({statusIdList: []})}>Nenhum</Button>
+									<Button onClick={() => this.setState({statusIdList: this.state.vendaStatusList.map((vendaStatus) => vendaStatus.vendaStatusId)})}>Todos</Button>
+								</ButtonGroup>
+							</Stack>
+						</Grid>
+						<Grid item xs={2} sx={{display: "flex", alignItems: "start"}}>
 							<LoadingButton fullWidth component="label" variant="contained" startIcon={<RefreshIcon />} loadingPosition="start" loading={this.state.calling} disabled={this.state.calling || this.state.vendaStatusList == null} onClick={this.getVendaListFromApi}>
 								Atualizar
 							</LoadingButton>
@@ -266,7 +287,7 @@ class VendasModule extends React.Component {
 					</Grid>
 					<Divider/>
 					<Box sx={{ flexGrow: 1 }}>
-						<DataGrid
+						<DataGridPremium
 							rows={this.state.vendaRows}
 							columns={this.columns}
 							disableRowSelectionOnClick
@@ -280,6 +301,14 @@ class VendasModule extends React.Component {
 							pageSizeOptions={[10, 30, 50, 100]}
 							loading={this.state.vendaList == null || this.state.calling}
 							sx={{marginBottom: 3}}
+							pagination
+							headerFilters
+							disableAggregation
+							slots={{
+								toolbar: GridToolbar,
+								headerFilterMenu: null,
+							}}
+							disableColumnFilter
 						/>
 					</Box>
 					<Collapse in={this.state.alertOpen}>

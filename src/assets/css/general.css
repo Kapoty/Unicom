@@ -41,6 +41,7 @@ iframe {
 	backdrop-filter: blur(10px);
 	background-color: rgba(0,0,0,0.7) !important;
 	background-image: none !important;
+	transform: translate3d(0, 0, 0);
 }
 
 @media print {

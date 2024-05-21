@@ -38,7 +38,7 @@ import SaveIcon from '@mui/icons-material/Save';
 import Avatar from '@mui/material/Avatar';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { DatePicker } from '@mui/x-date-pickers-pro';
 import InputLabel from '@mui/material/InputLabel';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
@@ -46,8 +46,10 @@ import EmailIcon from '@mui/icons-material/Email';
 import NumbersIcon from '@mui/icons-material/Numbers';
 import SmartphoneIcon from '@mui/icons-material/Smartphone';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
-import { TimePicker } from '@mui/x-date-pickers/TimePicker';
+import { TimePicker } from '@mui/x-date-pickers';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+
+import UsuarioAvatar from "../components/UsuarioAvatar";
 
 import dayjs from 'dayjs';
 
@@ -408,7 +410,7 @@ class CreateEditUsuarioModule extends React.Component {
 							<Grid item xs>
 								<Stack gap={1} justifyContent="center" alignItems="center">
 									{!this.state.createMode ? <React.Fragment>
-										<Avatar variant="square" sx={{ width: "128px", height: "128px"}} src={this.state.usuario.fotoPerfil ? api.defaults.baseURL + "/usuario/" + this.state.usuario.usuarioId + "/foto-perfil?versao=" + this.state.usuario.fotoPerfilVersao : ""}>{this.state.nome.charAt(0)}</Avatar>
+										<UsuarioAvatar variant="square" sx={{ width: "128px", height: "128px"}} usuario={this.state.usuario} />
 										<LoadingButton component="label" variant="contained" sx={{width: "128px"}} startIcon={<CloudUploadIcon />} loadingPosition="start" loading={this.state.savingFotoPerfil} disabled={this.state.calling}>
 										Upload
 										<input type="file" accept="image/jpeg" id="foto-perfil" hidden onChange={this.handleUsuarioFotoChange}/>
@@ -658,7 +660,7 @@ class CreateEditUsuarioModule extends React.Component {
 											</FormControl>
 										</Grid>
 										<Grid item xs={12}>
-											<Divider><Chip icon={<CalendarMonthIcon />} label="Jornada" /></Divider>
+											<Divider><Chip icon={<CalendarMonthIcon />} label="Folha de Ponto" /></Divider>
 										</Grid>
 										<Grid item xs={12}>
 											<FormControl fullWidth>

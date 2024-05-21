@@ -9,7 +9,7 @@ const PontoFacialRoute = React.lazy(() => import('routes/PontoFacialRoute'));
 
 import { red, green, grey } from '@mui/material/colors';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { ptBR } from '@mui/x-data-grid';
+import { ptBR } from '@mui/x-data-grid-premium/locales';
 import Backdrop from '@mui/material/Backdrop';
 import CircularProgress from '@mui/material/CircularProgress';
 
@@ -17,8 +17,8 @@ import { BrowserRouter, Routes, Route, unstable_HistoryRouter as HistoryRouter} 
 
 import history from "utils/history";
 
-import { LocalizationProvider } from '@mui/x-date-pickers';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
+import { LocalizationProvider } from '@mui/x-date-pickers-pro';
+import { AdapterDayjs } from '@mui/x-date-pickers-pro/AdapterDayjs'
 import 'dayjs/locale/pt';
 
 import dayjs from 'dayjs';
@@ -26,6 +26,10 @@ dayjs.locale('pt')
 
 var localizedFormat = require('dayjs/plugin/localizedFormat')
 dayjs.extend(localizedFormat)
+
+import { LicenseInfo } from '@mui/x-license';
+
+LicenseInfo.setLicenseKey('e0d9bb8070ce0054c9d9ecb6e82cb58fTz0wLEU9MzI0NzIxNDQwMDAwMDAsUz1wcmVtaXVtLExNPXBlcnBldHVhbCxLVj0y');
 
 const theme = createTheme({
 	palette: {
@@ -46,8 +50,19 @@ const theme = createTheme({
 				contrastText: "#111",
 			}
 	 },
+	/*components: {
+	    MuiButtonBase: {
+	      defaultProps: {
+	        disableRipple: true,
+	      },
+	    },
+	  },
+	transitions: {
+		// So we have `transition: none;` everywhere
+		create: () => 'none',
+	},*/
 	},
-	ptBR,
+	ptBR,	
 );
 
 class SiteRouter extends React.Component {

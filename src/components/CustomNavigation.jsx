@@ -87,11 +87,12 @@ class CustomNavigation extends React.Component {
 				<Drawer
 					variant="persistent"
 					anchor="left"
+					transitionDuration={0}
 		            open={this.props.menuOpen}
 		            sx={
 		            	{
 		            		width: this.props.menuOpen ? "350px" : "0px",
-		            		transition: "width 0.25s",
+		            		//transition: "width 0.25s",
 		            		"& .MuiDivider-fullWidth": {
 		            			display: "none"
 		            		},

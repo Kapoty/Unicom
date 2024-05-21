@@ -3,7 +3,7 @@ import React from "react";
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import CircularProgress from '@mui/material/CircularProgress';
-import { DataGrid } from '@mui/x-data-grid';
+import { DataGridPremium } from '@mui/x-data-grid-premium';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import ButtonGroup from '@mui/material/ButtonGroup';
@@ -22,6 +22,8 @@ import Tooltip from '@mui/material/Tooltip';
 import Alert from '@mui/material/Alert';
 import Collapse from '@mui/material/Collapse';
 import Avatar from '@mui/material/Avatar';
+
+import UsuarioDisplayStack from "../components/UsuarioDisplayStack";
 
 import api from "../services/api";
 
@@ -44,15 +46,9 @@ class EquipesModule extends React.Component {
 
 		this.columns = [
 			{ field: 'nome', headerName: 'Nome', minWidth: 100, flex: 1 },
-			{ field: 'supervisor', headerName: 'Supervisor', minWidth: 100, flex: 1, renderCell: (params) => <Stack direction="row" spacing={1} alignItems="center">
-					<Avatar src={params.row.supervisorFotoPerfilUrl}>{params.row.supervisor.charAt(0)}</Avatar>
-					<div>{params.row.supervisor}</div>
-				</Stack>},
-			{ field: 'gerente', headerName: 'Gerente', minWidth: 100, flex: 1, renderCell: (params) => <Stack direction="row" spacing={1} alignItems="center">
-					<Avatar src={params.row.gerenteFotoPerfilUrl}>{params.row.gerente.charAt(0)}</Avatar>
-					<div>{params.row.gerente}</div>
-				</Stack>},
-			{ field: "actions", headerName: "Ações", width: 300, renderCell: (params) => <Stack direction="row" spacing={1}>
+			{ field: 'supervisor', headerName: 'Supervisor', valueGetter: (value, row) => value?.nome, minWidth: 100, flex: 1, renderCell: (params) => <UsuarioDisplayStack usuario={params.row.supervisor}/>},
+			{ field: 'gerente', headerName: 'Gerente', valueGetter: (value, row) => value?.nome, minWidth: 100, flex: 1, renderCell: (params) => <UsuarioDisplayStack usuario={params.row.gerente}/>},
+			{ field: "actions", headerName: "Ações", width: 300, renderHeaderFilter: () => "", renderCell: (params) => <Stack direction="row" spacing={1}>
 				<Tooltip title="Editar" onClick={() => this.props.navigate("/equipes/" + params.row.equipeId)}>
 					<IconButton color="warning">
 						<EditIcon />
@@ -79,10 +75,8 @@ class EquipesModule extends React.Component {
 					id: equipe.equipeId,
 					equipeId: equipe.equipeId,
 					nome: equipe.nome,
-					supervisor: equipe.supervisor?.nome ?? "",
-					supervisorFotoPerfilUrl: equipe.supervisor?.fotoPerfil ? api.defaults.baseURL + "/usuario/" + equipe.supervisor?.usuarioId + "/foto-perfil?versao=" + equipe.supervisor?.fotoPerfilVersao : "",
-					gerente: equipe.gerente?.nome ?? "",
-					gerenteFotoPerfilUrl: equipe.gerente?.fotoPerfil ? api.defaults.baseURL + "/usuario/" + equipe.gerente?.usuarioId + "/foto-perfil?versao=" + equipe.gerente?.fotoPerfilVersao : "",
+					supervisor: equipe.supervisor,
+					gerente: equipe.gerente,
 				}})
 				this.setState({equipeList: response.data, equipeRows: equipeRows, calling: false});
 			})
@@ -111,7 +105,7 @@ class EquipesModule extends React.Component {
 							<Button variant="contained" size="large" startIcon={<PersonAddIcon />} onClick={() => this.props.navigate("/equipes/novo")}>Nova Equipe</Button>
 					</ButtonGroup>
 					<Box sx={{ flexGrow: 1 }}>
-						<DataGrid
+						<DataGridPremium
 							rows={this.state.equipeRows}
 							columns={this.columns}
 							disableRowSelectionOnClick
@@ -122,6 +116,12 @@ class EquipesModule extends React.Component {
 							pageSizeOptions={[10, 30, 50, 100]}
 							loading={this.state.equipeList == null || this.state.calling}
 							sx={{marginBottom: 3}}
+							headerFilters
+							disableAggregation
+							slots={{
+								headerFilterMenu: null,
+							}}
+							disableColumnFilter
 						/>
 					</Box>
 					<Collapse in={this.state.alertOpen}>

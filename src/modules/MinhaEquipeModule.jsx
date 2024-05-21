@@ -29,6 +29,8 @@ const JornadaChip = React.lazy(() => import('../components/JornadaChip'));
 const AlterarJornadaButton = React.lazy(() => import('../components/AlterarJornadaButton'));
 const RelatorioJornadaButton = React.lazy(() => import('../components/RelatorioJornadaButton'));
 
+import UsuarioAvatar from "../components/UsuarioAvatar";
+
 import {isAuth, getToken, setToken, removeToken} from "../utils/pontoAuth"
 
 import api from "../services/api";
@@ -104,14 +106,14 @@ class MinhaEquipeModule extends React.Component {
 						</Typography>
 						<Box sx={{ flexWrap: "wrap", gap: 3, flexDirection: "row", display: "flex"}}>
 							{this.state.equipe.gerente !== null ? <Paper sx={{display: "flex", width: "300px", alignItems: "center", boxSizing: "border-box", flexDirection: "column", padding: 3, gap: 2}}>
-								<Avatar variant="square" sx={{ width: "128px", height: "128px"}} src={this.state.equipe.gerente.fotoPerfil ? api.defaults.baseURL + "/usuario/" + this.state.equipe.gerente.usuarioId + "/foto-perfil?versao=" + this.state.equipe.gerente.fotoPerfilVersao : ""}>{this.state.equipe.gerente.nome.charAt(0)}</Avatar>
+								<UsuarioAvatar variant="square" sx={{ width: "128px", height: "128px"}} usuario={this.state.equipe.gerente}/>
 								<Typography variant="h4">
 									{this.state.equipe.gerente.nome}
 								</Typography>
 								<Chip label="Gerente" color="success" />
 							</Paper> : ""}
 							{this.state.equipe.supervisor !== null ? <Paper sx={{display: "flex", width: "300px", alignItems: "center", boxSizing: "border-box", flexDirection: "column", padding: 3, gap: 2}}>
-								<Avatar variant="square" sx={{ width: "128px", height: "128px"}} src={this.state.equipe.supervisor.fotoPerfil ? api.defaults.baseURL + "/usuario/" + this.state.equipe.supervisor.usuarioId + "/foto-perfil?versao=" + this.state.equipe.supervisor.fotoPerfilVersao : ""}>{this.state.equipe.supervisor.nome.charAt(0)}</Avatar>
+								<UsuarioAvatar variant="square" sx={{ width: "128px", height: "128px"}} usuario={this.state.equipe.supervisor}/>
 								<Typography variant="h4" align="center">
 									{this.state.equipe.supervisor.nome}
 								</Typography>
@@ -119,8 +121,8 @@ class MinhaEquipeModule extends React.Component {
 							</Paper> : ""}
 							{this.state.equipe.usuarioList.map(usuario =>
 								<Paper key={usuario.usuarioId} sx={{display: "flex", width: "300px", alignItems: "center", boxSizing: "border-box", flexDirection: "column", padding: 3, gap: 2}}>
-									<Avatar variant="square" sx={{ width: "128px", height: "128px"}} src={usuario.fotoPerfil ? api.defaults.baseURL + "/usuario/" + usuario.usuarioId + "/foto-perfil?versao=" + usuario.fotoPerfilVersao : ""}>{usuario.nome.charAt(0)}</Avatar>
-									<Typography variant="h4">
+									<UsuarioAvatar variant="square" sx={{ width: "128px", height: "128px"}} usuario={usuario}/>
+									<Typography variant="h4" align="center">
 										{usuario.nome}
 									</Typography>
 									<JornadaChip usuario={this.props.usuario} me={false} usuarioId={usuario.usuarioId}/>
