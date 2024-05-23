@@ -58,7 +58,7 @@ class CustomAppBar extends React.Component {
 	render() {
 	
 		return (
-		    <AppBar position="static" sx={{background: "black"}}>
+		    <AppBar position="static" /*sx={{background: "black"}}*/ elevation={0}>
 		        <Toolbar sx={{display: "flex", justifyContent: "space-between", gap: "10px", overflow: "auto"}}>
 		        		<IconButton
 			            size="large"
@@ -209,6 +209,7 @@ class CustomAppBar extends React.Component {
 				        </MenuItem>
 				      </Menu>
 		        </Toolbar>
+		        <Divider/>
 	     	</AppBar>
 		  );
 	}

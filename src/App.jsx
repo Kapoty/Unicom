@@ -35,12 +35,25 @@ const theme = createTheme({
 	palette: {
 			mode: "dark",
 			primary: {
-				main: "#00c853"
+				main: "#1976d2"//"#00c853"
 			},
 			secondary: red,
+			success: {
+				main: "#388e3c"
+			},
+			error: {
+				main: "#d32f2f"
+			},
+			info: {
+				main: "#303f9f"
+			},
+			warning: {
+				main: "#fbc02d"
+			},
 			background: {
-				 default: "#000000",
-				 paper: "#000000",
+				default: "#0f1214",//"#0a0b0c",
+				paper: "#0f1214",
+				light: "#13181b",
 			 },
 			green: green,
 			grey: {
@@ -49,22 +62,36 @@ const theme = createTheme({
 				dark: grey[700],
 				contrastText: "#111",
 			}
-	 },
-	/*components: {
-	    MuiButtonBase: {
-	      defaultProps: {
-	        disableRipple: true,
-	      },
-	    },
-	  },
-	transitions: {
+	},
+	/*mixins: {
+		MuiDataGrid: {
+		// Pinned columns sections
+		pinnedBackground: '#000',
+		// Headers, and top & bottom fixed rows
+		containerBackground: '#000',
+		},
+	},*/
+	components: {
+		/*MuiButtonBase: {
+			defaultProps: {
+				disableRipple: true,
+			},
+		},*/
+		MuiAccordionSummary: {
+			styleOverrides: {
+				root: {
+					fontFamily: "Roboto",
+				}
+			},
+		},
+	},
+	/*transitions: {
 		// So we have `transition: none;` everywhere
 		create: () => 'none',
 	},*/
 	},
 	ptBR,	
 );
-
 class SiteRouter extends React.Component {
 
 	render() {

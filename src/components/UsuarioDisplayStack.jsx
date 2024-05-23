@@ -8,12 +8,10 @@ import UsuarioAvatar from "./UsuarioAvatar"
 export default class UsuarioDisplayStack extends React.Component {
 	render() {
 		let usuario = this.props.usuario;
-		if (usuario == null)
-			return "";
-		return <Stack direction="row" spacing={1} alignItems="center">
+		return <Stack direction="row" spacing={1} alignItems="center" {...this.props}>
 					<UsuarioAvatar usuario={usuario}/>
 					<div>{usuario?.nome ?? ""}</div>
-					{usuario?.matricula !== null ? <Chip size="small" label={`#${usuario.matricula}`} /> : ""}
+					{usuario?.matricula ? <Chip size="small" label={`#${usuario?.matricula}`} /> : ""}
 				</Stack>
 	}
 }

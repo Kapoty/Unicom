@@ -87,22 +87,22 @@ class CustomNavigation extends React.Component {
 				<Drawer
 					variant="persistent"
 					anchor="left"
-					transitionDuration={0}
+					//transitionDuration={0}
 		            open={this.props.menuOpen}
 		            sx={
 		            	{
 		            		width: this.props.menuOpen ? "350px" : "0px",
 		            		//transition: "width 0.25s",
 		            		"& .MuiDivider-fullWidth": {
-		            			display: "none"
+		            			//display: "none"
 		            		},
 		            	}
 		            }
 		            PaperProps={{
 			          sx: {
 			            position: "relative",
-			            backgroundColor: "rgba(0, 0, 0, 0.75)",
-			            border: "none"
+			            //backgroundColor: "rgba(0, 0, 0, 0.75)",
+			            //border: "none"
 			          },
 			        }}
 		          >
@@ -129,9 +129,9 @@ class CustomNavigation extends React.Component {
 							<React.Fragment>
 						      	{this.props.usuario.permissaoList.includes("VER_MODULO_IFRAME") ?
 						      	<React.Fragment>
-								 	<ListItemButton onClick={() => this.setState({iframeListOpen: !this.state.iframeListOpen})}>
+								 	<ListItemButton divider onClick={() => this.setState({iframeListOpen: !this.state.iframeListOpen})}>
 										<ListItemIcon>
-											<Icon>web</Icon>
+											<Icon>leaderboard</Icon>
 										</ListItemIcon>
 										<ListItemText primary={"Relatórios"} sx={{wordBreak: "break-all"}}/>
 										{this.state.iframeListOpen ? <ExpandLess /> : <ExpandMore />}
@@ -140,7 +140,7 @@ class CustomNavigation extends React.Component {
 										<List component="div" disablePadding>
 											{this.props.iframeCategoryList !== null ?
 											this.props.iframeCategoryList.map((iframeCategory) => <List key={iframeCategory.iframeCategoryId} disablePadding>
-												<ListItemButton onClick={() => this.props.toggleIframeCategory(iframeCategory)} sx={{ pl: 3 }}>
+												<ListItemButton divider onClick={() => this.props.toggleIframeCategory(iframeCategory)} sx={{ pl: 3 }}>
 													<ListItemIcon>
 														<Icon>{iframeCategory.icon}</Icon>
 													</ListItemIcon>
@@ -163,7 +163,7 @@ class CustomNavigation extends React.Component {
 																		selected={this.props.location.pathname == `/i/${iframeCategory.uri}/${iframe.uri}`}
 																		>
 																		<ListItemIcon>
-																			<Icon sx={{ color: "red"}}>{iframe.icon}</Icon>
+																			<Icon>{iframe.icon}</Icon>
 																		</ListItemIcon>
 																		<ListItemText primary={iframe.titulo} sx={{wordBreak: "break-all"}}/>
 																	</ListItemButton>
@@ -171,7 +171,7 @@ class CustomNavigation extends React.Component {
 																<ListItem key={iframe.iframeId} disablePadding>
 																	<ListItemButton onClick={() => window.open(iframe.iframe, "_blank")} sx={{ pl: 4}}>
 																		<ListItemIcon>
-																			<Icon sx={{ color: "red"}}>{iframe.icon}</Icon>
+																			<Icon>{iframe.icon}</Icon>
 																		</ListItemIcon>
 																		<ListItemText primary={iframe.titulo} sx={{wordBreak: "break-all"}}/>
 																		<Icon>open_in_new</Icon>
@@ -186,7 +186,7 @@ class CustomNavigation extends React.Component {
 								</React.Fragment> : ""}
 								{this.props.usuario.permissaoList.includes("VER_MODULO_MINHA_EQUIPE") ?
 								<React.Fragment>
-									<ListItemButton onClick={() => this.setState({minhaEquipeModuleOpen: !this.state.minhaEquipeModuleOpen})}>
+									<ListItemButton divider onClick={() => this.setState({minhaEquipeModuleOpen: !this.state.minhaEquipeModuleOpen})}>
 										<ListItemIcon>
 											<Icon>groups</Icon>
 										</ListItemIcon>
@@ -201,7 +201,7 @@ class CustomNavigation extends React.Component {
 														selected={this.props.location.pathname == `/minhas-equipes/${equipe.equipeId}`}
 														>
 														<ListItemIcon>
-															<Icon sx={{ color: "red"}}>groups</Icon>
+															<Icon>groups</Icon>
 														</ListItemIcon>
 														<ListItemText primary={equipe.nome}/>
 													</ListItemButton>
@@ -211,7 +211,7 @@ class CustomNavigation extends React.Component {
 								</React.Fragment> : ""}
 								{this.props.usuario.permissaoList.includes("CADASTRAR_USUARIOS") ?
 								<React.Fragment>
-									<ListItemButton onClick={() => this.setState({usuarioModuleOpen: !this.state.usuarioModuleOpen})}>
+									<ListItemButton divider onClick={() => this.setState({usuarioModuleOpen: !this.state.usuarioModuleOpen})}>
 										<ListItemIcon>
 											<Icon>person</Icon>
 										</ListItemIcon>
@@ -225,7 +225,7 @@ class CustomNavigation extends React.Component {
 													selected={this.props.location.pathname == `/usuarios`}
 													>
 													<ListItemIcon>
-														<Icon sx={{ color: "red"}}>people</Icon>
+														<Icon>person</Icon>
 													</ListItemIcon>
 													<ListItemText primary={"Usuários"}/>
 												</ListItemButton>
@@ -235,7 +235,7 @@ class CustomNavigation extends React.Component {
 													selected={/^\/usuarios\/(\d|(novo))+$/.test(this.props.location.pathname)}
 													>
 													<ListItemIcon>
-														<Icon sx={{ color: "red"}}>person_add</Icon>
+														<Icon>person_add</Icon>
 													</ListItemIcon>
 													<ListItemText primary={"Novo Usuário"}/>
 												</ListItemButton>
@@ -245,7 +245,7 @@ class CustomNavigation extends React.Component {
 								</React.Fragment> : ""}
 								{this.props.usuario.permissaoList.includes("CADASTRAR_EQUIPES") ?
 								<React.Fragment>
-									<ListItemButton onClick={() => this.setState({equipeModuleOpen: !this.state.equipeModuleOpen})}>
+									<ListItemButton divider onClick={() => this.setState({equipeModuleOpen: !this.state.equipeModuleOpen})}>
 										<ListItemIcon>
 											<Icon>groups</Icon>
 										</ListItemIcon>
@@ -259,7 +259,7 @@ class CustomNavigation extends React.Component {
 													selected={this.props.location.pathname == `/equipes`}
 													>
 													<ListItemIcon>
-														<Icon sx={{ color: "red"}}>groups</Icon>
+														<Icon>groups</Icon>
 													</ListItemIcon>
 													<ListItemText primary={"Equipes"}/>
 												</ListItemButton>
@@ -269,7 +269,7 @@ class CustomNavigation extends React.Component {
 													selected={/^\/equipes\/(\d|(novo))+$/.test(this.props.location.pathname)}
 													>
 													<ListItemIcon>
-														<Icon sx={{ color: "red"}}>group_add</Icon>
+														<Icon>group_add</Icon>
 													</ListItemIcon>
 													<ListItemText primary={"Nova Equipe"}/>
 												</ListItemButton>
@@ -279,9 +279,9 @@ class CustomNavigation extends React.Component {
 								</React.Fragment> : ""}
 								{this.props.usuario.permissaoList.includes("CADASTRAR_VENDAS") ?
 								<React.Fragment>
-									<ListItemButton onClick={() => this.setState({vendaModuleOpen: !this.state.vendaModuleOpen})}>
+									<ListItemButton divider onClick={() => this.setState({vendaModuleOpen: !this.state.vendaModuleOpen})}>
 										<ListItemIcon>
-											<Icon>paid</Icon>
+											<Icon>credit_card</Icon>
 										</ListItemIcon>
 										<ListItemText primary={"Vendas"} sx={{wordBreak: "break-all"}}/>
 										{this.state.vendaModuleOpen ? <ExpandLess /> : <ExpandMore />}
@@ -293,7 +293,7 @@ class CustomNavigation extends React.Component {
 													selected={this.props.location.pathname == `/vendas`}
 													>
 													<ListItemIcon>
-														<Icon sx={{ color: "red"}}>paid</Icon>
+														<Icon>credit_card</Icon>
 													</ListItemIcon>
 													<ListItemText primary={"Vendas"}/>
 												</ListItemButton>
@@ -303,7 +303,7 @@ class CustomNavigation extends React.Component {
 													selected={/^\/vendas\/(\d|(novo))+$/.test(this.props.location.pathname)}
 													>
 													<ListItemIcon>
-														<Icon sx={{ color: "red"}}>add</Icon>
+														<Icon>add_card</Icon>
 													</ListItemIcon>
 													<ListItemText primary={"Nova Venda"}/>
 												</ListItemButton>

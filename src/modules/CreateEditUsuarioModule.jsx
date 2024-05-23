@@ -387,6 +387,7 @@ class CreateEditUsuarioModule extends React.Component {
 	}
 
 	render() {
+		console.log("CreateEditUsuarioModule was rendered at", new Date().toLocaleTimeString());
 		return (
 			<React.Fragment>
 				<Paper elevation={3} sx={{flexGrow: 1, padding: 5, minHeight: "100%", minWidth: "800px", boxSizing: "border-box", display: "flex", flexDirection: "column", aligmItems: "center", justifyContent: "start"}} className="modulePaper">

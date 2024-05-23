@@ -37,6 +37,8 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 import { DatePicker } from '@mui/x-date-pickers-pro';
 
+import CustomDataGridPremium from "./CustomDataGridPremium";
+
 import dayjs from 'dayjs';
 
 import api from "../services/api";
@@ -336,7 +338,7 @@ export default class AlterarJornadaBox extends React.Component {
 						{this.props.usuario.permissaoList.includes("VER_TODAS_EQUIPES") ? <LoadingButton variant="contained" color="warning" size="large" startIcon={<AddIcon />} loadingPosition="start" loading={this.state.adicionando} disabled={this.state.calling} onClick={() => this.addJornada(null)}>Nova Jornada Geral</LoadingButton> : ""}
 				</ButtonGroup>
 				<Box>
-					<DataGridPremium
+					<CustomDataGridPremium
 						rows={this.state.jornadaRows}
 						columns={this.columns}
 						disableColumnFilter

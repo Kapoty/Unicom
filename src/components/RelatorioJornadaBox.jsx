@@ -27,7 +27,7 @@ import DescriptionIcon from '@mui/icons-material/Description';
 import Paper from '@mui/material/Paper';
 import Divider from '@mui/material/Divider';
 import TextField from '@mui/material/TextField';
-import { DataGrid } from '@mui/x-data-grid';
+import { DataGridPremium } from '@mui/x-data-grid-premium';
 import Switch from '@mui/material/Switch';
 import FormGroup from '@mui/material/FormGroup';
 import FormControlLabel from '@mui/material/FormControlLabel';
@@ -44,6 +44,8 @@ import MenuItem from '@mui/material/MenuItem';
 import CircularProgress from '@mui/material/CircularProgress';
 import Chip from '@mui/material/Chip';
 import ListItemIcon from '@mui/material/ListItemIcon';
+
+import CustomDataGridPremium from "./CustomDataGridPremium";
 
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
@@ -725,7 +727,7 @@ export default class RelatorioJornadaBox extends React.Component {
 									</Grid>
 								</Grid>
 							</form>
-							<DataGrid
+							<CustomDataGridPremium
 								rows={this.state.dayRows}
 								columns={this.columns}
 								disableColumnFilter
@@ -736,6 +738,7 @@ export default class RelatorioJornadaBox extends React.Component {
 								initialState={{
 								    pagination: { paginationModel: { pageSize: 5 } },
 								  }}
+								pagination
 								pageSizeOptions={[5, 10, 15, 20, 25, 30, 31]}
 								onRowSelectionModelChange={this.handleRowSelected}
 							/>

@@ -13,7 +13,7 @@ import Stack from '@mui/material/Stack';
 import Switch from '@mui/material/Switch';
 import LoadingButton from '@mui/lab/LoadingButton';
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
-import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import GroupAddIcon from '@mui/icons-material/GroupAdd';
 import EditIcon from '@mui/icons-material/Edit';
 import IconButton from '@mui/material/IconButton';
 import PersonOffIcon from '@mui/icons-material/PersonOff';
@@ -24,6 +24,7 @@ import Collapse from '@mui/material/Collapse';
 import Avatar from '@mui/material/Avatar';
 
 import UsuarioDisplayStack from "../components/UsuarioDisplayStack";
+import CustomDataGridPremium from "../components/CustomDataGridPremium";
 
 import api from "../services/api";
 
@@ -97,25 +98,25 @@ class EquipesModule extends React.Component {
 	render() {
 		return (
 			<React.Fragment>
-				<Paper elevation={3} sx={{flexGrow: 1, padding: 5, minHeight: "100%", minWidth: "800px", boxSizing: "border-box", display: "flex", flexDirection: "column", aligmItems: "center", justifyContent: "start"}} className="modulePaper">
+				<Paper elevation={0} sx={{flexGrow: 1, padding: 5, minHeight: "100%", minWidth: "800px", boxSizing: "border-box", display: "flex", flexDirection: "column", aligmItems: "center", justifyContent: "start"}} className="modulePaper">
 					<Typography variant="h3" gutterBottom>
 					Equipes
 					</Typography>
 					<ButtonGroup sx={{marginBottom: 3}}>
-							<Button variant="contained" size="large" startIcon={<PersonAddIcon />} onClick={() => this.props.navigate("/equipes/novo")}>Nova Equipe</Button>
+							<Button variant="contained" size="large" startIcon={<GroupAddIcon />} onClick={() => this.props.navigate("/equipes/novo")}>Nova Equipe</Button>
 					</ButtonGroup>
 					<Box sx={{ flexGrow: 1 }}>
-						<DataGridPremium
+						<CustomDataGridPremium
 							rows={this.state.equipeRows}
 							columns={this.columns}
 							disableRowSelectionOnClick
-							autoHeight
 							initialState={{
 							    pagination: { paginationModel: { pageSize: 10 } },
 							  }}
 							pageSizeOptions={[10, 30, 50, 100]}
 							loading={this.state.equipeList == null || this.state.calling}
-							sx={{marginBottom: 3}}
+							sx={{marginBottom: 3, height: 1000}}
+							pagination
 							headerFilters
 							disableAggregation
 							slots={{

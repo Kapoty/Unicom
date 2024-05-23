@@ -31,6 +31,7 @@ import WarningIcon from '@mui/icons-material/Warning';
 import Paper from '@mui/material/Paper';
 import CircleIcon from '@mui/icons-material/Circle';
 import LinearProgress from '@mui/material/LinearProgress';
+import RefreshIcon from '@mui/icons-material/Refresh';
 
 import { grey, green, yellow, blue, red } from '@mui/material/colors';
 
@@ -448,8 +449,10 @@ export default class JornadaChip extends React.Component {
 					<Stack gap={1} sx={{padding: 1}}>
 						<LoadingButton
 							loading={this.state.refreshing}
-							variant="outlined"
+							variant="contained"
 							onClick={this.getUsuarioRegistroJornadaFromApi}
+							startIcon={<RefreshIcon />}
+							loadingPosition="start"
 						>
 							Atualizar
 						</LoadingButton>

@@ -24,6 +24,7 @@ import Collapse from '@mui/material/Collapse';
 import Avatar from '@mui/material/Avatar';
 
 import UsuarioDisplayStack from "../components/UsuarioDisplayStack";
+import CustomDataGridPremium from "../components/CustomDataGridPremium";
 
 import api from "../services/api";
 
@@ -149,7 +150,7 @@ class UsuariosModule extends React.Component {
 	render() {
 		return (
 			<React.Fragment>
-				<Paper elevation={3} sx={{flexGrow: 1, padding: 5, minHeight: "100%", minWidth: "800px", boxSizing: "border-box", display: "flex", flexDirection: "column", aligmItems: "center", justifyContent: "start"}} className="modulePaper">
+				<Paper elevation={0} sx={{flexGrow: 1, padding: 5, minHeight: "100%", minWidth: "800px", boxSizing: "border-box", display: "flex", flexDirection: "column", aligmItems: "center", justifyContent: "start"}} className="modulePaper">
 					<Typography variant="h3" gutterBottom>
 					Usuários
 					</Typography>
@@ -157,18 +158,17 @@ class UsuariosModule extends React.Component {
 							<Button variant="contained" size="large" startIcon={<PersonAddIcon />} onClick={() => this.props.navigate("/usuarios/novo")}>Novo Usuário</Button>
 					</ButtonGroup>
 					<Box sx={{ flexGrow: 1 }}>
-						<DataGridPremium
+						<CustomDataGridPremium
 							rows={this.state.usuarioRows}
 							columns={this.columns}
-							disableRowSelectionOnClick
-							autoHeight
 							initialState={{
 							    pagination: { paginationModel: { pageSize: 10 } },
 							  }}
 							pageSizeOptions={[10, 30, 50, 100]}
 							onRowSelectionModelChange={this.handleUsuarioSelected}
 							loading={this.state.usuarioList == null || this.state.calling}
-							sx={{marginBottom: 3}}
+							sx={{marginBottom: 3, height: 1000}}
+							pagination
 							headerFilters
 							disableAggregation
 							slots={{

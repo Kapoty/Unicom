@@ -1,9 +1,9 @@
-import React from "react";
+import React, {memo} from "react";
 
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import CircularProgress from '@mui/material/CircularProgress';
-import { DataGridPremium, GridToolbar } from '@mui/x-data-grid-premium';
+import { DataGridPremium, GridToolbar, GridToolbarContainer, GridToolbarExport, GridToolbarColumnsButton, GridToolbarDensitySelector, gridClasses } from '@mui/x-data-grid-premium';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import ButtonGroup from '@mui/material/ButtonGroup';
@@ -13,7 +13,7 @@ import Stack from '@mui/material/Stack';
 import Switch from '@mui/material/Switch';
 import LoadingButton from '@mui/lab/LoadingButton';
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
-import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import AddCardIcon from '@mui/icons-material/AddCard';
 import EditIcon from '@mui/icons-material/Edit';
 import IconButton from '@mui/material/IconButton';
 import PersonOffIcon from '@mui/icons-material/PersonOff';
@@ -32,17 +32,109 @@ import { DatePicker } from '@mui/x-date-pickers-pro';
 import Autocomplete from '@mui/material/Autocomplete';
 import TextField from '@mui/material/TextField';
 import Icon from '@mui/material/Icon';
-import VendaStatusCategoriaMap from "../model/VendaStatusCategoriaMap";
+import Menu from '@mui/material/Menu';
+import PreviewIcon from '@mui/icons-material/Preview';
+import { useTheme } from "@mui/material/styles";
 
 import { DateRangePicker } from '@mui/x-date-pickers-pro/DateRangePicker';
 
 import VendaStatusChip from '../components/VendaStatusChip';
+import UsuarioDisplayStack from "../components/UsuarioDisplayStack";
+import CustomDataGridPremium from "../components/CustomDataGridPremium";
+
+import VendaStatusCategoriaMap from "../model/VendaStatusCategoriaMap";
 
 import dayjs from 'dayjs';
 
 import api from "../services/api";
 
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
+
+const VendaListDataGrid = memo(function VendaListDataGrid({ vendaRows, columns, vendaList, calling, columnVisibilityModel, onColumnVisibilityModelChange, projecaoEnum, setColumnVisibilityModel, columnGroupingModel }) {
+  console.log("VendaListDataGrid was rendered at", new Date().toLocaleTimeString());
+
+  const theme = useTheme();
+
+  return (
+    <CustomDataGridPremium
+		rows={vendaRows}
+		columns={columns}
+		initialState={{
+		    pagination: { paginationModel: { pageSize: 100 } },
+		    sorting: {
+		    	sortModel: [{ field: 'dataVenda', sort: 'desc' }],
+		    },
+		    density: "standard"
+		  }}
+		pageSizeOptions={[10, 30, 50, 100, 1000]}
+		loading={vendaList == null || calling}
+		sx={{
+			marginBottom: 3,
+			height: 1000,
+		}}
+		pagination
+		headerFilters
+		disableAggregation
+		slots={{
+			toolbar: CustomToolbar,
+			headerFilterMenu: null,
+		}}
+		slotProps={{
+			toolbar: {
+				projecaoEnum: projecaoEnum,
+				setColumnVisibilityModel: setColumnVisibilityModel
+			}
+		}}
+		disableColumnFilter
+		columnVisibilityModel={columnVisibilityModel}
+		onColumnVisibilityModelChange={onColumnVisibilityModelChange}
+		columnGroupingModel={columnGroupingModel}
+	/>
+  );
+});
+
+const GridToolbarProjecao = memo(function GridToolbarProjecao({projecaoEnum, setColumnVisibilityModel}) {
+	const [anchorEl, setAnchorEl] = React.useState(null);
+	const open = Boolean(anchorEl);
+	const handleClick = (event) => {
+		setAnchorEl(event.currentTarget);
+	};
+	const handleClose = () => {
+		setAnchorEl(null);
+	};
+
+	return (
+		<Box>
+			<Button
+				startIcon={<PreviewIcon/>}
+				onClick={handleClick}
+				size="small"
+			>
+				Projeção
+			</Button>
+			<Menu
+				anchorEl={anchorEl}
+				open={open}
+				onClose={handleClose}
+				>
+				{projecaoEnum.map(projecao => <MenuItem key={projecao.value} onClick={() => {setColumnVisibilityModel(projecao.columnVisibilityModel); handleClose()}}>{projecao.nome}</MenuItem>)}
+				
+			</Menu>
+		</Box>
+	);
+	}
+)
+
+const CustomToolbar = memo(function CustomToolbar({projecaoEnum, setColumnVisibilityModel}) {
+	return (
+		<GridToolbarContainer>
+			<GridToolbarProjecao projecaoEnum={projecaoEnum} setColumnVisibilityModel={setColumnVisibilityModel}/>
+			<GridToolbarColumnsButton />
+			<GridToolbarDensitySelector/>
+			<GridToolbarExport />
+		</GridToolbarContainer>
+	);
+});
 
 class VendasModule extends React.Component {
 
@@ -53,14 +145,28 @@ class VendasModule extends React.Component {
 
 			vendaStatusList: null,
 			vendaStatusByVendaStatusId: null,
+			usuarioList: null,
+			usuarioByUsuarioId: null,
 
 			vendaRows: [],
 
-			tipoData: null,
+			// projecao
+
+			columnVisibilityModel: {},
+			projecao: "TUDO",
+
+			// filtros
+
+			tipoProduto: null,
+			pdv: "",
 			safra: dayjs().date(1),
+			tipoData: null,
 			dataInicio: dayjs().date(1),
 			dataFim: dayjs(),
 			statusIdList: [],
+			os: "",
+			cpf: "",
+			nome: "",
 
 			calling: false,
 
@@ -70,15 +176,33 @@ class VendasModule extends React.Component {
 			alert: null
 		}
 
+		this.tipoProdutoEnum = [
+			{nome: "Fibra", value: "FIBRA"},
+			{nome: "Móvel", value: "MOVEL"},
+		];
+		this.pdvEnum = ["UNICOM DF", "UNICOM GO"]
+
+		this.columnGroupingModel = [/*
+			{
+				groupId: 'Dados do Cliente',
+				freeReordering: true,
+				children: [{ field: 'cpf' }, {field: 'nome'}],
+			},*/
+		];
+
 		this.columns = [
 			{ field: 'statusId', headerName: 'Status', valueGetter: (value, row) => this.state.vendaStatusByVendaStatusId?.[value]?.nome, minWidth: 200, flex: 1, renderCell: (params) => <VendaStatusChip
 				vendaStatus={this.state.vendaStatusByVendaStatusId?.[params.row.statusId]}
 				onClick={() => this.props.navigate("/vendas/" + params.row.vendaId)}
 			/>},
+			{ field: 'tipoProduto', headerName: 'Tipo', minWidth: 100, flex: 1 },
+			{ field: 'pdv', headerName: 'PDV', minWidth: 100, flex: 1 },
+			{ field: 'safra', headerName: 'Safra', minWidth: 200, flex: 1, valueGetter: (value, row) => value !== null ? dayjs(value).format('MMMM YYYY') : "" },
 			{ field: 'cpf', headerName: 'CPF/CNPJ', minWidth: 200, flex: 1 },
 			{ field: 'nome', headerName: 'Nome/Razão Social', minWidth: 200, flex: 1 },
-			{ field: 'tipoProduto', headerName: 'Tipo', minWidth: 100, flex: 1 },
 			{ field: 'dataVenda', headerName: 'Data da Venda', minWidth: 200, flex: 1, type: 'date', renderCell: (params) => params.value !== null ? dayjs(params.value).format('L LTS') : "" },
+			{ field: 'loginVendedor', headerName: 'Login Vendedor', minWidth: 200, flex: 1 },
+			{ field: 'cadastradorId', headerName: 'Cadastrador', valueGetter: (value, row) => this.state.usuarioByUsuarioId?.[value]?.nome, minWidth: 100, flex: 1, renderCell: (params) => <UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[params.row.cadastradorId]}/>},
 			{ field: 'dataStatus', headerName: 'Data do Status', minWidth: 200, flex: 1, type: 'date', renderCell: (params) => params.value !== null ? dayjs(params.value).format('L LTS') : "" },
 			{ field: 'dataAtivacao', headerName: 'Data da Ativação', minWidth: 200, flex: 1, type: 'date', renderCell: (params) => params.value !== null ? dayjs(params.value).format('L LTS') : "" },
 			{ field: 'dataAgendamento', headerName: 'Data de Agendamento', minWidth: 200, flex: 1, type: 'date', renderCell: (params) => params.value !== null ? dayjs(params.value).format('L LTS') : "" },
@@ -95,10 +219,31 @@ class VendasModule extends React.Component {
 			{nome: "Data do Cadastro", value: "DATA_CADASTRO"},
 		];
 
+		this.projecaoEnum = [
+			{nome: "Tudo", value: "TUDO", columnVisibilityModel: {
+				cpf: false,
+			}},
+			{nome: "Fibra - Vendas", value: "FIBRA_VENDAS", columnVisibilityModel: {
+				nome: false,
+			}},
+			{nome: "Móvel - Vendas", value: "MOVEL_VENDAS", columnVisibilityModel: {
+				tipoProduto: false,
+			}},
+			{nome: "Fibra - Qualidade", value: "FIBRA_QUALIDADE", columnVisibilityModel: {
+				dataVenda: false,
+			}},
+			{nome: "Móvel - Qualidade", value: "MOVEL_QUALIDADE", columnVisibilityModel: {
+				dataAtivacao: false,
+			}},
+		]
+
 		this.getVendaListFromApi = this.getVendaListFromApi.bind(this);
 		this.getVendaStatusListFromApi = this.getVendaStatusListFromApi.bind(this);
+		this.getUsuarioListFromApi = this.getUsuarioListFromApi.bind(this);
 
 		this.calculateRows = this.calculateRows.bind(this);
+
+		this.onColumnVisibilityModelChange = this.onColumnVisibilityModelChange.bind(this);
 
 		this.openAlert = this.openAlert.bind(this);
 		this.closeAlert = this.closeAlert.bind(this);
@@ -106,16 +251,22 @@ class VendasModule extends React.Component {
 
 	componentDidMount() {
 		this.getVendaStatusListFromApi();
+		this.getUsuarioListFromApi();
 	}
 
 	getVendaListFromApi() {
 		this.setState({calling: true})
 		api.post("/venda/venda-list", {
-				tipoData: this.state.tipoData,
+				tipoProduto: this.state.tipoProduto,
+				pdv: this.state.pdv,
 				safra: this.state.safra !== null ? this.state.safra.format("YYYY-MM-DD") : null,
+				tipoData: this.state.tipoData,
 				dataInicio: this.state.dataInicio.format("YYYY-MM-DD"),
 				dataFim: this.state.dataFim.format("YYYY-MM-DD"),
 				statusIdList: this.state.statusIdList,
+				os: this.state.os,
+				cpf: this.state.cpf,
+				nome: this.state.nome,
 			})
 			.then((response) => {
 				this.setState({vendaList: response.data, errors: {}, calling: false}, () => this.calculateRows());
@@ -141,16 +292,34 @@ class VendasModule extends React.Component {
 			});
 	}
 
+	getUsuarioListFromApi() {
+		api.get("/empresa/me/usuario")
+			.then((response) => {
+				let usuarioList = response.data;
+				let usuarioByUsuarioId = {};
+				usuarioList.forEach((usuario) => usuarioByUsuarioId[usuario.usuarioId] = usuario);
+				this.setState({usuarioList: usuarioList, usuarioByUsuarioId: usuarioByUsuarioId});
+			})
+			.catch((err) => {
+				console.log(err);
+				setTimeout(this.getUsuarioListFromApi, 3000);
+			});
+	}
+
 	calculateRows() {
 		let vendaRows = this.state.vendaList.map((venda) => {
 			return {
 				id: venda.vendaId,
 				vendaId: venda.vendaId,
 				statusId: venda.statusId,
+				tipoProduto: venda.tipoProduto,
+				pdv: venda.pdv,
+				safra: venda.safra !== null ? new Date(venda.safra) : null,
+				dataVenda: venda.dataVenda !== null ? new Date(venda.dataVenda) : null,
+				loginVendedor: venda.loginVendedor,
+				cadastradorId: venda.cadastradorId,
 				cpf: venda.tipoPessoa == "CPF" ? venda.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4") : venda.cnpj.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4.$5"),
 				nome: venda.tipoPessoa == "CPF" ? venda.nome : venda.razaoSocial,
-				tipoProduto: venda.tipoProduto,
-				dataVenda: venda.dataVenda !== null ? new Date(venda.dataVenda) : null,
 				dataStatus: venda.dataStatus !== null ? new Date(venda.dataStatus) : null,
 				dataAtivacao: venda.dataAtivacao !== null ? new Date(venda.dataAtivacao) : null,
 				dataAgendamento: venda.dataAgendamento !== null ? new Date(venda.dataAgendamento) : null,
@@ -159,6 +328,10 @@ class VendasModule extends React.Component {
 			}
 		});
 		this.setState({vendaRows: vendaRows});
+	}
+
+	onColumnVisibilityModelChange(newModel) {
+		this.setState({columnVisibilityModel: newModel});
 	}
 
 	openAlert(severity, message) {
@@ -170,18 +343,51 @@ class VendasModule extends React.Component {
 	}
 
 	render() {
+		//console.log("VendasModule was rendered at", new Date().toLocaleTimeString());
 		return (
 			<React.Fragment>
-				<Paper elevation={3} sx={{flexGrow: 1, padding: 5, minHeight: "100%", minWidth: "1000px", boxSizing: "border-box", display: "flex", flexDirection: "column", aligmItems: "center", justifyContent: "start", gap: 3}} className="modulePaper">
+				<Paper elevation={0} sx={{flexGrow: 1, padding: 5, minHeight: "100%", minWidth: "1000px", boxSizing: "border-box", display: "flex", flexDirection: "column", aligmItems: "center", justifyContent: "start", gap: 3}} className="modulePaper">
 					<Typography variant="h3">
 						Vendas
 					</Typography>
 					<ButtonGroup>
-							<Button variant="contained" size="large" startIcon={<PersonAddIcon />} onClick={() => this.props.navigate("/vendas/novo")}>Nova Venda</Button>
+							<Button variant="contained" size="large" startIcon={<AddCardIcon />} onClick={() => this.props.navigate("/vendas/novo")}>Nova Venda</Button>
 					</ButtonGroup>
 					<Divider/>
-					<Grid container spacing={3}>
-						<Grid item xs={2}>
+					<Grid container spacing={3} sx={{maxWidth: 1500}}>
+						<Grid item xs={4}>
+							<FormControl fullWidth size="small">
+								<InputLabel>Tipo do Produto</InputLabel>
+								<Select
+									id="tipo-prduto"
+									value={this.state.tipoProduto}
+									label="Tipo do Produto"
+									onChange={(e) => this.setState({tipoProduto: e.target.value})}
+									>
+									<MenuItem key={"nenhum"} value={null}>Ambos</MenuItem>
+									{this.tipoProdutoEnum.map((tipoProduto) => <MenuItem key={tipoProduto.value} value={tipoProduto.value}>{tipoProduto.nome}</MenuItem>)}
+								</Select>
+							</FormControl>
+						</Grid>
+						<Grid item xs={4}>
+							<Autocomplete
+								id="pdv"
+								freeSolo
+								disableClearable
+								options={this.pdvEnum}
+								value={this.state.pdv}
+								onInputChange={(event, value) => this.setState({pdv: value})}
+								renderInput={(params) => (
+									<TextField
+										{...params}
+										variant="outlined"
+										label="PDV"
+									/>
+								)}
+								size="small"
+							/>
+						</Grid>
+						<Grid item xs={4}>
 							<DatePicker
 								label="Safra"
 								views={['month', 'year']}
@@ -193,12 +399,13 @@ class VendasModule extends React.Component {
 										fullWidth: true,
 										error: "safra" in this.state.errors,
 										helperText: this.state.errors?.safra ?? "",
+										size: "small"
 									},
 								}}
 							/>
 						</Grid>
-						<Grid item xs={2}>
-							<FormControl fullWidth>
+						<Grid item xs={3}>
+							<FormControl fullWidth size="small">
 								<InputLabel>Tipo de Data</InputLabel>
 								<Select
 									id="tipo-de-data"
@@ -211,7 +418,7 @@ class VendasModule extends React.Component {
 								</Select>
 							</FormControl>
 						</Grid>
-						<Grid item xs={3}>
+						<Grid item xs={4}>
 							{this.state.tipoData !== null ?
 								<Stack spacing={1}>
 									<DateRangePicker
@@ -224,6 +431,7 @@ class VendasModule extends React.Component {
 												fullWidth: true,
 												error: "dataInicio" in this.state.errors || "dataValid" in this.state.errors || "dataRangeValid" in this.state.errors,
 												helperText: this.state.errors?.dataInicio ?? this.state.errors?.dataValid ?? this.state.errors?.dataRangeValid ?? "",
+												size: "small"
 											},
 										}}
 									/>
@@ -236,7 +444,7 @@ class VendasModule extends React.Component {
 								</Stack>
 							: ""}
 						</Grid>
-						<Grid item xs={3}>
+						<Grid item xs={5}>
 							<Stack spacing={1}>
 								<Autocomplete
 									multiple
@@ -272,6 +480,7 @@ class VendasModule extends React.Component {
 										/>
 										))
 									}
+									size="small"
 								/>
 								<ButtonGroup variant="text" size="small">
 									<Button onClick={() => this.setState({statusIdList: []})}>Nenhum</Button>
@@ -279,7 +488,52 @@ class VendasModule extends React.Component {
 								</ButtonGroup>
 							</Stack>
 						</Grid>
-						<Grid item xs={2} sx={{display: "flex", alignItems: "start"}}>
+						<Grid item xs={3}>
+							<TextField
+								id="os"
+								value={this.state.os}
+								onChange={(e) => this.setState({os: e.target.value})}
+								fullWidth
+								label="OS"
+								variant="outlined"
+								disabled={this.state.calling}
+								inputProps={{
+									maxLength: 50,
+								}}
+								size="small"
+							/>
+						</Grid>
+						<Grid item xs={3}>
+							<TextField
+								id="cpf"
+								value={this.state.cpf}
+								onChange={(e) => this.setState({cpf: e.target.value})}
+								fullWidth
+								label="CPF/CNPJ"
+								variant="outlined"
+								disabled={this.state.calling}
+								inputProps={{
+									maxLength: 14,
+								}}
+								size="small"
+							/>
+						</Grid>
+						<Grid item xs={3}>
+							<TextField
+								id="nome"
+								value={this.state.nome}
+								onChange={(e) => this.setState({nome: e.target.value})}
+								fullWidth
+								label="Nome/Razão Social"
+								variant="outlined"
+								disabled={this.state.calling}
+								inputProps={{
+									maxLength: 200,
+								}}
+								size="small"
+							/>
+						</Grid>
+						<Grid item xs={3} sx={{display: "flex", alignItems: "start"}}>
 							<LoadingButton fullWidth component="label" variant="contained" startIcon={<RefreshIcon />} loadingPosition="start" loading={this.state.calling} disabled={this.state.calling || this.state.vendaStatusList == null} onClick={this.getVendaListFromApi}>
 								Atualizar
 							</LoadingButton>
@@ -287,28 +541,16 @@ class VendasModule extends React.Component {
 					</Grid>
 					<Divider/>
 					<Box sx={{ flexGrow: 1 }}>
-						<DataGridPremium
-							rows={this.state.vendaRows}
+						<VendaListDataGrid
+							vendaRows={this.state.vendaRows}
 							columns={this.columns}
-							disableRowSelectionOnClick
-							autoHeight
-							initialState={{
-							    pagination: { paginationModel: { pageSize: 10 } },
-							    sorting: {
-							    	sortModel: [{ field: 'dataVenda', sort: 'desc' }],
-							    }
-							  }}
-							pageSizeOptions={[10, 30, 50, 100]}
-							loading={this.state.vendaList == null || this.state.calling}
-							sx={{marginBottom: 3}}
-							pagination
-							headerFilters
-							disableAggregation
-							slots={{
-								toolbar: GridToolbar,
-								headerFilterMenu: null,
-							}}
-							disableColumnFilter
+							vendaList={this.state.vendaList}
+							calling={this.state.calling}
+							columnVisibilityModel={this.state.columnVisibilityModel}
+							onColumnVisibilityModelChange={this.onColumnVisibilityModelChange}
+							projecaoEnum={this.projecaoEnum}
+							setColumnVisibilityModel={this.onColumnVisibilityModelChange}
+							columnGroupingModel={this.columnGroupingModel}
 						/>
 					</Box>
 					<Collapse in={this.state.alertOpen}>
