@@ -48,7 +48,7 @@ const theme = createTheme({
 				main: "#303f9f"
 			},
 			warning: {
-				main: "#fbc02d"
+				main: "#fbc02d"//"#e64a19"
 			},
 			background: {
 				default: "#0f1214",//"#0a0b0c",
@@ -83,6 +83,25 @@ const theme = createTheme({
 					fontFamily: "Roboto",
 				}
 			},
+		},
+		MuiPaper: {
+			defaultProps: {
+				//elevation: 0,
+				//variant: "outlined",
+			}
+		},
+		MuiDialog: {
+			defaultProps: {
+				PaperProps: {
+					elevation: 0,
+					variant: "outlined",
+				}
+			}
+		},
+		MuiAlert: {
+			defaultProps: {
+				variant: "standard",
+			}
 		},
 	},
 	/*transitions: {

@@ -55,7 +55,7 @@ const MinhaEquipeModuleWrapper = (props) => {
   return <MinhaEquipeModule key={equipeId} {...props} />
 };
 
-const ModuleRoutes = memo(function ModuleRoutes({ usuario, iframeCategoryList }) {
+const ModuleRoutes = memo(function ModuleRoutes({ usuario, iframeCategoryList, location}) {
   //console.log("ModuleRoutes was rendered at", new Date().toLocaleTimeString());
   return (
   	<Suspense
@@ -315,7 +315,7 @@ class PainelRoute extends React.Component {
 			<Box sx={{display: "flex", flexGrow: 1, flexDirection: "row", overflow: "hidden"}}>
 				<CustomNavigation menuOpen={this.state.menuOpen} toggleMenu={this.toggleMenu} usuario={this.state.usuario} iframeCategoryList={this.state.iframeCategoryList} minhaEquipeList={this.state.minhaEquipeList} toggleIframeCategory={this.toggleIframeCategory} closeIframe={this.closeIframe}/>
 				<Box sx={{flexGrow: 1, height: "100%", overflow: "auto"}}>
-					{/*<Suspense fallback={<Backdrop sx={{color: "primary.main"}} open={true}>
+					{<Suspense fallback={<Backdrop sx={{color: "primary.main"}} open={true}>
 											<CircularProgress color="inherit"/>
 										</Backdrop>}>
 						{this.state.usuario !== null && this.state.usuario.permissaoList.includes("VER_MODULO_IFRAME") ? <IframesModule iframeCategoryList={this.state.iframeCategoryList}/> : ""}
@@ -330,8 +330,8 @@ class PainelRoute extends React.Component {
 								{this.state.usuario !== null && this.state.usuario.permissaoList.includes("CADASTRAR_VENDAS") ? <Route path="/vendas/" element={<VendasModule usuario={this.state.usuario}/>} /> : null}
 								{this.state.usuario !== null && this.state.usuario.permissaoList.includes("CADASTRAR_VENDAS") ? <Route path="/vendas/:vendaId" element={<CreateEditVendaModuleWrapper usuario={this.state.usuario}/>} /> : null}
 							</Routes>
-					</Suspense>*/}
-					<ModuleRoutes usuario={this.state.usuario} iframeCategoryList={this.state.iframeCategoryList} />
+					</Suspense>}
+					{/*<ModuleRoutes usuario={this.state.usuario} iframeCategoryList={this.state.iframeCategoryList} location={this.props.location} />*/}
 				</Box>
 			</Box>
 		</Box>

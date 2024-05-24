@@ -50,7 +50,7 @@ import api from "../services/api";
 
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 
-const VendaListDataGrid = memo(function VendaListDataGrid({ vendaRows, columns, vendaList, calling, columnVisibilityModel, onColumnVisibilityModelChange, projecaoEnum, setColumnVisibilityModel, columnGroupingModel }) {
+const VendaListDataGrid = memo(function VendaListDataGrid({ vendaRows, columns, vendaList, calling, columnVisibilityModel, onColumnVisibilityModelChange, projecaoList, setColumnVisibilityModel, columnGroupingModel }) {
   console.log("VendaListDataGrid was rendered at", new Date().toLocaleTimeString());
 
   const theme = useTheme();
@@ -81,7 +81,7 @@ const VendaListDataGrid = memo(function VendaListDataGrid({ vendaRows, columns, 
 		}}
 		slotProps={{
 			toolbar: {
-				projecaoEnum: projecaoEnum,
+				projecaoList: projecaoList,
 				setColumnVisibilityModel: setColumnVisibilityModel
 			}
 		}}
@@ -93,7 +93,7 @@ const VendaListDataGrid = memo(function VendaListDataGrid({ vendaRows, columns, 
   );
 });
 
-const GridToolbarProjecao = memo(function GridToolbarProjecao({projecaoEnum, setColumnVisibilityModel}) {
+const GridToolbarProjecao = memo(function GridToolbarProjecao({projecaoList, setColumnVisibilityModel}) {
 	const [anchorEl, setAnchorEl] = React.useState(null);
 	const open = Boolean(anchorEl);
 	const handleClick = (event) => {
@@ -117,7 +117,7 @@ const GridToolbarProjecao = memo(function GridToolbarProjecao({projecaoEnum, set
 				open={open}
 				onClose={handleClose}
 				>
-				{projecaoEnum.map(projecao => <MenuItem key={projecao.value} onClick={() => {setColumnVisibilityModel(projecao.columnVisibilityModel); handleClose()}}>{projecao.nome}</MenuItem>)}
+				{projecaoList.map(projecao => <MenuItem key={projecao.value} onClick={() => {setColumnVisibilityModel(projecao.columnVisibilityModel); handleClose()}}>{projecao.nome}</MenuItem>)}
 				
 			</Menu>
 		</Box>
@@ -125,10 +125,10 @@ const GridToolbarProjecao = memo(function GridToolbarProjecao({projecaoEnum, set
 	}
 )
 
-const CustomToolbar = memo(function CustomToolbar({projecaoEnum, setColumnVisibilityModel}) {
+const CustomToolbar = memo(function CustomToolbar({projecaoList, setColumnVisibilityModel}) {
 	return (
 		<GridToolbarContainer>
-			<GridToolbarProjecao projecaoEnum={projecaoEnum} setColumnVisibilityModel={setColumnVisibilityModel}/>
+			<GridToolbarProjecao projecaoList={projecaoList} setColumnVisibilityModel={setColumnVisibilityModel}/>
 			<GridToolbarColumnsButton />
 			<GridToolbarDensitySelector/>
 			<GridToolbarExport />
@@ -176,40 +176,6 @@ class VendasModule extends React.Component {
 			alert: null
 		}
 
-		this.tipoProdutoEnum = [
-			{nome: "Fibra", value: "FIBRA"},
-			{nome: "Móvel", value: "MOVEL"},
-		];
-		this.pdvEnum = ["UNICOM DF", "UNICOM GO"]
-
-		this.columnGroupingModel = [/*
-			{
-				groupId: 'Dados do Cliente',
-				freeReordering: true,
-				children: [{ field: 'cpf' }, {field: 'nome'}],
-			},*/
-		];
-
-		this.columns = [
-			{ field: 'statusId', headerName: 'Status', valueGetter: (value, row) => this.state.vendaStatusByVendaStatusId?.[value]?.nome, minWidth: 200, flex: 1, renderCell: (params) => <VendaStatusChip
-				vendaStatus={this.state.vendaStatusByVendaStatusId?.[params.row.statusId]}
-				onClick={() => this.props.navigate("/vendas/" + params.row.vendaId)}
-			/>},
-			{ field: 'tipoProduto', headerName: 'Tipo', minWidth: 100, flex: 1 },
-			{ field: 'pdv', headerName: 'PDV', minWidth: 100, flex: 1 },
-			{ field: 'safra', headerName: 'Safra', minWidth: 200, flex: 1, valueGetter: (value, row) => value !== null ? dayjs(value).format('MMMM YYYY') : "" },
-			{ field: 'cpf', headerName: 'CPF/CNPJ', minWidth: 200, flex: 1 },
-			{ field: 'nome', headerName: 'Nome/Razão Social', minWidth: 200, flex: 1 },
-			{ field: 'dataVenda', headerName: 'Data da Venda', minWidth: 200, flex: 1, type: 'date', renderCell: (params) => params.value !== null ? dayjs(params.value).format('L LTS') : "" },
-			{ field: 'loginVendedor', headerName: 'Login Vendedor', minWidth: 200, flex: 1 },
-			{ field: 'cadastradorId', headerName: 'Cadastrador', valueGetter: (value, row) => this.state.usuarioByUsuarioId?.[value]?.nome, minWidth: 100, flex: 1, renderCell: (params) => <UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[params.row.cadastradorId]}/>},
-			{ field: 'dataStatus', headerName: 'Data do Status', minWidth: 200, flex: 1, type: 'date', renderCell: (params) => params.value !== null ? dayjs(params.value).format('L LTS') : "" },
-			{ field: 'dataAtivacao', headerName: 'Data da Ativação', minWidth: 200, flex: 1, type: 'date', renderCell: (params) => params.value !== null ? dayjs(params.value).format('L LTS') : "" },
-			{ field: 'dataAgendamento', headerName: 'Data de Agendamento', minWidth: 200, flex: 1, type: 'date', renderCell: (params) => params.value !== null ? dayjs(params.value).format('L LTS') : "" },
-			{ field: 'dataInstalacao', headerName: 'Data de Instalação', minWidth: 200, flex: 1, type: 'date', renderCell: (params) => params.value !== null ? dayjs(params.value).format('L LTS') : "" },
-			{ field: 'dataCadastro', headerName: 'Data do Cadastro', minWidth: 200, flex: 1, type: 'date', renderCell: (params) => params.value !== null ? dayjs(params.value).format('L LTS') : "" },
-		];
-
 		this.tipoDataList = [
 			{nome: "Data da Venda", value: "DATA_VENDA"},
 			{nome: "Data do Status", value: "DATA_STATUS"},
@@ -219,23 +185,276 @@ class VendasModule extends React.Component {
 			{nome: "Data do Cadastro", value: "DATA_CADASTRO"},
 		];
 
-		this.projecaoEnum = [
-			{nome: "Tudo", value: "TUDO", columnVisibilityModel: {
-				cpf: false,
-			}},
+		this.tipoProdutoEnum = [
+			{nome: "Fibra", value: "FIBRA"},
+			{nome: "Móvel", value: "MOVEL"},
+		];
+		this.pdvEnum = ["UNICOM DF", "UNICOM GO"];
+
+		this.tipoDeLinhaMap = {
+			"NOVA": "Nova",
+			"PORTABILIDADE": "Portabilidade",
+			"TT": "TT",
+		};
+		this.faturaStatusMap = {
+			"NA": "N/A",
+			"A_VENCER": "A Vencer",
+			"EM_ABERTO": "Em Aberto",
+			"PAGA": "Paga",
+			"MULTA": "Multa",
+			"CHURN": "Churn"
+		};
+		this.porteMap = {
+			"MEI": "MEI",
+			"LTDA": "LTDA",
+		};
+		this.formaDePagamentoMap = {
+			"BOLETO": "Boleto",
+			"DEBITO_AUTOMATICO": "Débito Automático",
+			"CARTAO_CREDITO": "Cartão de Crédito"
+		}
+		this.sistemaMap = {
+			"TIM_VENDAS": "TIM Vendas",
+			"TELEVENDAS": "Televendas",
+			"TBP": "TBP"
+		};
+		this.brscanMap = {
+			"SIM": "Sim",
+			"NAO": "Não",
+			"EXCECAO": "Exceção",
+			"CANCELADA_INTERNAMENTE": "Cancelada Internamente",
+			"AGUARDANDO_ACEITE_DIGITAL": "Aguardando Aceite Digital",
+			"SEM_WHATSAPP": "Sem Whatsapp"
+		};
+		this.suporteMap = {
+			"SIM": "Sim",
+			"NAO": "Não",
+			"EXCECAO": "Exceção",
+			"CANCELADA_INTERNAMENTE": "Cancelada Internamente",
+		};
+		this.faturaStatusMap = {
+			"NA": "N/A",
+			"A_VENCER": "A Vencer",
+			"EM_ABERTO": "Em Aberto",
+			"PAGA": "Paga",
+			"MULTA": "Multa",
+			"CHURN": "Churn",
+		};
+
+		this.columnGroupingModel = [
+			/*{
+				groupId: 'Dados do Cliente',
+				freeReordering: true,
+				children: [{ field: 'cpf' }, {field: 'nome'}],
+			},*/
+		];
+
+		this.numeroFaturas = 14;
+
+		this.columns = [
+			{ field: 'statusId', headerName: 'Status', valueGetter: (value, row) => this.state.vendaStatusByVendaStatusId?.[value]?.nome, minWidth: 200, flex: 1, renderCell: (params) => <VendaStatusChip
+				vendaStatus={this.state.vendaStatusByVendaStatusId?.[params.row.statusId]}
+				onClick={() => this.props.navigate("/vendas/" + params.row.vendaId)}
+			/>},
+			{ field: 'dataStatus', headerName: 'Data do Status', minWidth: 200, flex: 1, type: 'date', renderCell: (params) => params.value !== null ? dayjs(params.value).format('L LTS') : "" },
+			{ field: 'dataCadastro', headerName: 'Data do Cadastro', minWidth: 200, flex: 1, type: 'date', renderCell: (params) => params.value !== null ? dayjs(params.value).format('L LTS') : "" },
+			{ field: 'tipoProduto', headerName: 'Tipo', minWidth: 100, flex: 1 },
+			{ field: 'pdv', headerName: 'PDV', minWidth: 100, flex: 1 },
+			{ field: 'safra', headerName: 'Safra', minWidth: 100, flex: 1, valueGetter: (value, row) => value !== null ? dayjs(value).format('MMMM YYYY') : "" },
+			{ field: 'dataVenda', headerName: 'Data da Venda', minWidth: 200, flex: 1, type: 'date', renderCell: (params) => params.value !== null ? dayjs(params.value).format('L LTS') : "" },
+			{ field: 'loginVendedor', headerName: 'Login Vendedor', minWidth: 200, flex: 1 },
+			{ field: 'cadastradorId', headerName: 'Cadastrador', valueGetter: (value, row) => this.state.usuarioByUsuarioId?.[value]?.nome, minWidth: 200, flex: 1, renderCell: (params) => <UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[params.row.cadastradorId]}/>},
+			{ field: 'sistema', headerName: 'Sistema', minWidth: 150, flex: 1 },
+			{ field: 'auditorId', headerName: 'Auditor', valueGetter: (value, row) => this.state.usuarioByUsuarioId?.[value]?.nome, minWidth: 200, flex: 1, renderCell: (params) => <UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[params.row.auditorId]}/>},
+			{ field: 'os', headerName: 'OS', minWidth: 100, flex: 1 },
+			{ field: 'custcode', headerName: 'Cust-Code', minWidth: 100, flex: 1 },
+			{ field: 'origem', headerName: 'Mailing/Origem', minWidth: 200, flex: 1 },
+			{ field: 'vendedorId', headerName: 'Vendedor', valueGetter: (value, row) => this.state.usuarioByUsuarioId?.[value]?.nome, minWidth: 200, flex: 1, renderCell: (params) => <UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[params.row.vendedorId]}/>},
+			{ field: 'supervisorId', headerName: 'Supervisor', valueGetter: (value, row) => this.state.usuarioByUsuarioId?.[value]?.nome, minWidth: 200, flex: 1, renderCell: (params) => <UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[params.row.supervisorId]}/>},
+			{ field: 'totalDeProdutos', headerName: 'N° de Produtos', minWidth: 100, flex: 1 },
+			{ field: 'produto', headerName: 'Produto', minWidth: 200, flex: 1 },
+			{ field: 'valor', headerName: 'Valor', minWidth: 100, flex: 1 },
+			{ field: 'quantidade', headerName: 'Quantidade', minWidth: 100, flex: 1 },
+			{ field: 'telefoneFixo', headerName: 'Telefone Fixo', minWidth: 200, flex: 1 },
+			{ field: 'valorTelefoneFixo', headerName: 'Valor Telefone Fixo', minWidth: 200, flex: 1 },
+			{ field: 'tipoDeLinha', headerName: 'Tipo de Linha', minWidth: 200, flex: 1 },
+			{ field: 'ddd', headerName: 'DDD', minWidth: 100, flex: 1 },
+			{ field: 'operadora', headerName: 'Operadora', minWidth: 150, flex: 1 },
+
+			{ field: 'uf', headerName: 'UF', minWidth: 100, flex: 1 },
+			{ field: 'cidade', headerName: 'Cidade', minWidth: 200, flex: 1 },
+			{ field: 'bairro', headerName: 'Bairro', minWidth: 200, flex: 1 },
+
+			{ field: 'porte', headerName: 'Porte', minWidth: 200, flex: 1 },
+			{ field: 'cpf', headerName: 'CPF/CNPJ', minWidth: 200, flex: 1 },
+			{ field: 'nome', headerName: 'Nome/Razão Social', minWidth: 200, flex: 1 },
+			{ field: 'nomeContato', headerName: 'Nome Contato', minWidth: 200, flex: 1 },
+
+			{ field: 'telefoneCelular', headerName: 'Telefone Celular', minWidth: 200, flex: 1 },
+			{ field: 'telefoneWhatsapp', headerName: 'Whatsapp', minWidth: 200, flex: 1 },
+			{ field: 'telefoneResidencial', headerName: 'Telefone Residencial', minWidth: 200, flex: 1 },
+			{ field: 'email', headerName: 'Email', minWidth: 200, flex: 1 },
+			{ field: 'observacao', headerName: 'Observação', minWidth: 200, flex: 1 },
+
+			{ field: 'formaDePagamento', headerName: 'Forma de Pagamento', minWidth: 200, flex: 1 },
+			{ field: 'vencimento', headerName: 'Vencimento', minWidth: 100, flex: 1 },
+
+			{ field: 'dataAgendamento', headerName: 'Data de Agendamento', minWidth: 200, flex: 1, type: 'date', renderCell: (params) => params.value !== null ? dayjs(params.value).format('L LTS') : "" },
+			{ field: 'dataInstalacao', headerName: 'Data de Instalação', minWidth: 200, flex: 1, type: 'date', renderCell: (params) => params.value !== null ? dayjs(params.value).format('L LTS') : "" },
+			{ field: 'dataAtivacao', headerName: 'Data da Ativação', minWidth: 200, flex: 1, type: 'date', renderCell: (params) => params.value !== null ? dayjs(params.value).format('L LTS') : "" },
+
+			{ field: 'vendaOriginal', headerName: 'Venda Original', minWidth: 200, flex: 1 },
+			{ field: 'brscan', headerName: 'BrScan', minWidth: 200, flex: 1 },
+			{ field: 'suporte', headerName: 'Suporte', minWidth: 200, flex: 1 },
+			{ field: 'prints', headerName: 'Prints', minWidth: 100, flex: 1 },
+
+			{ field: 'situacao', headerName: 'Situação', minWidth: 200, flex: 1 },
+		];
+
+		for (let i=1; i<=this.numeroFaturas; i++) {
+			this.columns.push({ field: `m${i}Mes`, headerName: `M${i} Mês`, minWidth: 150, flex: 1, valueGetter: (value, row) => value !== null ? dayjs(value).format('MMMM YYYY') : "" });
+			this.columns.push({ field: `m${i}Status`, headerName: `M${i} Status`, minWidth: 100, flex: 1});
+			this.columns.push({ field: `m${i}Valor`, headerName: `M${i} Valor`, minWidth: 100, flex: 1});
+		}
+
+		this.allHiddenColumnVisibilityModel = {};
+		Object.keys(this.columns).forEach((column) => this.allHiddenColumnVisibilityModel[this.columns[column].field] = false);
+
+		this.projecaoList = [
 			{nome: "Fibra - Vendas", value: "FIBRA_VENDAS", columnVisibilityModel: {
-				nome: false,
+				...this.allHiddenColumnVisibilityModel,
+				statusId: true,
+				dataStatus: true,
+				tipoProduto: true,
+				pdv: true,
+				safra: true,
+				dataVenda: true,
+				loginVendedor: true,
+				cadastradorId: true,
+				sistema: true,
+				auditorId: true,
+				os: true,
+				origem: true,
+				vendedorId: true,
+				supervisorId: true,
+				produto: true,
+				valor: true,
+				quantidade: true,
+				telefoneFixo: true,
+				valorTelefoneFixo: true,
+				uf: true,
+				cidade: true,
+				bairro: true,
+				cpf: true,
+				nome: true,
+				telefoneCelular: true,
+				telefoneWhatsapp: true,
+				telefoneResidencial: true,
+				email: true,
+				observacao: true,
+				formaDePagamento: true,
+				dataAgendamento: true,
+				dataInstalacao: true,
+				vendaOriginal: true,
+				brscan: true,
+				suporte: true,
 			}},
 			{nome: "Móvel - Vendas", value: "MOVEL_VENDAS", columnVisibilityModel: {
-				tipoProduto: false,
+				...this.allHiddenColumnVisibilityModel,
+				statusId: true,
+				dataStatus: true,
+				tipoProduto: true,
+				pdv: true,
+				safra: true,
+				dataVenda: true,
+				loginVendedor: true,
+				cadastradorId: true,
+				sistema: true,
+				auditorId: true,
+				os: true,
+				origem: true,
+				vendedorId: true,
+				supervisorId: true,
+				totalDeProdutos: true,
+				produto: true,
+				valor: true,
+				quantidade: true,
+				tipoDeLinha: true,
+				ddd: true,
+				operadora: true,
+				uf: true,
+				cidade: true,
+				bairro: true,
+				porte: true,
+				cpf: true,
+				nome: true,
+				telefoneCelular: true,
+				telefoneWhatsapp: true,
+				telefoneResidencial: true,
+				email: true,
+				observacao: true,
+				dataAtivacao: true,
+				prints: true,
 			}},
 			{nome: "Fibra - Qualidade", value: "FIBRA_QUALIDADE", columnVisibilityModel: {
-				dataVenda: false,
+				...this.allHiddenColumnVisibilityModel,
+				statusId: true,
+				dataStatus: true,
+				tipoProduto: true,
+				pdv: true,
+				safra: true,
+				os: true,
+				custcode: true,
+				dataInstalacao: true,
+				telefoneCelular: true,
+				telefoneWhatsapp: true,
+				telefoneResidencial: true,
+				email: true,
+				produto: true,
+				valor: true,
+				cpf: true,
+				nome: true,
+				formaDePagamento: true,
+				vencimento: true,
+				situacao: true,
+				observacao: true,
 			}},
 			{nome: "Móvel - Qualidade", value: "MOVEL_QUALIDADE", columnVisibilityModel: {
-				dataAtivacao: false,
+				...this.allHiddenColumnVisibilityModel,
+				statusId: true,
+				dataStatus: true,
+				tipoProduto: true,
+				pdv: true,
+				safra: true,
+				os: true,
+				dataAtivacao: true,
+				telefoneCelular: true,
+				telefoneWhatsapp: true,
+				telefoneResidencial: true,
+				email: true,
+				produto: true,
+				valor: true,
+				quantidade: true,
+				tipoDeLinha: true,
+				cpf: true,
+				nome: true,
+				nomeContato: true,
+				formaDePagamento: true,
+				vencimento: true,
+				situacao: true,
+				observacao: true,
 			}},
-		]
+		];
+
+		for (let j=2; j<=3; j++) {
+			for (let i=1; i<=this.numeroFaturas; i++) {
+				this.projecaoList[j].columnVisibilityModel[`m${i}Mes`] = true;
+				this.projecaoList[j].columnVisibilityModel[`m${i}Status`] = true;
+				this.projecaoList[j].columnVisibilityModel[`m${i}Valor`] = true;
+			}
+		}
+
+		this.state.columnVisibilityModel = this.projecaoList[0].columnVisibilityModel;
 
 		this.getVendaListFromApi = this.getVendaListFromApi.bind(this);
 		this.getVendaStatusListFromApi = this.getVendaStatusListFromApi.bind(this);
@@ -308,24 +527,85 @@ class VendasModule extends React.Component {
 
 	calculateRows() {
 		let vendaRows = this.state.vendaList.map((venda) => {
-			return {
+
+			let situacao = "Adimplente";
+			for (let i=0; i<venda.faturaList.length; i++) {
+				if (venda.faturaList[i].status == "EM_ABERTO") {
+					situacao = "Inadimplente";
+					break;
+				}
+			}
+
+			let row = {
 				id: venda.vendaId,
 				vendaId: venda.vendaId,
 				statusId: venda.statusId,
+
 				tipoProduto: venda.tipoProduto,
 				pdv: venda.pdv,
 				safra: venda.safra !== null ? new Date(venda.safra) : null,
 				dataVenda: venda.dataVenda !== null ? new Date(venda.dataVenda) : null,
 				loginVendedor: venda.loginVendedor,
 				cadastradorId: venda.cadastradorId,
+				sistema: venda?.sistema !== null ? this.sistemaMap[venda.sistema] : "",
+				auditorId: venda.auditorId,
+				os: venda.os,
+				custcode: venda.custcode,
+				origem: venda.origem,
+				vendedorId: venda.vendedorId,
+				supervisor: venda.supervisorId,
+
+				produtoList: venda.produtoList,
+				totalDeProdutos: venda.produtoList.length,
+				produto: venda.produtoList?.[0]?.nome ?? "",
+				valor: "R$ " + (venda.produtoList?.[0]?.valor ?? 0).toFixed(2),
+				quantidade: venda.produtoList?.[0]?.tipoDeLinha == "NOVA" ? venda.produtoList?.[0]?.quantidade : venda.produtoList?.[0]?.portabilidadeList?.length ?? 0,
+				telefoneFixo: venda.produtoList?.[0]?.telefoneFixo ? "Sim" : "Não",
+				valorTelefoneFixo: venda.produtoList?.[0]?.telefoneFixo ? ("R$ " + (venda.produtoList?.[0]?.valorTelefoneFixo ?? 0).toFixed(2)) : "",
+				tipoDeLinha: venda.produtoList?.[0]?.tipoDeLinha !== null ? this.tipoDeLinhaMap[venda.produtoList?.[0]?.tipoDeLinha] : "",
+				ddd: venda.produtoList?.[0]?.ddd,
+				operadora: venda.produtoList?.[0]?.operadora,
+
+				uf: venda.uf,
+				cidade: venda.cidade,
+				bairro: venda.bairro,
+
+				porte: venda?.porte !== null ? this.porteMap[venda.porte] : "",
 				cpf: venda.tipoPessoa == "CPF" ? venda.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4") : venda.cnpj.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4.$5"),
 				nome: venda.tipoPessoa == "CPF" ? venda.nome : venda.razaoSocial,
+				nomeContato: venda.nomeContato,
+
+				telefoneCelular: venda.telefoneCelular.replace(/(\d{2})(\d{1})(\d{4})(\d{4})/, "($1) $2 $3-$4"),
+				telefoneWhatsapp: venda.telefoneWhatsapp.replace(/(\d{2})(\d{1})(\d{4})(\d{4})/, "($1) $2 $3-$4"),
+				telefoneResidencial: venda.telefoneResidencial.replace(/(\d{2})(\d{1})(\d{4})(\d{4})/, "($1) $2 $3-$4"),
+				email: venda.email,
+				observacao: venda.observacao,
+
+				formaDePagamento: venda?.formaDePagamento !== null ? this.formaDePagamentoMap[venda.formaDePagamento] : "",
+				vencimento: venda.vencimento,
+
 				dataStatus: venda.dataStatus !== null ? new Date(venda.dataStatus) : null,
 				dataAtivacao: venda.dataAtivacao !== null ? new Date(venda.dataAtivacao) : null,
 				dataAgendamento: venda.dataAgendamento !== null ? new Date(venda.dataAgendamento) : null,
 				dataInstalacao: venda.dataInstalacao !== null ? new Date(venda.dataInstalacao) : null,
 				dataCadastro: venda.dataCadastro !== null ? new Date(venda.dataCadastro) : null,
+
+				vendaOriginal: venda.vendaOriginal ? "Sim" : "Não",
+				brscan: venda?.brscan !== null ? this.brscanMap[venda.brscan] : "",
+				suporte: venda?.suporte !== null ? this.suporteMap[venda.suporte] : "",
+				prints: venda.prints ? "Sim" : "Não",
+
+				situacao: situacao,
+
+			};
+
+			for (let i=1; i<=this.numeroFaturas; i++) {
+				row[`m${i}Mes`] = venda.faturaList?.[i - 1]?.mes ? new Date(venda.faturaList?.[i - 1]?.mes) : null;
+				row[`m${i}Status`] = venda.faturaList?.[i - 1]?.status ? this.faturaStatusMap[venda.faturaList?.[i - 1]?.status] : "";
+				row[`m${i}Valor`] = venda.faturaList?.[i - 1]?.valor ? ("R$ " + (venda.faturaList?.[i - 1]?.valor ?? 0).toFixed(2)) : "";
 			}
+
+			return row;
 		});
 		this.setState({vendaRows: vendaRows});
 	}
@@ -548,7 +828,7 @@ class VendasModule extends React.Component {
 							calling={this.state.calling}
 							columnVisibilityModel={this.state.columnVisibilityModel}
 							onColumnVisibilityModelChange={this.onColumnVisibilityModelChange}
-							projecaoEnum={this.projecaoEnum}
+							projecaoList={this.projecaoList}
 							setColumnVisibilityModel={this.onColumnVisibilityModelChange}
 							columnGroupingModel={this.columnGroupingModel}
 						/>

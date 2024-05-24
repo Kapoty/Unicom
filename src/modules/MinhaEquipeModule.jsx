@@ -107,7 +107,7 @@ class MinhaEquipeModule extends React.Component {
 						<Box sx={{ flexWrap: "wrap", gap: 3, flexDirection: "row", display: "flex"}}>
 							{this.state.equipe.gerente !== null ? <Paper sx={{display: "flex", width: "300px", alignItems: "center", boxSizing: "border-box", flexDirection: "column", padding: 3, gap: 2}}>
 								<UsuarioAvatar variant="square" sx={{ width: "128px", height: "128px"}} usuario={this.state.equipe.gerente}/>
-								<Typography variant="h4">
+								<Typography variant="h4" align="center">
 									{this.state.equipe.gerente.nome}
 								</Typography>
 								<Chip label="Gerente" color="success" />

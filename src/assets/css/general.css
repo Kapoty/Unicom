@@ -32,6 +32,10 @@ iframe {
 	outline: 0;
 }
 
+input {
+	color-scheme: dark;
+}
+
 .customIcon {
 	width: 24px;
 	height: 24px;

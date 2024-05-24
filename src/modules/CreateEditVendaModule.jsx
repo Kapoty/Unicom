@@ -248,14 +248,17 @@ class CreateEditVendaModule extends React.Component {
 		];
 		this.formaDePagamentoEnum = [
 			{nome: "Boleto", value: "BOLETO"},
-			{nome: "Debito Automático", value: "DEBITO_AUTOMATICO"},
+			{nome: "Débito Automático", value: "DEBITO_AUTOMATICO"},
 			{nome: "Cartão de Crédito", value: "CARTAO_CREDITO"},
 		];
 		this.vencimentoEnum = [1, 3, 7, 10];
 		this.faturaStatusEnum = [
-			{nome: "NA", value: "NA"},
+			{nome: "N/A", value: "NA"},
 			{nome: "A Vencer", value: "A_VENCER"},
+			{nome: "Em Aberto", value: "EM_ABERTO"},
 			{nome: "Paga", value: "PAGA"},
+			{nome: "Multa", value: "MULTA"},
+			{nome: "Churn", value: "CHURN"},
 		];
 		this.pdvEnum = ["UNICOM DF", "UNICOM GO"]
 		this.tipoDeLinhaEnum = [
@@ -1401,170 +1404,172 @@ class CreateEditVendaModule extends React.Component {
 										</React.Fragment> : ""}
 
 										{this.state.tab == "PRODUTOS" ? <React.Fragment>
-											<Grid item xs={12}>
-												<Box display="flex" flexDirection="column" gap={3}>
-													{this.state.vendaProdutoList.length == 0 ? <Alert severity="info">Os produtos que você adicionar aparecerão aqui.</Alert> : ""}
-													{this.state.vendaProdutoList.map((produto, i) => 
-														<Paper key={i} sx={{padding: 3}}>
-															<Grid container spacing={3}>
-																<Grid item xs={6}>
-																	<TextField
-																		value={produto.nome}
-																		onChange={(e) => this.updateProduto(i, "nome", e.target.value)}
-																		fullWidth
-																		label="Nome"
-																		variant="outlined"
-																		disabled={this.state.calling}
-																		inputProps={{
-																			maxLength: 100,
-																		}}
-																	/>
-																</Grid>
-																<Grid item xs={6}>
-																	<MoneyInput
-																		value={produto.valor}
-																		onChange={(e) => this.updateProduto(i, "valor", e.target.value)}
-																		fullWidth
-																		label="Valor"
-																		variant="outlined"
-																		disabled={this.state.calling}
-																	/>
-																</Grid>
-																{this.state.tipoProduto == "MOVEL" ? <React.Fragment>
-																	<Grid item xs={12}>
-																		<Autocomplete
-																			freeSolo
-																			disableClearable
-																			options={this.adicionaisEnum}
-																			value={produto.adicionais}
-																			onInputChange={(event, value) => this.updateProduto(i, "adicionais", value)}
-																			renderInput={(params) => (
-																				<TextField
-																					{...params}
-																					variant="outlined"
-																					label="Adicionais"
-																				/>
-																			)}
-																		/>
-																	</Grid>
-																	<Grid item xs={6}>
-																		<FormControl fullWidth>
-																			<InputLabel>Tipo de Linha</InputLabel>
-																			<Select
-																				value={produto.tipoDeLinha}
-																				label="Tipo de Linha"
-																				onChange={(e) => this.updateProduto(i, "tipoDeLinha", e.target.value)}
-																				>
-																				{this.tipoDeLinhaEnum.map((tipoDeLinha) => <MenuItem key={tipoDeLinha.value} value={tipoDeLinha.value}>{tipoDeLinha.nome}</MenuItem>)}
-																			</Select>
-																		</FormControl>
-																	</Grid>
+											{this.state.tipoProduto == null || this.state.tipoPessoa == null ? <Grid item xs={12}><Alert severity="info">Você poderá ver os produtos após definir o tipo da venda.</Alert></Grid> : <React.Fragment>
+												<Grid item xs={12}>
+													<Box display="flex" flexDirection="column" gap={3}>
+														{this.state.vendaProdutoList.length == 0 ? <Alert severity="info">Os produtos que você adicionar aparecerão aqui.</Alert> : ""}
+														{this.state.vendaProdutoList.map((produto, i) => 
+															<Paper key={i} sx={{padding: 3}}>
+																<Grid container spacing={3}>
 																	<Grid item xs={6}>
 																		<TextField
-																			value={produto.ddd}
-																			onChange={(e) => this.updateProduto(i, "ddd", e.target.value)}
+																			value={produto.nome}
+																			onChange={(e) => this.updateProduto(i, "nome", e.target.value)}
 																			fullWidth
-																			label="DDD"
+																			label="Nome"
 																			variant="outlined"
 																			disabled={this.state.calling}
 																			inputProps={{
-																				maxLength: 2,
+																				maxLength: 100,
 																			}}
 																		/>
 																	</Grid>
-																	{produto.tipoDeLinha == "NOVA" ? 
+																	<Grid item xs={6}>
+																		<MoneyInput
+																			value={produto.valor}
+																			onChange={(e) => this.updateProduto(i, "valor", e.target.value)}
+																			fullWidth
+																			label="Valor"
+																			variant="outlined"
+																			disabled={this.state.calling}
+																		/>
+																	</Grid>
+																	{this.state.tipoProduto == "MOVEL" ? <React.Fragment>
 																		<Grid item xs={12}>
-																			<TextField
-																				value={produto.quantidade}
-																				onChange={(e) => this.updateProduto(i, "quantidade", e.target.value)}
-																				fullWidth
-																				label="Quantidade"
-																				variant="outlined"
-																				disabled={this.state.calling}
-																				type="number"
+																			<Autocomplete
+																				freeSolo
+																				disableClearable
+																				options={this.adicionaisEnum}
+																				value={produto.adicionais}
+																				onInputChange={(event, value) => this.updateProduto(i, "adicionais", value)}
+																				renderInput={(params) => (
+																					<TextField
+																						{...params}
+																						variant="outlined"
+																						label="Adicionais"
+																					/>
+																				)}
 																			/>
 																		</Grid>
-																		: ""}
-																	{["PORTABILIDADE", "TT"].includes(produto.tipoDeLinha) ? <React.Fragment>
-																		<Grid item xs={12}>
+																		<Grid item xs={6}>
+																			<FormControl fullWidth>
+																				<InputLabel>Tipo de Linha</InputLabel>
+																				<Select
+																					value={produto.tipoDeLinha}
+																					label="Tipo de Linha"
+																					onChange={(e) => this.updateProduto(i, "tipoDeLinha", e.target.value)}
+																					>
+																					{this.tipoDeLinhaEnum.map((tipoDeLinha) => <MenuItem key={tipoDeLinha.value} value={tipoDeLinha.value}>{tipoDeLinha.nome}</MenuItem>)}
+																				</Select>
+																			</FormControl>
+																		</Grid>
+																		<Grid item xs={6}>
 																			<TextField
-																				value={produto.operadora}
-																				onChange={(e) => this.updateProduto(i, "operadora", e.target.value)}
+																				value={produto.ddd}
+																				onChange={(e) => this.updateProduto(i, "ddd", e.target.value)}
 																				fullWidth
-																				label="operadora"
+																				label="DDD"
 																				variant="outlined"
 																				disabled={this.state.calling}
 																				inputProps={{
-																					maxLength: 20,
+																					maxLength: 2,
 																				}}
 																			/>
 																		</Grid>
-																		{produto.portabilidadeList.length == 0 ? <Grid item xs={12}><Alert severity="info">Os telefones que você adicionar aparecerão aqui.</Alert></Grid> : ""}
-																		{produto.portabilidadeList.map((portabilidade, j) =>
-																			<Grid item xs={3} key={j}>
-																				<PhoneInput
-																					value={portabilidade.telefone}
-																					onChange={(e) => this.updatePortabilidade(i, j, "telefone", e.target.value)}
+																		{produto.tipoDeLinha == "NOVA" ? 
+																			<Grid item xs={12}>
+																				<TextField
+																					value={produto.quantidade}
+																					onChange={(e) => this.updateProduto(i, "quantidade", e.target.value)}
 																					fullWidth
-																					label="Telefone (sem DDD)"
+																					label="Quantidade"
 																					variant="outlined"
 																					disabled={this.state.calling}
-																					ddd={false}
-																					InputProps={{
-																						endAdornment: 	<InputAdornment position="end">
-																											<IconButton
-																												onClick={() => this.deletePortabilidade(i, j)}
-																											>
-																												<DeleteIcon/>
-																											</IconButton>
-																										</InputAdornment>,
+																					type="number"
+																				/>
+																			</Grid>
+																			: ""}
+																		{["PORTABILIDADE", "TT"].includes(produto.tipoDeLinha) ? <React.Fragment>
+																			<Grid item xs={12}>
+																				<TextField
+																					value={produto.operadora}
+																					onChange={(e) => this.updateProduto(i, "operadora", e.target.value)}
+																					fullWidth
+																					label="operadora"
+																					variant="outlined"
+																					disabled={this.state.calling}
+																					inputProps={{
+																						maxLength: 20,
 																					}}
 																				/>
 																			</Grid>
-																		)}
-																		<Grid item xs={12} container display="flex" justifyContent="flex-end">
-																			<Button variant="contained" size="large" startIcon={<AddIcon />} onClick={() => this.addPortabilidade(i)}>Adicionar Telefone</Button>
-																		</Grid>
-																	</React.Fragment> : ""}
-																</React.Fragment> : <React.Fragment>
-																	<Grid item xs={3}>
-																		<FormControl>
-																			<FormLabel id={"telefone-fixo" + i}>Telefone Fixo</FormLabel>
-																			<RadioGroup
-																				row
-																				aria-labelledby={"telefone-fixo" + i}
-																				name="controlled-radio-buttons-group"
-																				value={produto.telefoneFixo}
-																				onChange={(e) => this.updateProduto(i, "telefoneFixo", e.target.value)}
-																			>
-																			<FormControlLabel value={true} control={<Radio />} label="Sim" />
-																			<FormControlLabel value={false} control={<Radio />} label="Não" />
-																			</RadioGroup>
-																		</FormControl>
-																	</Grid>
-																	{String(produto.telefoneFixo) == "true" ?
+																			{produto.portabilidadeList.length == 0 ? <Grid item xs={12}><Alert severity="info">Os telefones que você adicionar aparecerão aqui.</Alert></Grid> : ""}
+																			{produto.portabilidadeList.map((portabilidade, j) =>
+																				<Grid item xs={3} key={j}>
+																					<PhoneInput
+																						value={portabilidade.telefone}
+																						onChange={(e) => this.updatePortabilidade(i, j, "telefone", e.target.value)}
+																						fullWidth
+																						label="Telefone (sem DDD)"
+																						variant="outlined"
+																						disabled={this.state.calling}
+																						ddd={false}
+																						InputProps={{
+																							endAdornment: 	<InputAdornment position="end">
+																												<IconButton
+																													onClick={() => this.deletePortabilidade(i, j)}
+																												>
+																													<DeleteIcon/>
+																												</IconButton>
+																											</InputAdornment>,
+																						}}
+																					/>
+																				</Grid>
+																			)}
+																			<Grid item xs={12} container display="flex" justifyContent="flex-end">
+																				<Button variant="contained" size="large" startIcon={<AddIcon />} onClick={() => this.addPortabilidade(i)}>Adicionar Telefone</Button>
+																			</Grid>
+																		</React.Fragment> : ""}
+																	</React.Fragment> : <React.Fragment>
 																		<Grid item xs={3}>
-																			<MoneyInput
-																				value={produto.valorTelefoneFixo}
-																				onChange={(e) => this.updateProduto(i, "valorTelefoneFixo", e.target.value)}
-																				fullWidth
-																				label="Valor Telefone Fixo"
-																				variant="outlined"
-																				disabled={this.state.calling}
-																			/>
-																		</Grid> : ""}
-																</React.Fragment>}
-																<Grid item xs={12}>
-																	<Button color="error" variant="contained" size="large" startIcon={<DeleteIcon />} onClick={() => this.deleteProduto(i)}>Remover Produto</Button>
+																			<FormControl>
+																				<FormLabel id={"telefone-fixo" + i}>Telefone Fixo</FormLabel>
+																				<RadioGroup
+																					row
+																					aria-labelledby={"telefone-fixo" + i}
+																					name="controlled-radio-buttons-group"
+																					value={produto.telefoneFixo}
+																					onChange={(e) => this.updateProduto(i, "telefoneFixo", e.target.value)}
+																				>
+																				<FormControlLabel value={true} control={<Radio />} label="Sim" />
+																				<FormControlLabel value={false} control={<Radio />} label="Não" />
+																				</RadioGroup>
+																			</FormControl>
+																		</Grid>
+																		{String(produto.telefoneFixo) == "true" ?
+																			<Grid item xs={3}>
+																				<MoneyInput
+																					value={produto.valorTelefoneFixo}
+																					onChange={(e) => this.updateProduto(i, "valorTelefoneFixo", e.target.value)}
+																					fullWidth
+																					label="Valor Telefone Fixo"
+																					variant="outlined"
+																					disabled={this.state.calling}
+																				/>
+																			</Grid> : ""}
+																	</React.Fragment>}
+																	<Grid item xs={12}>
+																		<Button color="error" variant="contained" size="large" startIcon={<DeleteIcon />} onClick={() => this.deleteProduto(i)}>Remover Produto</Button>
+																	</Grid>
 																</Grid>
-															</Grid>
-														</Paper>
-													)}
-												</Box>
-											</Grid>
-											<Grid item xs={12} container display="flex" justifyContent="flex-end">
-												<Button variant="contained" size="large" startIcon={<AddIcon />} onClick={() => this.setState({addProdutoDialogOpen: true, addProdutoId: null})}>Adicionar Produto</Button>
-											</Grid>
+															</Paper>
+														)}
+													</Box>
+												</Grid>
+												<Grid item xs={12} container display="flex" justifyContent="flex-end">
+													<Button variant="contained" size="large" startIcon={<AddIcon />} onClick={() => this.setState({addProdutoDialogOpen: true, addProdutoId: null})}>Adicionar Produto</Button>
+												</Grid>
+											</React.Fragment>}
 										</React.Fragment> : ""}
 
 										{this.state.tab == "DADOS_DO_CONTRATO" ? <React.Fragment>
@@ -2196,7 +2201,7 @@ class CreateEditVendaModule extends React.Component {
 							</Box>
 				</Paper>
 				<Snackbar open={this.state.alertOpen} onClose={(e, reason) => (reason !== "clickaway") ? this.closeAlert() : ""} anchorOrigin={{vertical: "bottom", horizontal: "right"}}>
-					{this.state.alert}
+					<div>{this.state.alert}</div>
 				</Snackbar>
 				<Dialog
 					disableEscapeKeyDown
