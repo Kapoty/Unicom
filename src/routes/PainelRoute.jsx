@@ -315,10 +315,11 @@ class PainelRoute extends React.Component {
 			<Box sx={{display: "flex", flexGrow: 1, flexDirection: "row", overflow: "hidden"}}>
 				<CustomNavigation menuOpen={this.state.menuOpen} toggleMenu={this.toggleMenu} usuario={this.state.usuario} iframeCategoryList={this.state.iframeCategoryList} minhaEquipeList={this.state.minhaEquipeList} toggleIframeCategory={this.toggleIframeCategory} closeIframe={this.closeIframe}/>
 				<Box sx={{flexGrow: 1, height: "100%", overflow: "auto"}}>
+					{this.state.usuario !== null && this.state.usuario.permissaoList.includes("VER_MODULO_IFRAME") ? <IframesModule iframeCategoryList={this.state.iframeCategoryList}/> : ""}
+					{/*this.state.usuario !== null && this.state.usuario.permissaoList.includes("CADASTRAR_VENDAS") ? <VendasModule usuario={this.state.usuario}/> : null*/}
 					{<Suspense fallback={<Backdrop sx={{color: "primary.main"}} open={true}>
 											<CircularProgress color="inherit"/>
 										</Backdrop>}>
-						{this.state.usuario !== null && this.state.usuario.permissaoList.includes("VER_MODULO_IFRAME") ? <IframesModule iframeCategoryList={this.state.iframeCategoryList}/> : ""}
 							<Routes>
 								<Route path="/" element={<Box></Box>}/>
 								{this.state.usuario !== null && this.state.usuario.permissaoList.includes("CADASTRAR_USUARIOS") ? <Route path="/usuarios/" element={<UsuariosModule usuario={this.state.usuario}/>} /> : null}

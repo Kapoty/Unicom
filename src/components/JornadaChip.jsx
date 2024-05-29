@@ -511,7 +511,7 @@ export default class JornadaChip extends React.Component {
 							{this.state.registroJornada.canUsuarioDeslogar ? <LoadingButton loading={this.state.deslogando} variant="contained" color="error" startIcon={<LogoutIcon />} onClick={this.deslogar}>Deslogar</LoadingButton> : ""}
 							{((!this.state.registroJornada.canUsuarioLogar && this.props.me) || (!this.state.registroJornada.canSupervisorLogar && !this.props.me)) && this.state.registroJornada.statusAtual == null ? <Alert severity="warning">Fora da jornada</Alert> : ""}
 							{!this.props.me ? <FormGroup>
-									<FormControlLabel sx={{justifyContent: "center"}} control={<Switch checked={this.state.registroJornada.horaExtraPermitida} disabled={this.state.togglingHoraExtraPermitida} onClick={this.toggleHoraExtraPermitida} color="warning"/>} label="Hora Extra Permitida" />
+									<FormControlLabel sx={{justifyContent: "center"}} control={<Switch checked={this.state.registroJornada.horaExtraPermitida} disabled={this.state.togglingHoraExtraPermitida} onClick={this.toggleHoraExtraPermitida} color="success"/>} label="Hora Extra Permitida" />
 								</FormGroup> : ""}
 							<Divider/>
 							{(this.state.registroJornada.statusGroupedList !== null) ? this.state.registroJornada.statusGroupedList.map(status =>

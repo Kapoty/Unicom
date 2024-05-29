@@ -37,6 +37,8 @@ import Autocomplete from '@mui/material/Autocomplete';
 import SaveIcon from '@mui/icons-material/Save';
 import Avatar from '@mui/material/Avatar';
 import DeleteIcon from '@mui/icons-material/Delete';
+import RestoreFromTrashIcon from '@mui/icons-material/RestoreFromTrash';
+import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { DatePicker } from '@mui/x-date-pickers-pro';
 import { DateTimePicker } from '@mui/x-date-pickers-pro';
@@ -77,6 +79,8 @@ import ApartmentIcon from '@mui/icons-material/Apartment';
 import RouterIcon from '@mui/icons-material/Router';
 import Link from '@mui/material/Link';
 import GroupsIcon from '@mui/icons-material/Groups';
+import Badge from '@mui/material/Badge';
+import RecyclingIcon from '@mui/icons-material/Recycling';
 
 import CPFInput from "../components/CPFInput";
 import CNPJInput from "../components/CNPJInput";
@@ -178,7 +182,7 @@ class CreateEditVendaModule extends React.Component {
 			cadastradorId: null,
 			origem: "",
 			dataVenda: null,
-			safra: null,
+			safra: dayjs().date(1),
 
 			// dados contrato movel
 
@@ -190,14 +194,15 @@ class CreateEditVendaModule extends React.Component {
 			dataAgendamento: null,
 			dataInstalacao: null,
 			pdv: "",
+			reimputado: false,
 			vendaOriginal: false,
 			brscan: "NAO",
 			suporte: "NAO",
 			loginVendedor: "",
 
 			//pagamento
-			formaDePagamento: null,
-			vencimento: 1,
+			formaDePagamento: "BOLETO",
+			vencimento: "1",
 			agencia: "",
 			conta: "",
 			banco: "",
@@ -219,9 +224,9 @@ class CreateEditVendaModule extends React.Component {
 
 			saving: false,
 			calling: false,
+			updatingVenda: false,
 			updatingAnexoList: false,
 			uploadingAnexo: false,
-			deletingAnexo: false,
 
 			alertOpen: false,
 			alert: null,
@@ -251,7 +256,7 @@ class CreateEditVendaModule extends React.Component {
 			{nome: "Débito Automático", value: "DEBITO_AUTOMATICO"},
 			{nome: "Cartão de Crédito", value: "CARTAO_CREDITO"},
 		];
-		this.vencimentoEnum = [1, 3, 7, 10];
+		this.vencimentoEnum = ["1", "3", "7", "10"];
 		this.faturaStatusEnum = [
 			{nome: "N/A", value: "NA"},
 			{nome: "A Vencer", value: "A_VENCER"},
@@ -259,6 +264,7 @@ class CreateEditVendaModule extends React.Component {
 			{nome: "Paga", value: "PAGA"},
 			{nome: "Multa", value: "MULTA"},
 			{nome: "Churn", value: "CHURN"},
+			{nome: "Parcelada", value: "PARCELADA"},
 		];
 		this.pdvEnum = ["UNICOM DF", "UNICOM GO"]
 		this.tipoDeLinhaEnum = [
@@ -320,6 +326,8 @@ class CreateEditVendaModule extends React.Component {
 		this.patchVenda = this.patchVenda.bind(this);
 		this.postVenda = this.postVenda.bind(this);
 		this.handleUploadAnexoChange = this.handleUploadAnexoChange.bind(this);
+		this.trashAnexo = this.trashAnexo.bind(this);
+		this.untrashAnexo = this.untrashAnexo.bind(this);
 		this.deleteAnexo = this.deleteAnexo.bind(this);
 
 		this.setVendaIdFromParams = this.setVendaIdFromParams.bind(this);
@@ -351,8 +359,8 @@ class CreateEditVendaModule extends React.Component {
 
 
 	getVendaFromApi() {
-		this.setState({calling: true})
-		api.get("/venda/" + this.state.vendaId)
+		this.setState({calling: true, updatingVenda: true})
+		api.get("/venda/" + this.state.vendaId, {redirect403: false})
 			.then((response) => {
 				let venda = response.data;
 
@@ -434,6 +442,7 @@ class CreateEditVendaModule extends React.Component {
 					dataAgendamento: venda.dataAgendamento !== null ? dayjs(new Date(venda.dataAgendamento)) : null,
 					dataInstalacao: venda.dataInstalacao !== null ? dayjs(new Date(venda.dataInstalacao)) : null,
 					pdv: venda.pdv,
+					reimputado: venda.reimputado,
 					vendaOriginal: venda.vendaOriginal,
 					brscan: venda.brscan,
 					suporte: venda.suporte,
@@ -460,13 +469,15 @@ class CreateEditVendaModule extends React.Component {
 					//atualização
 					atualizacaoList: venda.atualizacaoList,
 
-					calling: false
+					calling: false,
+					updatingVenda: false,
 				}, () => this.calculateAtualizacaoRows());
 				console.log(venda);
 			})
 			.catch((err) => {
 				console.log(err);
-				setTimeout(this.getVendaFromApi, 3000);
+				this.openAlert("error", "Falha ao obter venda!");
+				this.setState({calling: false, updatingVenda: false});
 			});
 	}
 
@@ -700,10 +711,45 @@ class CreateEditVendaModule extends React.Component {
 		this.setState({alertOpen: false});
 	}
 
-	errorsFormat(errors) {
+	formatErrors(errors) {
 		let msg = "----------------\n";
 		Object.keys(errors).forEach((key) => msg += `${key}: ${errors[key]}\n`)
 		return msg;
+	}
+
+	parseErrors(errors) {
+		let keys = Object.keys(errors);
+
+		if (["tipoProduto", "tipoPessoa"].some(r => keys.includes(r)))
+			errors["TIPO_DA_VENDA"] = "";
+
+		if (["cpf", "nome", "dataNascimento", "genero", "rg", "rgOrgaoEmissor", "rgDataEmissao", "nomeDaMae",
+			"cnpj", "porte", "razaoSocial", "dataConstituicao", "dataEmissao", "representanteLegal", "cpfRepresentanteLegal"].some(r => keys.includes(r)))
+			errors["DADOS_DO_CLIENTE"] = "";
+
+		if (["nomeContato", "telefoneCelular", "telefoneWhatsapp", "telefoneResidencial", "email"].some(r => keys.includes(r)))
+			errors["CONTATO"] = "";
+
+		if (["cep", "logradouro", "numero", "complemento", "bairro", "referencia", "cidade", "uf"].some(r => keys.includes(r)))
+			errors["ENDERECO"] = "";
+
+		if (keys.some(k => k.startsWith("produtoList")))
+			errors["PRODUTOS"] = "";
+
+		if (["os", "custcode", "sistema", "origem", "safra", "dataVenda", "dataAtivacao", "prints",
+			"dataAgendamento", "dataInstalacao", "pdv", "reimputado", "vendaOriginal", "brscan", "suporte", "loginVendedor"].some(r => keys.includes(r)))
+			errors["DADOS_DO_CONTRATO"] = "";
+
+		if (["formaDePagamento", "vencimento", "agencia", "conta", "banco"].some(r => keys.includes(r)))
+			errors["PAGAMENTO"] = "";
+
+		if (["statusId", "relato"].some(r => keys.includes(r)))
+			errors["STATUS"] = "";
+
+		if (keys.some(k => k.startsWith("faturaList")))
+			errors["FATURAS"] = "";
+
+		return errors;
 	}
 
 	postVenda(data) {
@@ -714,7 +760,8 @@ class CreateEditVendaModule extends React.Component {
 			})
 			.catch((err) => {
 				let errors = err?.response?.data?.errors ?? {};
-				this.openAlert("error", "Falha ao salvar venda!\n" + this.errorsFormat(errors));
+				errors = this.parseErrors(errors);
+				this.openAlert("error", "Falha ao salvar venda!");
 				this.setState({calling: false, saving: false, errors: errors});
 			})
 	}
@@ -729,7 +776,8 @@ class CreateEditVendaModule extends React.Component {
 			})
 			.catch((err) => {
 				let errors = err?.response?.data?.errors ?? {};
-				this.openAlert("error", "Falha ao salvar venda!\n" + this.errorsFormat(errors));
+				errors = this.parseErrors(errors);
+				this.openAlert("error", "Falha ao salvar venda!");
 				this.setState({calling: false, saving: false, errors: errors});
 			})
 	}
@@ -828,6 +876,7 @@ class CreateEditVendaModule extends React.Component {
 			dataAgendamento: this.state.dataAgendamento !== null ? this.state.dataAgendamento.format("YYYY-MM-DDTHH:mm:ss") : null,
 			dataInstalacao: this.state.dataInstalacao !== null ? this.state.dataInstalacao.format("YYYY-MM-DDTHH:mm:ss") : null,
 			pdv: this.state.pdv ?? "",
+			reimputado: this.state.reimputado,
 			vendaOriginal: this.state.vendaOriginal,
 			brscan: this.state.brscan,
 			suporte: this.state.suporte,
@@ -881,17 +930,45 @@ class CreateEditVendaModule extends React.Component {
 		event.target.value = "";
 	}
 
+	trashAnexo(anexoId) {
+		this.setState({calling: true});
+		api.post(`/anexo/trash/${anexoId}`, {}, {redirect403: false})
+			.then((response) => {
+				this.openAlert("success", "Anexo enviado para lixeira com sucesso!");
+				this.getAnexoListFromApi();
+				this.setState({calling: false, errors: {}});
+			})
+			.catch((err) => {
+				this.openAlert("error", "Falha ao enviar anexo para lixeira!");
+				this.setState({calling: false, errors: {}});
+			})
+	}
+
+	untrashAnexo(anexoId) {
+		this.setState({calling: true});
+		api.post(`/anexo/untrash/${anexoId}`, {}, {redirect403: false})
+			.then((response) => {
+				this.openAlert("success", "Anexo restaurado com sucesso!");
+				this.getAnexoListFromApi();
+				this.setState({calling: false, errors: {}});
+			})
+			.catch((err) => {
+				this.openAlert("error", "Falha ao restaurar para lixeira!");
+				this.setState({calling: false, errors: {}});
+			})
+	}
+
 	deleteAnexo(anexoId) {
-		this.setState({calling: true, deletingAnexo: true});
-		api.delete(`/anexo/delete/${anexoId}`)
+		this.setState({calling: true});
+		api.delete(`/anexo/delete/${anexoId}`, {redirect403: false})
 			.then((response) => {
 				this.openAlert("success", "Anexo deletado com sucesso!");
 				this.getAnexoListFromApi();
-				this.setState({calling: false, deletingAnexo: false, errors: {}});
+				this.setState({calling: false, errors: {}});
 			})
 			.catch((err) => {
 				this.openAlert("error", "Falha ao deletar anexo!");
-				this.setState({calling: false, deletingAnexo: false, errors: {}});
+				this.setState({calling: false, errors: {}});
 			})
 	}
 
@@ -903,1302 +980,1385 @@ class CreateEditVendaModule extends React.Component {
 					{this.state.createMode ? "Nova Venda" : "Editar Venda"}
 					</Typography>
 					<ButtonGroup sx={{marginBottom: 3}}>
-							<Button variant="outlined" size="large" startIcon={<ArrowBackIcon />}  onClick={() => this.props.navigate(-1)}>Voltar</Button>
+							<Button variant="outlined" size="large" startIcon={<ArrowBackIcon />}  onClick={() => this.props.navigate("/vendas")}>Voltar</Button>
+							{!this.state.createMode && false && <LoadingButton color="primary" variant="outlined" size="large" startIcon={<RefreshIcon />} loadingPosition="start" loading={this.state.updatingVenda} disabled={this.state.calling} onClick={this.getVendaFromApi}>Atualizar</LoadingButton>}
 					</ButtonGroup>
 					<Box display="flex" justifyContent="center">
-						{((!this.state.createMode && this.state.venda == null)
-							) ? <Box width="100%" display="flex" justifyContent="center" m={3}><CircularProgress/></Box> :
-									<Grid container spacing={3} sx={{margin: 0, width: "100%"}}>
-										<Grid item xs={12}>
-											<Tabs
-												value={this.state.tab}
-												onChange={(e, newValue) => this.setState({tab: newValue})}
-												variant="scrollable"
-												scrollButtons
-												allowScrollButtonsMobile
-												aria-label="scrollable auto tabs example"
-											>
-												<Tab icon={<DescriptionIcon />} value="TIPO_DA_VENDA" label="Tipo da Venda" />
-												<Tab icon={<PersonIcon />} value="DADOS_DO_CLIENTE" label="Dados do Cliente" />
-												<Tab icon={<LocalPhoneIcon />} value="CONTATO" label="Contato" />
-												<Tab icon={<PlaceIcon />} value="ENDERECO" label="Endereço" />
-												<Tab icon={<DescriptionIcon />} value="PRODUTOS" label="Produtos" />
-												<Tab icon={<GavelIcon />} value="DADOS_DO_CONTRATO" label="Dados do Contrato" />
-												<Tab icon={<GroupsIcon />} value="ATORES" label="Atores" />
-												<Tab icon={<PaidIcon />} value="PAGAMENTO" label="Pagamento" />
-												<Tab icon={<RequestQuoteIcon />} value="FATURAS" label="Faturas" />
-												<Tab icon={<ChatIcon />} value="OBSERVACAO" label="Observação" />
-												<Tab icon={<InfoIcon />} value="STATUS" label="Status / Salvar" />
-												<Tab icon={<AttachmentIcon />} value="ANEXOS" label="Anexos" />
-												<Tab icon={<UpdateIcon />} value="ATUALIZACOES" label="Atualizações" />
-											</Tabs>
+						{((this.state.createMode || this.state.venda !== null)) ?
+							<Grid container spacing={3} sx={{margin: 0, width: "100%"}}>
+								<Grid item xs={12}>
+									<Tabs
+										value={this.state.tab}
+										onChange={(e, newValue) => this.setState({tab: newValue})}
+										variant="scrollable"
+										scrollButtons
+										allowScrollButtonsMobile
+										aria-label="scrollable auto tabs example"
+									>
+										<Tab icon={<Badge color="error" variant="dot" invisible={!("TIPO_DA_VENDA" in this.state.errors)}><DescriptionIcon /></Badge>} value="TIPO_DA_VENDA" label="Tipo da Venda" />
+										<Tab icon={<Badge color="error" variant="dot" invisible={!("DADOS_DO_CLIENTE" in this.state.errors)}><PersonIcon /></Badge>} value="DADOS_DO_CLIENTE" label="Dados do Cliente" />
+										<Tab icon={<Badge color="error" variant="dot" invisible={!("CONTATO" in this.state.errors)}><LocalPhoneIcon /></Badge>} value="CONTATO" label="Contato" />
+										<Tab icon={<Badge color="error" variant="dot" invisible={!("ENDERECO" in this.state.errors)}><PlaceIcon /></Badge>} value="ENDERECO" label="Endereço" />
+										<Tab icon={<Badge color="error" variant="dot" invisible={!("PRODUTOS" in this.state.errors)}><DescriptionIcon /></Badge>} value="PRODUTOS" label="Produtos" />
+										<Tab icon={<Badge color="error" variant="dot" invisible={!("DADOS_DO_CONTRATO" in this.state.errors)}><GavelIcon /></Badge>} value="DADOS_DO_CONTRATO" label="Dados do Contrato" />
+										<Tab icon={<GroupsIcon />} value="ATORES" label="Atores" />
+										<Tab icon={<Badge color="error" variant="dot" invisible={!("PAGAMENTO" in this.state.errors)}><PaidIcon /></Badge>} value="PAGAMENTO" label="Pagamento" />
+										<Tab icon={<Badge color="error" variant="dot" invisible={!("FATURAS" in this.state.errors)}><RequestQuoteIcon /></Badge>} value="FATURAS" label="Faturas" />
+										<Tab icon={<ChatIcon />} value="OBSERVACAO" label="Observação" />
+										<Tab icon={<Badge color="error" variant="dot" invisible={!("STATUS" in this.state.errors)}><InfoIcon /></Badge>} value="STATUS" label="Status / Salvar" />
+										<Tab icon={<AttachmentIcon />} value="ANEXOS" label="Anexos" />
+										<Tab icon={<UpdateIcon />} value="ATUALIZACOES" label="Atualizações" />
+									</Tabs>
+								</Grid>
+
+								{this.state.tab == "TIPO_DA_VENDA" ? <React.Fragment>
+									<Grid item xs={12}>
+										<Divider><Chip icon={<DescriptionIcon />} label="Tipo do Produto" /></Divider>
+									</Grid>
+									<Grid item xs={12}>
+										<ToggleButtonGroup
+											id="tipoProduto"
+											fullWidth
+											color="primary"
+											value={this.state.tipoProduto}
+											exclusive
+											onChange={(event, value) => this.setState({tipoProduto: value})}
+											aria-label="Tipo do Produto"
+										>
+											<ToggleButton value={"FIBRA"} sx={{display: "flex", flexDirection: "row", gap: 1}}><RouterIcon/>FIBRA</ToggleButton>
+											<ToggleButton value={"MOVEL"} sx={{display: "flex", flexDirection: "row", gap: 1}}><SmartphoneIcon/>MOVEL</ToggleButton>
+										</ToggleButtonGroup>
+									</Grid>
+									{"tipoProduto" in this.state.errors && <Grid item xs={12}><Alert severity="error">selecione uma das opções</Alert></Grid>}
+									<Grid item xs={12}>
+										<Divider><Chip icon={<PersonIcon />} label="Tipo da Pessoa" /></Divider>
+									</Grid>
+									<Grid item xs={12}>
+										<ToggleButtonGroup
+											id="tipoPessoa"
+											fullWidth
+											color="primary"
+											value={this.state.tipoPessoa}
+											exclusive
+											onChange={(event, value) => this.setState({tipoPessoa: value})}
+											aria-label="Tipo da Pessoa"
+										>
+											<ToggleButton value={"CPF"} sx={{display: "flex", flexDirection: "row", gap: 1}}><PersonIcon/>CPF</ToggleButton>
+											<ToggleButton value={"CNPJ"} sx={{display: "flex", flexDirection: "row", gap: 1}}><ApartmentIcon/>CNPJ</ToggleButton>
+										</ToggleButtonGroup>
+									</Grid>
+									{"tipoPessoa" in this.state.errors && <Grid item xs={12}><Alert severity="error">selecione uma das opções</Alert></Grid>}
+								</React.Fragment> : ""}
+
+								{this.state.tab == "DADOS_DO_CLIENTE" ? <React.Fragment>
+									{this.state.tipoPessoa == "CPF" && this.state.tipoProduto !== null ? <React.Fragment>
+										<Grid item xs={6}>
+											<CPFInput
+												required
+												id="cpf"
+												value={this.state.cpf}
+												onChange={(e) => this.setState({cpf: e.target.value})}
+												fullWidth
+												label="CPF"
+												variant="outlined"
+												disabled={this.state.calling}
+												error={"cpf" in this.state.errors}
+												helperText={this.state.errors?.cpf ?? ""}
+											/>
 										</Grid>
+										<Grid item xs={6}>
+											<TextField
+												required
+												id="nome"
+												value={this.state.nome}
+												onChange={(e) => this.setState({nome: e.target.value})}
+												fullWidth
+												label="Nome"
+												variant="outlined"
+												disabled={this.state.calling}
+												error={"nome" in this.state.errors}
+												helperText={this.state.errors?.nome ?? ""}
+												inputProps={{
+													maxLength: 200,
+												}}
+											/>
+										</Grid>
+										<Grid item xs={6}>
+											<DatePicker
+												label="Data de Nascimento"
+												value={this.state.dataNascimento}
+												onChange={(newValue) => this.setState({dataNascimento: newValue})}
+												slotProps={{
+													field: { clearable: true },
+													textField: {
+														required: true,
+														fullWidth: true,
+														error: "dataNascimento" in this.state.errors,
+														helperText: this.state.errors?.dataNascimento ?? "",
+													},
+												}}
+											/>
+										</Grid>
+										<Grid item xs={6}>
+											<FormControl fullWidth>
+												<InputLabel>Gênero</InputLabel>
+												<Select
+													id="genero"
+													value={this.state.genero}
+													label="Gênero"
+													onChange={(e) => this.setState({genero: e.target.value})}
+													>
+													<MenuItem key={"nenhum"} value={null}>Nenhum</MenuItem>
+													{this.generoEnum.map((genero) => <MenuItem key={genero.value} value={genero.value}>{genero.nome}</MenuItem>)}
+												</Select>
+											</FormControl>
+										</Grid>
+										<Grid item xs={4}>
+											<TextField
+												required
+												id="rg"
+												value={this.state.rg}
+												onChange={(e) => this.setState({rg: e.target.value})}
+												fullWidth
+												label="RG"
+												variant="outlined"
+												disabled={this.state.calling}
+												error={"rg" in this.state.errors}
+												helperText={this.state.errors?.rg ?? ""}
+												inputProps={{
+													maxLength: 20,
+												}}
+											/>
+										</Grid>
+										<Grid item xs={4}>
+											<TextField
+												id="rg-orgao-emissor"
+												value={this.state.rgOrgaoEmissor}
+												onChange={(e) => this.setState({rgOrgaoEmissor: e.target.value})}
+												fullWidth
+												label="Órgão Emissor"
+												variant="outlined"
+												disabled={this.state.calling}
+												error={"rgOrgaoEmissor" in this.state.errors}
+												helperText={this.state.errors?.rgOrgaoEmissor ?? ""}
+												inputProps={{
+													maxLength: 50,
+												}}
+											/>
+										</Grid>
+										<Grid item xs={4}>
+											<DatePicker
+												label="Data de Emissão"
+												value={this.state.rgDataEmissao}
+												onChange={(newValue) => this.setState({rgDataEmissao: newValue})}
+												slotProps={{
+													field: { clearable: true },
+													textField: {
+														fullWidth: true,
+														error: "rgDataEmissao" in this.state.errors,
+														helperText: this.state.errors?.rgDataEmissao ?? "",
+													},
+												}}
+											/>
+										</Grid>
+										<Grid item xs={12}>
+											<TextField
+												id="nome-da-mae"
+												value={this.state.nomeDaMae}
+												onChange={(e) => this.setState({nomeDaMae: e.target.value})}
+												fullWidth
+												label="Nome da Mãe"
+												variant="outlined"
+												disabled={this.state.calling}
+												error={"nomeDaMae" in this.state.errors}
+												helperText={this.state.errors?.nomeDaMae ?? ""}
+												inputProps={{
+													maxLength: 200,
+												}}
+											/>
+										</Grid>
+									</React.Fragment> : this.state.tipoPessoa == "CNPJ" && this.state.tipoProduto !== null ? <React.Fragment>
+										<Grid item xs={6}>
+											<CNPJInput
+												required
+												id="cnpj"
+												value={this.state.cnpj}
+												onChange={(e) => this.setState({cnpj: e.target.value})}
+												fullWidth
+												label="CNPJ"
+												variant="outlined"
+												disabled={this.state.calling}
+												error={"cnpj" in this.state.errors}
+												helperText={this.state.errors?.cnpj ?? ""}
+											/>
+										</Grid>
+										<Grid item xs={6}>
+											<FormControl fullWidth>
+												<InputLabel>Porte</InputLabel>
+												<Select
+													id="porte"
+													value={this.state.porte}
+													label="Porte"
+													onChange={(e) => this.setState({porte: e.target.value})}
+													>
+													<MenuItem key={"nenhum"} value={null}>Nenhum</MenuItem>
+													{this.porteEnum.map((porte) => <MenuItem key={porte.value} value={porte.value}>{porte.nome}</MenuItem>)}
+												</Select>
+											</FormControl>
+										</Grid>
+										<Grid item xs={4}>
+											<TextField
+												required
+												id="razao-social"
+												value={this.state.razaoSocial}
+												onChange={(e) => this.setState({razaoSocial: e.target.value})}
+												fullWidth
+												label="Razão Social"
+												variant="outlined"
+												disabled={this.state.calling}
+												error={"razaoSocial" in this.state.errors}
+												helperText={this.state.errors?.razaoSocial ?? ""}
+												inputProps={{
+													maxLength: 200,
+												}}
+											/>
+										</Grid>
+										<Grid item xs={4}>
+											<DatePicker
+												label="Data da Constituição"
+												value={this.state.dataConstituicao}
+												onChange={(newValue) => this.setState({dataConstituicao: newValue})}
+												slotProps={{
+													field: { clearable: true },
+													textField: {
+														fullWidth: true,
+														error: "dataConstituicao" in this.state.errors,
+														helperText: this.state.errors?.dataConstituicao ?? "",
+													},
+												}}
+											/>
+										</Grid>
+										<Grid item xs={4}>
+											<DatePicker
+												label="Data de Emissão"
+												value={this.state.dataEmissao}
+												onChange={(newValue) => this.setState({dataEmissao: newValue})}
+												slotProps={{
+													field: { clearable: true },
+													textField: {
+														fullWidth: true,
+														error: "dataEmissao" in this.state.errors,
+														helperText: this.state.errors?.dataEmissao ?? "",
+													},
+												}}
+											/>
+										</Grid>
+										<Grid item xs={6}>
+											<TextField
+												required
+												id="representante-legal"
+												value={this.state.representanteLegal}
+												onChange={(e) => this.setState({representanteLegal: e.target.value})}
+												fullWidth
+												label="Representante Legal"
+												variant="outlined"
+												disabled={this.state.calling}
+												error={"representanteLegal" in this.state.errors}
+												helperText={this.state.errors?.representanteLegal ?? ""}
+												inputProps={{
+													maxLength: 200,
+												}}
+											/>
+										</Grid>
+										<Grid item xs={6}>
+											<CPFInput
+												required
+												id="cpf-representante-legal"
+												value={this.state.cpfRepresentanteLegal}
+												onChange={(e) => this.setState({cpfRepresentanteLegal: e.target.value})}
+												fullWidth
+												label="CPF do Representante Legal"
+												variant="outlined"
+												disabled={this.state.calling}
+												error={"cpfRepresentanteLegal" in this.state.errors}
+												helperText={this.state.errors?.cpfRepresentanteLegal ?? ""}
+											/>
+										</Grid>
+									</React.Fragment> : <Grid item xs={12}><Alert severity="info">Você poderá ver os dados do cliente após definir o tipo da venda.</Alert></Grid>}
+								</React.Fragment> : ""}
 
-										{this.state.tab == "TIPO_DA_VENDA" ? <React.Fragment>
-											<Grid item xs={12}>
-												<Divider><Chip icon={<DescriptionIcon />} label="Tipo do Produto" /></Divider>
-											</Grid>
-											<Grid item xs={12}>
-												<ToggleButtonGroup
-													id="tipoProduto"
-													fullWidth
-													color="primary"
-													value={this.state.tipoProduto}
-													exclusive
-													onChange={(event, value) => this.setState({tipoProduto: value})}
-													aria-label="Tipo do Produto"
-												>
-													<ToggleButton value={"FIBRA"} sx={{display: "flex", flexDirection: "row", gap: 1}}><RouterIcon/>FIBRA</ToggleButton>
-													<ToggleButton value={"MOVEL"} sx={{display: "flex", flexDirection: "row", gap: 1}}><SmartphoneIcon/>MOVEL</ToggleButton>
-												</ToggleButtonGroup>
-											</Grid>
-											<Grid item xs={12}>
-												<Divider><Chip icon={<PersonIcon />} label="Tipo da Pessoa" /></Divider>
-											</Grid>
-											<Grid item xs={12}>
-												<ToggleButtonGroup
-													id="tipoPessoa"
-													fullWidth
-													color="primary"
-													value={this.state.tipoPessoa}
-													exclusive
-													onChange={(event, value) => this.setState({tipoPessoa: value})}
-													aria-label="Tipo da Pessoa"
-												>
-													<ToggleButton value={"CPF"} sx={{display: "flex", flexDirection: "row", gap: 1}}><PersonIcon/>CPF</ToggleButton>
-													<ToggleButton value={"CNPJ"} sx={{display: "flex", flexDirection: "row", gap: 1}}><ApartmentIcon/>CNPJ</ToggleButton>
-												</ToggleButtonGroup>
-											</Grid>
-										</React.Fragment> : ""}
+								{this.state.tab == "CONTATO" ? <React.Fragment>
+									<Grid item xs={12}>
+										<TextField
+											required
+											id="nome-contato"
+											value={this.state.nomeContato}
+											onChange={(e) => this.setState({nomeContato: e.target.value})}
+											fullWidth
+											label="Nome Contato"
+											variant="outlined"
+											disabled={this.state.calling}
+											error={"nomeContato" in this.state.errors}
+											helperText={this.state.errors?.nomeContato ?? ""}
+											inputProps={{
+												maxLength: 200,
+											}}
+										/>
+									</Grid>
+									<Grid item xs={4}>
+										<PhoneInput
+											required
+											id="telefone-celular"
+											value={this.state.telefoneCelular}
+											onChange={(e) => this.setState({telefoneCelular: e.target.value})}
+											fullWidth
+											label="Telefone Celular"
+											variant="outlined"
+											disabled={this.state.calling}
+											error={"telefoneCelular" in this.state.errors}
+											helperText={this.state.errors?.telefoneCelular ?? ""}
+										/>
+									</Grid>
+									<Grid item xs={4}>
+										<PhoneInput
+											id="telefone-whatsapp"
+											value={this.state.telefoneWhatsapp}
+											onChange={(e) => this.setState({telefoneWhatsapp: e.target.value})}
+											fullWidth
+											label="Whatsapp"
+											variant="outlined"
+											disabled={this.state.calling}
+											error={"telefoneWhatsapp" in this.state.errors}
+											helperText={this.state.errors?.telefoneWhatsapp ?? ""}
+										/>
+									</Grid>
+									<Grid item xs={4}>
+										<PhoneInput
+											id="telefone-residencial"
+											value={this.state.telefoneResidencial}
+											onChange={(e) => this.setState({telefoneResidencial: e.target.value})}
+											fullWidth
+											label="Telefone Residencial"
+											variant="outlined"
+											disabled={this.state.calling}
+											error={"telefoneResidencial" in this.state.errors}
+											helperText={this.state.errors?.telefoneResidencial ?? ""}
+										/>
+									</Grid>
+									<Grid item xs={12}>
+										<TextField
+											id="email"
+											value={this.state.email}
+											onChange={(e) => this.setState({email: e.target.value})}
+											fullWidth
+											label="Email"
+											variant="outlined"
+											disabled={this.state.calling}
+											error={"email" in this.state.errors}
+											helperText={this.state.errors?.email ?? ""}
+											inputProps={{
+												maxLength: 200,
+											}}
+										/>
+									</Grid>
+								</React.Fragment> : ""}
 
-										{this.state.tab == "DADOS_DO_CLIENTE" ? <React.Fragment>
-											{this.state.tipoPessoa == "CPF" && this.state.tipoProduto !== null ? <React.Fragment>
-												<Grid item xs={6}>
-													<CPFInput
-														id="cpf"
-														value={this.state.cpf}
-														onChange={(e) => this.setState({cpf: e.target.value})}
-														fullWidth
-														label="CPF"
-														variant="outlined"
-														disabled={this.state.calling}
-														error={"nome" in this.state.errors}
-														helperText={this.state.errors?.cpf ?? ""}
-													/>
-												</Grid>
-												<Grid item xs={6}>
-													<TextField
-														id="nome"
-														value={this.state.nome}
-														onChange={(e) => this.setState({nome: e.target.value})}
-														fullWidth
-														label="Nome"
-														variant="outlined"
-														disabled={this.state.calling}
-														error={"nome" in this.state.errors}
-														helperText={this.state.errors?.nome ?? ""}
-														inputProps={{
-															maxLength: 200,
-														}}
-													/>
-												</Grid>
-												<Grid item xs={6}>
-													<DatePicker
-														label="Data de Nascimento"
-														value={this.state.dataNascimento}
-														onChange={(newValue) => this.setState({dataNascimento: newValue})}
-														slotProps={{
-															field: { clearable: true },
-															textField: {
-																fullWidth: true,
-																error: "dataNascimento" in this.state.errors,
-																helperText: this.state.errors?.dataNascimento ?? "",
-															},
-														}}
-													/>
-												</Grid>
-												<Grid item xs={6}>
-													<FormControl fullWidth>
-														<InputLabel>Gênero</InputLabel>
-														<Select
-															id="genero"
-															value={this.state.genero}
-															label="Gênero"
-															onChange={(e) => this.setState({genero: e.target.value})}
-															>
-															<MenuItem key={"nenhum"} value={null}>Nenhum</MenuItem>
-															{this.generoEnum.map((genero) => <MenuItem key={genero.value} value={genero.value}>{genero.nome}</MenuItem>)}
-														</Select>
-													</FormControl>
-												</Grid>
-												<Grid item xs={4}>
-													<TextField
-														id="rg"
-														value={this.state.rg}
-														onChange={(e) => this.setState({rg: e.target.value})}
-														fullWidth
-														label="RG"
-														variant="outlined"
-														disabled={this.state.calling}
-														error={"rg" in this.state.errors}
-														helperText={this.state.errors?.rg ?? ""}
-														inputProps={{
-															maxLength: 20,
-														}}
-													/>
-												</Grid>
-												<Grid item xs={4}>
-													<TextField
-														id="rg-orgao-emissor"
-														value={this.state.rgOrgaoEmissor}
-														onChange={(e) => this.setState({rgOrgaoEmissor: e.target.value})}
-														fullWidth
-														label="Órgão Emissor"
-														variant="outlined"
-														disabled={this.state.calling}
-														error={"rgOrgaoEmissor" in this.state.errors}
-														helperText={this.state.errors?.rgOrgaoEmissor ?? ""}
-														inputProps={{
-															maxLength: 50,
-														}}
-													/>
-												</Grid>
-												<Grid item xs={4}>
-													<DatePicker
-														label="Data de Emissão"
-														value={this.state.rgDataEmissao}
-														onChange={(newValue) => this.setState({rgDataEmissao: newValue})}
-														slotProps={{
-															field: { clearable: true },
-															textField: {
-																fullWidth: true,
-																error: "rgDataEmissao" in this.state.errors,
-																helperText: this.state.errors?.rgDataEmissao ?? "",
-															},
-														}}
-													/>
-												</Grid>
-												<Grid item xs={12}>
-													<TextField
-														id="nome-da-mae"
-														value={this.state.nomeDaMae}
-														onChange={(e) => this.setState({nomeDaMae: e.target.value})}
-														fullWidth
-														label="Nome da Mãe"
-														variant="outlined"
-														disabled={this.state.calling}
-														error={"nomeDaMae" in this.state.errors}
-														helperText={this.state.errors?.nomeDaMae ?? ""}
-														inputProps={{
-															maxLength: 200,
-														}}
-													/>
-												</Grid>
-											</React.Fragment> : this.state.tipoPessoa == "CNPJ" && this.state.tipoProduto !== null ? <React.Fragment>
-												<Grid item xs={6}>
-													<CNPJInput
-														id="cnpj"
-														value={this.state.cnpj}
-														onChange={(e) => this.setState({cnpj: e.target.value})}
-														fullWidth
-														label="CNPJ"
-														variant="outlined"
-														disabled={this.state.calling}
-														error={"cnpj" in this.state.errors}
-														helperText={this.state.errors?.cnpj ?? ""}
-													/>
-												</Grid>
-												<Grid item xs={6}>
-													<FormControl fullWidth>
-														<InputLabel>Porte</InputLabel>
-														<Select
-															id="porte"
-															value={this.state.porte}
-															label="Porte"
-															onChange={(e) => this.setState({porte: e.target.value})}
-															>
-															<MenuItem key={"nenhum"} value={null}>Nenhum</MenuItem>
-															{this.porteEnum.map((porte) => <MenuItem key={porte.value} value={porte.value}>{porte.nome}</MenuItem>)}
-														</Select>
-													</FormControl>
-												</Grid>
-												<Grid item xs={4}>
-													<TextField
-														id="razao-social"
-														value={this.state.razaoSocial}
-														onChange={(e) => this.setState({razaoSocial: e.target.value})}
-														fullWidth
-														label="Razão Social"
-														variant="outlined"
-														disabled={this.state.calling}
-														error={"razaoSocial" in this.state.errors}
-														helperText={this.state.errors?.razaoSocial ?? ""}
-														inputProps={{
-															maxLength: 200,
-														}}
-													/>
-												</Grid>
-												<Grid item xs={4}>
-													<DatePicker
-														label="Data da Constituição"
-														value={this.state.dataConstituicao}
-														onChange={(newValue) => this.setState({dataConstituicao: newValue})}
-														slotProps={{
-															field: { clearable: true },
-															textField: {
-																fullWidth: true,
-																error: "dataConstituicao" in this.state.errors,
-																helperText: this.state.errors?.dataConstituicao ?? "",
-															},
-														}}
-													/>
-												</Grid>
-												<Grid item xs={4}>
-													<DatePicker
-														label="Data de Emissão"
-														value={this.state.dataEmissao}
-														onChange={(newValue) => this.setState({dataEmissao: newValue})}
-														slotProps={{
-															field: { clearable: true },
-															textField: {
-																fullWidth: true,
-																error: "dataEmissao" in this.state.errors,
-																helperText: this.state.errors?.dataEmissao ?? "",
-															},
-														}}
-													/>
-												</Grid>
-												<Grid item xs={6}>
-													<TextField
-														id="representante-legal"
-														value={this.state.representanteLegal}
-														onChange={(e) => this.setState({representanteLegal: e.target.value})}
-														fullWidth
-														label="Representante Legal"
-														variant="outlined"
-														disabled={this.state.calling}
-														error={"representanteLegal" in this.state.errors}
-														helperText={this.state.errors?.representanteLegal ?? ""}
-														inputProps={{
-															maxLength: 200,
-														}}
-													/>
-												</Grid>
-												<Grid item xs={6}>
-													<CPFInput
-														id="cpf-representante-legal"
-														value={this.state.cpfRepresentanteLegal}
-														onChange={(e) => this.setState({cpfRepresentanteLegal: e.target.value})}
-														fullWidth
-														label="CPF do Representante Legal"
-														variant="outlined"
-														disabled={this.state.calling}
-														error={"cpfRepresentanteLegal" in this.state.errors}
-														helperText={this.state.errors?.cpfRepresentanteLegal ?? ""}
-													/>
-												</Grid>
-											</React.Fragment> : <Grid item xs={12}><Alert severity="info">Você poderá ver os dados do cliente após definir o tipo da venda.</Alert></Grid>}
-										</React.Fragment> : ""}
+								{this.state.tab == "ENDERECO" ? <React.Fragment>
+									<Grid item container xs={4} display="flex" gap={1} flexDirection="column">
+										<CEPInput
+											required
+											id="cep"
+											value={this.state.cep}
+											onChange={(e) => this.updateCep(e.target.value)}
+											fullWidth
+											label="CEP"
+											variant="outlined"
+											disabled={this.state.calling}
+											error={"cep" in this.state.errors}
+											helperText={this.state.errors?.cep ?? ""}
+										/>
+										<Link href="https://buscacepinter.correios.com.br/app/endereco/index.php" target="_blank" sx={{alignSelf: "end"}}>Descobrir CEP</Link>
+									</Grid>
+									<Grid item xs={4}>
+										<TextField
+											required
+											id="logradouro"
+											value={this.state.logradouro}
+											onChange={(e) => this.setState({logradouro: e.target.value})}
+											fullWidth
+											label="Logradouro"
+											variant="outlined"
+											disabled={this.state.calling}
+											error={"logradouro" in this.state.errors}
+											helperText={this.state.errors?.logradouro ?? ""}
+											inputProps={{
+												maxLength: 100,
+											}}
+										/>
+									</Grid>
+									<Grid item xs={4}>
+										<TextField
+											required
+											id="numero"
+											value={this.state.numero}
+											onChange={(e) => this.setState({numero: e.target.value})}
+											fullWidth
+											label="Número"
+											variant="outlined"
+											disabled={this.state.calling}
+											error={"numero" in this.state.errors}
+											helperText={this.state.errors?.numero ?? ""}
+											inputProps={{
+												maxLength: 10,
+											}}
+										/>
+									</Grid>
+									<Grid item xs={4}>
+										<TextField
+											id="complemento"
+											value={this.state.complemento}
+											onChange={(e) => this.setState({complemento: e.target.value})}
+											fullWidth
+											label="Complemento"
+											variant="outlined"
+											disabled={this.state.calling}
+											error={"complemento" in this.state.errors}
+											helperText={this.state.errors?.complemento ?? ""}
+											inputProps={{
+												maxLength: 100,
+											}}
+										/>
+									</Grid>
+									<Grid item xs={4}>
+										<TextField
+											id="bairro"
+											value={this.state.bairro}
+											onChange={(e) => this.setState({bairro: e.target.value})}
+											fullWidth
+											label="Bairro"
+											variant="outlined"
+											disabled={this.state.calling}
+											error={"bairro" in this.state.errors}
+											helperText={this.state.errors?.bairro ?? ""}
+											inputProps={{
+												maxLength: 100,
+											}}
+										/>
+									</Grid>
+									<Grid item xs={4}>
+										<TextField
+											id="referencia"
+											value={this.state.referencia}
+											onChange={(e) => this.setState({referencia: e.target.value})}
+											fullWidth
+											label="Referência"
+											variant="outlined"
+											disabled={this.state.calling}
+											error={"referencia" in this.state.errors}
+											helperText={this.state.errors?.referencia ?? ""}
+											inputProps={{
+												maxLength: 100,
+											}}
+										/>
+									</Grid>
+									<Grid item xs={6}>
+										<TextField
+											id="cidade"
+											value={this.state.cidade}
+											onChange={(e) => this.setState({cidade: e.target.value})}
+											fullWidth
+											label="Cidade"
+											variant="outlined"
+											disabled={this.state.calling}
+											error={"cidade" in this.state.errors}
+											helperText={this.state.errors?.cidade ?? ""}
+											inputProps={{
+												maxLength: 100,
+											}}
+										/>
+									</Grid>
+									<Grid item xs={6}>
+										<TextField
+											id="uf"
+											value={this.state.uf}
+											onChange={(e) => this.setState({uf: e.target.value})}
+											fullWidth
+											label="UF"
+											variant="outlined"
+											disabled={this.state.calling}
+											error={"uf" in this.state.errors}
+											helperText={this.state.errors?.uf ?? ""}
+											inputProps={{
+												maxLength: 2,
+											}}
+										/>
+									</Grid>
+								</React.Fragment> : ""}
 
-										{this.state.tab == "CONTATO" ? <React.Fragment>
-											<Grid item xs={12}>
-												<TextField
-													id="nome-contato"
-													value={this.state.nomeContato}
-													onChange={(e) => this.setState({nomeContato: e.target.value})}
-													fullWidth
-													label="Nome Contato"
-													variant="outlined"
-													disabled={this.state.calling}
-													error={"nomeContato" in this.state.errors}
-													helperText={this.state.errors?.nomeContato ?? ""}
-													inputProps={{
-														maxLength: 200,
-													}}
-												/>
-											</Grid>
-											<Grid item xs={4}>
-												<PhoneInput
-													id="telefone-celular"
-													value={this.state.telefoneCelular}
-													onChange={(e) => this.setState({telefoneCelular: e.target.value})}
-													fullWidth
-													label="Telefone Celular"
-													variant="outlined"
-													disabled={this.state.calling}
-													error={"telefoneCelular" in this.state.errors}
-													helperText={this.state.errors?.telefoneCelular ?? ""}
-												/>
-											</Grid>
-											<Grid item xs={4}>
-												<PhoneInput
-													id="telefone-whatsapp"
-													value={this.state.telefoneWhatsapp}
-													onChange={(e) => this.setState({telefoneWhatsapp: e.target.value})}
-													fullWidth
-													label="Whatsapp"
-													variant="outlined"
-													disabled={this.state.calling}
-													error={"telefoneWhatsapp" in this.state.errors}
-													helperText={this.state.errors?.telefoneWhatsapp ?? ""}
-												/>
-											</Grid>
-											<Grid item xs={4}>
-												<PhoneInput
-													id="telefone-residencial"
-													value={this.state.telefoneResidencial}
-													onChange={(e) => this.setState({telefoneResidencial: e.target.value})}
-													fullWidth
-													label="Telefone Residencial"
-													variant="outlined"
-													disabled={this.state.calling}
-													error={"telefoneResidencial" in this.state.errors}
-													helperText={this.state.errors?.telefoneResidencial ?? ""}
-												/>
-											</Grid>
-											<Grid item xs={12}>
-												<TextField
-													id="email"
-													value={this.state.email}
-													onChange={(e) => this.setState({email: e.target.value})}
-													fullWidth
-													label="Email"
-													variant="outlined"
-													disabled={this.state.calling}
-													error={"email" in this.state.errors}
-													helperText={this.state.errors?.email ?? ""}
-													inputProps={{
-														maxLength: 200,
-													}}
-												/>
-											</Grid>
-										</React.Fragment> : ""}
-
-										{this.state.tab == "ENDERECO" ? <React.Fragment>
-											<Grid item container xs={4} display="flex" gap={1} flexDirection="column">
-												<CEPInput
-													id="cep"
-													value={this.state.cep}
-													onChange={(e) => this.updateCep(e.target.value)}
-													fullWidth
-													label="CEP"
-													variant="outlined"
-													disabled={this.state.calling}
-													error={"cep" in this.state.errors}
-													helperText={this.state.errors?.cep ?? ""}
-												/>
-												<Link href="https://buscacepinter.correios.com.br/app/endereco/index.php" target="_blank" sx={{alignSelf: "end"}}>Descobrir CEP</Link>
-											</Grid>
-											<Grid item xs={4}>
-												<TextField
-													id="logradouro"
-													value={this.state.logradouro}
-													onChange={(e) => this.setState({logradouro: e.target.value})}
-													fullWidth
-													label="Logradouro"
-													variant="outlined"
-													disabled={this.state.calling}
-													error={"logradouro" in this.state.errors}
-													helperText={this.state.errors?.logradouro ?? ""}
-													inputProps={{
-														maxLength: 100,
-													}}
-												/>
-											</Grid>
-											<Grid item xs={4}>
-												<TextField
-													id="numero"
-													value={this.state.numero}
-													onChange={(e) => this.setState({numero: e.target.value})}
-													fullWidth
-													label="Número"
-													variant="outlined"
-													disabled={this.state.calling}
-													error={"numero" in this.state.errors}
-													helperText={this.state.errors?.numero ?? ""}
-													inputProps={{
-														maxLength: 10,
-													}}
-												/>
-											</Grid>
-											<Grid item xs={4}>
-												<TextField
-													id="complemento"
-													value={this.state.complemento}
-													onChange={(e) => this.setState({complemento: e.target.value})}
-													fullWidth
-													label="Complemento"
-													variant="outlined"
-													disabled={this.state.calling}
-													error={"complemento" in this.state.errors}
-													helperText={this.state.errors?.complemento ?? ""}
-													inputProps={{
-														maxLength: 100,
-													}}
-												/>
-											</Grid>
-											<Grid item xs={4}>
-												<TextField
-													id="bairro"
-													value={this.state.bairro}
-													onChange={(e) => this.setState({bairro: e.target.value})}
-													fullWidth
-													label="Bairro"
-													variant="outlined"
-													disabled={this.state.calling}
-													error={"bairro" in this.state.errors}
-													helperText={this.state.errors?.bairro ?? ""}
-													inputProps={{
-														maxLength: 100,
-													}}
-												/>
-											</Grid>
-											<Grid item xs={4}>
-												<TextField
-													id="referencia"
-													value={this.state.referencia}
-													onChange={(e) => this.setState({referencia: e.target.value})}
-													fullWidth
-													label="Referência"
-													variant="outlined"
-													disabled={this.state.calling}
-													error={"referencia" in this.state.errors}
-													helperText={this.state.errors?.referencia ?? ""}
-													inputProps={{
-														maxLength: 100,
-													}}
-												/>
-											</Grid>
-											<Grid item xs={6}>
-												<TextField
-													id="cidade"
-													value={this.state.cidade}
-													onChange={(e) => this.setState({cidade: e.target.value})}
-													fullWidth
-													label="Cidade"
-													variant="outlined"
-													disabled={this.state.calling}
-													error={"cidade" in this.state.errors}
-													helperText={this.state.errors?.cidade ?? ""}
-													inputProps={{
-														maxLength: 100,
-													}}
-												/>
-											</Grid>
-											<Grid item xs={6}>
-												<TextField
-													id="uf"
-													value={this.state.uf}
-													onChange={(e) => this.setState({uf: e.target.value})}
-													fullWidth
-													label="UF"
-													variant="outlined"
-													disabled={this.state.calling}
-													error={"uf" in this.state.errors}
-													helperText={this.state.errors?.uf ?? ""}
-													inputProps={{
-														maxLength: 2,
-													}}
-												/>
-											</Grid>
-										</React.Fragment> : ""}
-
-										{this.state.tab == "PRODUTOS" ? <React.Fragment>
-											{this.state.tipoProduto == null || this.state.tipoPessoa == null ? <Grid item xs={12}><Alert severity="info">Você poderá ver os produtos após definir o tipo da venda.</Alert></Grid> : <React.Fragment>
-												<Grid item xs={12}>
-													<Box display="flex" flexDirection="column" gap={3}>
-														{this.state.vendaProdutoList.length == 0 ? <Alert severity="info">Os produtos que você adicionar aparecerão aqui.</Alert> : ""}
-														{this.state.vendaProdutoList.map((produto, i) => 
-															<Paper key={i} sx={{padding: 3}}>
-																<Grid container spacing={3}>
-																	<Grid item xs={6}>
-																		<TextField
-																			value={produto.nome}
-																			onChange={(e) => this.updateProduto(i, "nome", e.target.value)}
-																			fullWidth
-																			label="Nome"
-																			variant="outlined"
-																			disabled={this.state.calling}
-																			inputProps={{
-																				maxLength: 100,
-																			}}
-																		/>
-																	</Grid>
-																	<Grid item xs={6}>
-																		<MoneyInput
-																			value={produto.valor}
-																			onChange={(e) => this.updateProduto(i, "valor", e.target.value)}
-																			fullWidth
-																			label="Valor"
-																			variant="outlined"
-																			disabled={this.state.calling}
-																		/>
-																	</Grid>
-																	{this.state.tipoProduto == "MOVEL" ? <React.Fragment>
-																		<Grid item xs={12}>
-																			<Autocomplete
-																				freeSolo
-																				disableClearable
-																				options={this.adicionaisEnum}
-																				value={produto.adicionais}
-																				onInputChange={(event, value) => this.updateProduto(i, "adicionais", value)}
-																				renderInput={(params) => (
-																					<TextField
-																						{...params}
-																						variant="outlined"
-																						label="Adicionais"
-																					/>
-																				)}
-																			/>
-																		</Grid>
-																		<Grid item xs={6}>
-																			<FormControl fullWidth>
-																				<InputLabel>Tipo de Linha</InputLabel>
-																				<Select
-																					value={produto.tipoDeLinha}
-																					label="Tipo de Linha"
-																					onChange={(e) => this.updateProduto(i, "tipoDeLinha", e.target.value)}
-																					>
-																					{this.tipoDeLinhaEnum.map((tipoDeLinha) => <MenuItem key={tipoDeLinha.value} value={tipoDeLinha.value}>{tipoDeLinha.nome}</MenuItem>)}
-																				</Select>
-																			</FormControl>
-																		</Grid>
-																		<Grid item xs={6}>
+								{this.state.tab == "PRODUTOS" ? <React.Fragment>
+									{this.state.tipoProduto == null || this.state.tipoPessoa == null ? <Grid item xs={12}><Alert severity="info">Você poderá ver os produtos após definir o tipo da venda.</Alert></Grid> : <React.Fragment>
+										<Grid item xs={12}>
+											<Box display="flex" flexDirection="column" gap={3}>
+												{this.state.vendaProdutoList.length == 0 ? <Alert severity="info">Os produtos que você adicionar aparecerão aqui.</Alert> : ""}
+												{this.state.vendaProdutoList.map((produto, i) => 
+													<Paper key={i} sx={{padding: 3}}>
+														<Grid container spacing={3}>
+															<Grid item xs={6}>
+																<TextField
+																	required
+																	value={produto.nome}
+																	onChange={(e) => this.updateProduto(i, "nome", e.target.value)}
+																	fullWidth
+																	label="Nome"
+																	variant="outlined"
+																	disabled={this.state.calling}
+																	error={`produtoList[${i}].nome` in this.state.errors}
+																	helperText={this.state.errors?.[`produtoList[${i}].nome`] ?? ""}
+																	inputProps={{
+																		maxLength: 100,
+																	}}
+																/>
+															</Grid>
+															<Grid item xs={6}>
+																<MoneyInput
+																	required
+																	value={produto.valor}
+																	onChange={(e) => this.updateProduto(i, "valor", e.target.value)}
+																	fullWidth
+																	label="Valor"
+																	variant="outlined"
+																	error={`produtoList[${i}].valor` in this.state.errors}
+																	helperText={this.state.errors?.[`produtoList[${i}].valor`] ?? ""}
+																	disabled={this.state.calling}
+																/>
+															</Grid>
+															{this.state.tipoProduto == "MOVEL" ? <React.Fragment>
+																<Grid item xs={12}>
+																	<Autocomplete
+																		freeSolo
+																		disableClearable
+																		options={this.adicionaisEnum}
+																		value={produto.adicionais}
+																		onInputChange={(event, value) => this.updateProduto(i, "adicionais", value)}
+																		renderInput={(params) => (
 																			<TextField
-																				value={produto.ddd}
-																				onChange={(e) => this.updateProduto(i, "ddd", e.target.value)}
-																				fullWidth
-																				label="DDD"
+																				{...params}
 																				variant="outlined"
-																				disabled={this.state.calling}
-																				inputProps={{
-																					maxLength: 2,
-																				}}
+																				label="Adicionais"
 																			/>
-																		</Grid>
-																		{produto.tipoDeLinha == "NOVA" ? 
-																			<Grid item xs={12}>
-																				<TextField
-																					value={produto.quantidade}
-																					onChange={(e) => this.updateProduto(i, "quantidade", e.target.value)}
-																					fullWidth
-																					label="Quantidade"
-																					variant="outlined"
-																					disabled={this.state.calling}
-																					type="number"
-																				/>
-																			</Grid>
-																			: ""}
-																		{["PORTABILIDADE", "TT"].includes(produto.tipoDeLinha) ? <React.Fragment>
-																			<Grid item xs={12}>
-																				<TextField
-																					value={produto.operadora}
-																					onChange={(e) => this.updateProduto(i, "operadora", e.target.value)}
-																					fullWidth
-																					label="operadora"
-																					variant="outlined"
-																					disabled={this.state.calling}
-																					inputProps={{
-																						maxLength: 20,
-																					}}
-																				/>
-																			</Grid>
-																			{produto.portabilidadeList.length == 0 ? <Grid item xs={12}><Alert severity="info">Os telefones que você adicionar aparecerão aqui.</Alert></Grid> : ""}
-																			{produto.portabilidadeList.map((portabilidade, j) =>
-																				<Grid item xs={3} key={j}>
-																					<PhoneInput
-																						value={portabilidade.telefone}
-																						onChange={(e) => this.updatePortabilidade(i, j, "telefone", e.target.value)}
-																						fullWidth
-																						label="Telefone (sem DDD)"
-																						variant="outlined"
-																						disabled={this.state.calling}
-																						ddd={false}
-																						InputProps={{
-																							endAdornment: 	<InputAdornment position="end">
-																												<IconButton
-																													onClick={() => this.deletePortabilidade(i, j)}
-																												>
-																													<DeleteIcon/>
-																												</IconButton>
-																											</InputAdornment>,
-																						}}
-																					/>
-																				</Grid>
-																			)}
-																			<Grid item xs={12} container display="flex" justifyContent="flex-end">
-																				<Button variant="contained" size="large" startIcon={<AddIcon />} onClick={() => this.addPortabilidade(i)}>Adicionar Telefone</Button>
-																			</Grid>
-																		</React.Fragment> : ""}
-																	</React.Fragment> : <React.Fragment>
-																		<Grid item xs={3}>
-																			<FormControl>
-																				<FormLabel id={"telefone-fixo" + i}>Telefone Fixo</FormLabel>
-																				<RadioGroup
-																					row
-																					aria-labelledby={"telefone-fixo" + i}
-																					name="controlled-radio-buttons-group"
-																					value={produto.telefoneFixo}
-																					onChange={(e) => this.updateProduto(i, "telefoneFixo", e.target.value)}
-																				>
-																				<FormControlLabel value={true} control={<Radio />} label="Sim" />
-																				<FormControlLabel value={false} control={<Radio />} label="Não" />
-																				</RadioGroup>
-																			</FormControl>
-																		</Grid>
-																		{String(produto.telefoneFixo) == "true" ?
-																			<Grid item xs={3}>
-																				<MoneyInput
-																					value={produto.valorTelefoneFixo}
-																					onChange={(e) => this.updateProduto(i, "valorTelefoneFixo", e.target.value)}
-																					fullWidth
-																					label="Valor Telefone Fixo"
-																					variant="outlined"
-																					disabled={this.state.calling}
-																				/>
-																			</Grid> : ""}
-																	</React.Fragment>}
-																	<Grid item xs={12}>
-																		<Button color="error" variant="contained" size="large" startIcon={<DeleteIcon />} onClick={() => this.deleteProduto(i)}>Remover Produto</Button>
-																	</Grid>
-																</Grid>
-															</Paper>
-														)}
-													</Box>
-												</Grid>
-												<Grid item xs={12} container display="flex" justifyContent="flex-end">
-													<Button variant="contained" size="large" startIcon={<AddIcon />} onClick={() => this.setState({addProdutoDialogOpen: true, addProdutoId: null})}>Adicionar Produto</Button>
-												</Grid>
-											</React.Fragment>}
-										</React.Fragment> : ""}
-
-										{this.state.tab == "DADOS_DO_CONTRATO" ? <React.Fragment>
-											<Grid item xs={4}>
-												<TextField
-													id="os"
-													value={this.state.os}
-													onChange={(e) => this.setState({os: e.target.value})}
-													fullWidth
-													label="OS"
-													variant="outlined"
-													disabled={this.state.calling}
-													error={"os" in this.state.errors}
-													helperText={this.state.errors?.os ?? ""}
-													inputProps={{
-														maxLength: 50,
-													}}
-												/>
-											</Grid>
-											<Grid item xs={4}>
-												<TextField
-													id="custcode"
-													value={this.state.custcode}
-													onChange={(e) => this.setState({custcode: e.target.value})}
-													fullWidth
-													label="Cust-Code"
-													variant="outlined"
-													disabled={this.state.calling}
-													error={"os" in this.state.errors}
-													helperText={this.state.errors?.custcode ?? ""}
-													inputProps={{
-														maxLength: 50,
-													}}
-												/>
-											</Grid>
-											<Grid item xs={4}>
-												<FormControl fullWidth>
-													<InputLabel>Sistema</InputLabel>
-													<Select
-														id="sistema"
-														value={this.state.sistema}
-														label="Sistema"
-														onChange={(e) => this.setState({sistema: e.target.value})}
-														>
-														<MenuItem key={"nenhum"} value={null}>Nenhum</MenuItem>
-														{this.sistemaEnum.map((sistema) => <MenuItem key={sistema.value} value={sistema.value}>{sistema.nome}</MenuItem>)}
-													</Select>
-												</FormControl>
-											</Grid>
-											<Grid item xs={4}>
-												<TextField
-													id="origem"
-													value={this.state.origem}
-													onChange={(e) => this.setState({origem: e.target.value})}
-													fullWidth
-													label="Mailing/Origem"
-													variant="outlined"
-													disabled={this.state.calling}
-													error={"origem" in this.state.errors}
-													helperText={this.state.errors?.origem ?? ""}
-													inputProps={{
-														maxLength: 100,
-													}}
-												/>
-											</Grid>
-											<Grid item xs={4}>
-												<DatePicker
-													label="Safra"
-													views={['month', 'year']}
-													value={this.state.safra}
-													onChange={(newValue) => this.setState({safra: newValue})}
-													slotProps={{
-														field: { clearable: true },
-														textField: {
-															fullWidth: true,
-															error: "safra" in this.state.errors,
-															helperText: this.state.errors?.safra ?? "",
-														},
-													}}
-												/>
-											</Grid>
-											<Grid item xs={4}>
-												<DateTimePicker
-													label="Data da Venda"
-													value={this.state.dataVenda}
-													onChange={(newValue) => this.setState({dataVenda: newValue})}
-													slotProps={{
-														field: { clearable: true },
-														textField: {
-															fullWidth: true,
-															error: "dataVenda" in this.state.errors,
-															helperText: this.state.errors?.dataVenda ?? (this.state.createMode ? (this.state.dataVenda == null ? "agora" : "outra data") : ""),
-														},
-													}}
-												/>
-											</Grid>
-											{this.state.tipoProduto == "MOVEL" ? <React.Fragment>
-												<Grid item xs={6}>
-													<DateTimePicker
-															label="Data da Ativação"
-															value={this.state.dataAtivacao}
-															onChange={(newValue) => this.setState({dataAtivacao: newValue})}
-															slotProps={{
-																field: { clearable: true },
-																textField: {
-																	fullWidth: true,
-																	error: "dataAtivacao" in this.state.errors,
-																	helperText: this.state.errors?.dataAtivacao ?? "",
-																},
-															}}
-														/>
-												</Grid>
-												<Grid item xs={6}>
-													<FormControl>
-														<FormLabel id="prints">Prints</FormLabel>
-														<RadioGroup
-															row
-															aria-labelledby="prints"
-															name="controlled-radio-buttons-group"
-															value={this.state.prints}
-															onChange={(e) => this.setState({prints: e.target.value})}
-														>
-														<FormControlLabel value={true} control={<Radio />} label="Sim" />
-														<FormControlLabel value={false} control={<Radio />} label="Não" />
-														</RadioGroup>
-													</FormControl>
-												</Grid>
-											</React.Fragment> : <React.Fragment>
-												<Grid item xs={6}>
-													<DateTimePicker
-															label="Data de Agendamento"
-															value={this.state.dataAgendamento}
-															onChange={(newValue) => this.setState({dataAgendamento: newValue})}
-															slotProps={{
-																field: { clearable: true },
-																textField: {
-																	fullWidth: true,
-																	error: "dataAgendamento" in this.state.errors,
-																	helperText: this.state.errors?.dataAgendamento ?? "",
-																},
-															}}
-														/>
-												</Grid>
-												<Grid item xs={6}>
-													<DateTimePicker
-															label="Data de Instalação"
-															value={this.state.dataInstalacao}
-															onChange={(newValue) => this.setState({dataInstalacao: newValue})}
-															slotProps={{
-																field: { clearable: true },
-																textField: {
-																	fullWidth: true,
-																	error: "dataInstalacao" in this.state.errors,
-																	helperText: this.state.errors?.dataInstalacao ?? "",
-																},
-															}}
-														/>
-												</Grid>
-												<Grid item xs={3}>
-													<Autocomplete
-														id="pdv"
-														freeSolo
-														disableClearable
-														options={this.pdvEnum}
-														value={this.state.pdv}
-														onInputChange={(event, value) => this.setState({pdv: value})}
-														renderInput={(params) => (
-															<TextField
-																{...params}
-																variant="outlined"
-																label="PDV"
-																error={"pdv" in this.state.errors}
-																helperText={this.state.errors?.pdv ?? ""}
-															/>
-														)}
-													/>
-												</Grid>
-												<Grid item xs={3}>
-													<FormControl>
-														<FormLabel id="venda-original">Venda Original</FormLabel>
-														<RadioGroup
-															row
-															aria-labelledby="venda-original"
-															name="controlled-radio-buttons-group"
-															value={this.state.vendaOriginal}
-															onChange={(e) => this.setState({vendaOriginal: e.target.value})}
-														>
-														<FormControlLabel value={true} control={<Radio />} label="Sim" />
-														<FormControlLabel value={false} control={<Radio />} label="Não" />
-														</RadioGroup>
-													</FormControl>
-												</Grid>
-												<Grid item xs={3}>
-													<FormControl fullWidth>
-														<InputLabel>BrScan</InputLabel>
-														<Select
-															value={this.state.brscan}
-															label="BrScan"
-															onChange={(e) => this.setState({brscan: e.target.value})}
-															>
-															{this.brscanEnum.map((brscan) => <MenuItem key={brscan.value} value={brscan.value}>{brscan.nome}</MenuItem>)}
-														</Select>
-													</FormControl>
-												</Grid>
-												<Grid item xs={3}>
-													<FormControl fullWidth>
-														<InputLabel>Suporte</InputLabel>
-														<Select
-															value={this.state.suporte}
-															label="Suporte"
-															onChange={(e) => this.setState({suporte: e.target.value})}
-															>
-															{this.suporteEnum.map((suporte) => <MenuItem key={suporte.value} value={suporte.value}>{suporte.nome}</MenuItem>)}
-														</Select>
-													</FormControl>
-												</Grid>
-												<Grid item xs={12}>
-													<TextField
-														id="login-vendedor"
-														value={this.state.loginVendedor}
-														onChange={(e) => this.setState({loginVendedor: e.target.value})}
-														fullWidth
-														label="Login Vendedor"
-														variant="outlined"
-														disabled={this.state.calling}
-														error={"loginVendedor" in this.state.errors}
-														helperText={this.state.errors?.loginVendedor ?? ""}
-														inputProps={{
-															maxLength: 50,
-														}}
-													/>
-												</Grid>
-											</React.Fragment>}
-										</React.Fragment> : ""}
-
-										{this.state.tab == "ATORES" ? <React.Fragment>
-											{!this.state.createMode ? <React.Fragment>
-												<Grid item xs={3}>
-													<Stack spacing={3}>
-														<Typography align="center">Vendedor</Typography>
-														<UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[this.state.vendedorId]} direction="column"/>
-														{this.props.usuario.permissaoList.includes("ALTERAR_VENDEDOR") ? <Autocomplete
-															id="vendedor"
-															options={Object.keys(this.state.usuarioByUsuarioId ?? {}).map(key => parseInt(key))}
-															getOptionLabel={(option) => this.state.usuarioByUsuarioId?.[option]?.nome}
-															renderOption={(props, option) => <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props}>
-																		<UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[option]}/>
-																	</Box>}
-															value={this.state.vendedorId}
-															onChange={(event, value) => this.setState({vendedorId: value})}
-															renderInput={(params) => (
-																<TextField
-																{...params}
-																variant="outlined"
-																label="Vendedor"
-																/>
-															)}
-															loading={this.state.usuarioList == null}
-														/> : ""}
-													</Stack>
-												</Grid>
-												<Grid item xs={3}>
-													<Stack spacing={3}>
-														<Typography align="center">Supervisor</Typography>
-														<UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[this.state.supervisorId]} direction="column"/>
-														{this.props.usuario.permissaoList.includes("ALTERAR_VENDEDOR") ? <Autocomplete
-															id="supervisor"
-															options={Object.keys(this.state.usuarioByUsuarioId ?? {}).map(key => parseInt(key))}
-															getOptionLabel={(option) => this.state.usuarioByUsuarioId?.[option]?.nome}
-															renderOption={(props, option) => <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props}>
-																		<UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[option]}/>
-																	</Box>}
-															value={this.state.supervisorId}
-															onChange={(event, value) => this.setState({supervisorId: value})}
-															renderInput={(params) => (
-																<TextField
-																{...params}
-																variant="outlined"
-																label="Supervisor"
-																/>
-															)}
-															loading={this.state.usuarioList == null}
-														/> : ""}
-													</Stack>
-												</Grid>
-												<Grid item xs={3}>
-													<Stack spacing={3}>
-														<Typography align="center">Auditor</Typography>
-														<UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[this.state.auditorId]} direction="column"/>
-														{this.props.usuario.permissaoList.includes("ALTERAR_AUDITOR") ? <Autocomplete
-															id="auditor"
-															options={Object.keys(this.state.usuarioByUsuarioId ?? {}).map(key => parseInt(key))}
-															getOptionLabel={(option) => this.state.usuarioByUsuarioId?.[option]?.nome}
-															renderOption={(props, option) => <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props}>
-																		<UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[option]}/>
-																	</Box>}
-															value={this.state.auditorId}
-															onChange={(event, value) => this.setState({auditorId: value})}
-															renderInput={(params) => (
-																<TextField
-																{...params}
-																variant="outlined"
-																label="Auditor"
-																/>
-															)}
-															loading={this.state.usuarioList == null}
-														/> : ""}
-													</Stack>
-												</Grid>
-												<Grid item xs={3}>
-													<Stack spacing={3}>
-														<Typography align="center">Cadastrador</Typography>
-														<UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[this.state.cadastradorId]} direction="column"/>
-														{this.props.usuario.permissaoList.includes("ALTERAR_AUDITOR") ? <Autocomplete
-															id="cadastrador"
-															options={Object.keys(this.state.usuarioByUsuarioId ?? {}).map(key => parseInt(key))}
-															getOptionLabel={(option) => this.state.usuarioByUsuarioId?.[option]?.nome}
-															renderOption={(props, option) => <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props}>
-																		<UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[option]}/>
-																	</Box>}
-															value={this.state.cadastradorId}
-															onChange={(event, value) => this.setState({cadastradorId: value})}
-															renderInput={(params) => (
-																<TextField
-																{...params}
-																variant="outlined"
-																label="Cadastrador"
-																/>
-															)}
-															loading={this.state.usuarioList == null}
-														/> : ""}
-													</Stack>
-												</Grid>
-											</React.Fragment> : <Grid item xs={12}><Alert severity="info">Você poderá ver os atores da venda após salva-la.</Alert></Grid>}
-										</React.Fragment> : ""}
-
-										{this.state.tab == "PAGAMENTO" ? <React.Fragment>
-											<Grid item xs={12}>
-												<FormControl fullWidth>
-													<InputLabel>Forma de Pagamento</InputLabel>
-													<Select
-														id="forma-de-pagamento"
-														value={this.state.formaDePagamento}
-														label="Forma de Pagamento"
-														onChange={(e) => this.setState({formaDePagamento: e.target.value})}
-														>
-														<MenuItem key={"nenhum"} value={null}>Nenhum</MenuItem>
-														{this.formaDePagamentoEnum.map((formaDePagamento) => <MenuItem key={formaDePagamento.value} value={formaDePagamento.value}>{formaDePagamento.nome}</MenuItem>)}
-													</Select>
-												</FormControl>
-											</Grid>
-											<Grid item xs={12}>
-												<Autocomplete
-													id="vencimento"
-													freeSolo
-													disableClearable
-													options={this.vencimentoEnum}
-													value={this.state.vencimento}
-													onInputChange={(event, value) => this.setState({vencimento: value})}
-													renderInput={(params) => (
-														<TextField
-															{...params}
-															variant="outlined"
-															label="Vencimento"
-															error={"vencimento" in this.state.errors}
-															helperText={this.state.errors?.vencimento ?? ""}
-														/>
-													)}
-												/>
-											</Grid>
-											{this.state.formaDePagamento == "DEBITO_AUTOMATICO" ? <React.Fragment>
-												<Grid item xs={4}>
-													<TextField
-														id="agencia"
-														value={this.state.agencia}
-														onChange={(e) => this.setState({agencia: e.target.value})}
-														fullWidth
-														label="Agência"
-														variant="outlined"
-														disabled={this.state.calling}
-														error={"agencia" in this.state.errors}
-														helperText={this.state.errors?.agencia ?? ""}
-														inputProps={{
-															maxLength: 50,
-														}}
-													/>
-												</Grid>
-												<Grid item xs={4}>
-													<TextField
-														id="conta"
-														value={this.state.conta}
-														onChange={(e) => this.setState({conta: e.target.value})}
-														fullWidth
-														label="Conta"
-														variant="outlined"
-														disabled={this.state.calling}
-														error={"conta" in this.state.errors}
-														helperText={this.state.errors?.conta ?? ""}
-														inputProps={{
-															maxLength: 50,
-														}}
-													/>
-												</Grid>
-												<Grid item xs={4}>
-													<TextField
-														id="banco"
-														value={this.state.banco}
-														onChange={(e) => this.setState({banco: e.target.value})}
-														fullWidth
-														label="Banco"
-														variant="outlined"
-														disabled={this.state.calling}
-														error={"banco" in this.state.errors}
-														helperText={this.state.errors?.banco ?? ""}
-														inputProps={{
-															maxLength: 50,
-														}}
-													/>
-												</Grid>
-											</React.Fragment> : ""}
-										</React.Fragment> : ""}
-
-										{this.state.tab == "FATURAS" ? <React.Fragment>
-											<Grid item xs={12}>
-												<Box display="flex" flexDirection="column" gap={3}>
-													{this.state.faturaList.length == 0 ? <Alert severity="info">As faturas que você adicionar aparecerão aqui.</Alert> : ""}
-													{this.state.faturaList.map((fatura, i) => 
-														<Paper key={i} sx={{padding: 3}}>
-															<Grid container spacing={3}>
-																<Grid item xs={4}>
-																	<DatePicker
-																		label="Mês"
-																		views={['month', 'year']}
-																		value={fatura.mes}
-																		onChange={(newValue) => this.updateFatura(i, "mes", newValue)}
-																		slotProps={{
-																			textField: {
-																				fullWidth: true,
-																			}
-																		}}
+																		)}
 																	/>
 																</Grid>
-																<Grid item xs={4}>
-																	<FormControl fullWidth>
-																		<InputLabel>Status</InputLabel>
+																<Grid item xs={6}>
+																	<FormControl fullWidth required>
+																		<InputLabel>Tipo de Linha</InputLabel>
 																		<Select
-																			value={fatura.status}
-																			label="Status"
-																			onChange={(e) => this.updateFatura(i, "status", e.target.value)}
+																			value={produto.tipoDeLinha}
+																			label="Tipo de Linha"
+																			onChange={(e) => this.updateProduto(i, "tipoDeLinha", e.target.value)}
 																			>
-																			{this.faturaStatusEnum.map((status) => <MenuItem key={status.value} value={status.value}>{status.nome}</MenuItem>)}
+																			{this.tipoDeLinhaEnum.map((tipoDeLinha) => <MenuItem key={tipoDeLinha.value} value={tipoDeLinha.value}>{tipoDeLinha.nome}</MenuItem>)}
 																		</Select>
 																	</FormControl>
 																</Grid>
-																<Grid item container xs={4} display="flex" flexDirection="row" gap={3} alignItems="center">
-																	<MoneyInput
-																		value={fatura.valor}
-																		onChange={(e) => this.updateFatura(i, "valor", e.target.value)}
-																		label="Valor"
+																<Grid item xs={6}>
+																	<TextField
+																		value={produto.ddd}
+																		onChange={(e) => this.updateProduto(i, "ddd", e.target.value)}
+																		fullWidth
+																		label="DDD"
 																		variant="outlined"
 																		disabled={this.state.calling}
-																		sx={{flexGrow: 1}}
+																		error={`produtoList[${i}].ddd` in this.state.errors}
+																		helperText={this.state.errors?.[`produtoList[${i}].ddd`] ?? ""}
+																		inputProps={{
+																			maxLength: 2,
+																		}}
 																	/>
-																	<IconButton
-																		onClick={() => this.deleteFatura(i)}
-																	>
-																		<DeleteIcon/>
-																	</IconButton>
 																</Grid>
+																{produto.tipoDeLinha == "NOVA" ? 
+																	<Grid item xs={12}>
+																		<TextField
+																			required
+																			value={produto.quantidade}
+																			onChange={(e) => this.updateProduto(i, "quantidade", e.target.value)}
+																			fullWidth
+																			label="Quantidade"
+																			variant="outlined"
+																			disabled={this.state.calling}
+																			error={`produtoList[${i}].quantidade` in this.state.errors}
+																			helperText={this.state.errors?.[`produtoList[${i}].quantidade`] ?? ""}
+																			type="number"
+																		/>
+																	</Grid>
+																	: ""}
+																{["PORTABILIDADE", "TT"].includes(produto.tipoDeLinha) ? <React.Fragment>
+																	<Grid item xs={12}>
+																		<TextField
+																			value={produto.operadora}
+																			onChange={(e) => this.updateProduto(i, "operadora", e.target.value)}
+																			fullWidth
+																			label="Operadora"
+																			variant="outlined"
+																			disabled={this.state.calling}
+																			error={`produtoList[${i}].operadora` in this.state.errors}
+																			helperText={this.state.errors?.[`produtoList[${i}].operadora`] ?? ""}
+																			inputProps={{
+																				maxLength: 20,
+																			}}
+																		/>
+																	</Grid>
+																	{produto.portabilidadeList.length == 0 ? <Grid item xs={12}><Alert severity="info">Os telefones que você adicionar aparecerão aqui.</Alert></Grid> : ""}
+																	{produto.portabilidadeList.map((portabilidade, j) =>
+																		<Grid item xs={3} key={j}>
+																			<PhoneInput
+																				required
+																				value={portabilidade.telefone}
+																				onChange={(e) => this.updatePortabilidade(i, j, "telefone", e.target.value)}
+																				fullWidth
+																				label="Telefone (sem DDD)"
+																				variant="outlined"
+																				disabled={this.state.calling}
+																				error={`produtoList[${i}].portabilidadeList[${i}].telefone` in this.state.errors}
+																				helperText={this.state.errors?.[`produtoList[${i}].portabilidadeList[${i}].telefone`] ?? ""}
+																				ddd={false}
+																				InputProps={{
+																					endAdornment: 	<InputAdornment position="end">
+																										<IconButton
+																											onClick={() => this.deletePortabilidade(i, j)}
+																										>
+																											<DeleteIcon/>
+																										</IconButton>
+																									</InputAdornment>,
+																				}}
+																			/>
+																		</Grid>
+																	)}
+																	<Grid item xs={12} container display="flex" justifyContent="flex-end">
+																		<Button variant="contained" size="large" startIcon={<AddIcon />} onClick={() => this.addPortabilidade(i)}>Adicionar Telefone</Button>
+																	</Grid>
+																</React.Fragment> : ""}
+															</React.Fragment> : <React.Fragment>
+																<Grid item xs={3}>
+																	<FormControl>
+																		<FormLabel id={"telefone-fixo" + i}>Telefone Fixo</FormLabel>
+																		<RadioGroup
+																			row
+																			aria-labelledby={"telefone-fixo" + i}
+																			name="controlled-radio-buttons-group"
+																			value={produto.telefoneFixo}
+																			onChange={(e) => this.updateProduto(i, "telefoneFixo", e.target.value)}
+																		>
+																		<FormControlLabel value={true} control={<Radio />} label="Sim" />
+																		<FormControlLabel value={false} control={<Radio />} label="Não" />
+																		</RadioGroup>
+																	</FormControl>
+																</Grid>
+																{String(produto.telefoneFixo) == "true" ?
+																	<Grid item xs={3}>
+																		<MoneyInput
+																			required
+																			value={produto.valorTelefoneFixo}
+																			onChange={(e) => this.updateProduto(i, "valorTelefoneFixo", e.target.value)}
+																			fullWidth
+																			label="Valor Telefone Fixo"
+																			variant="outlined"
+																			disabled={this.state.calling}
+																			error={`produtoList[${i}].valorTelefoneFixo` in this.state.errors}
+																			helperText={this.state.errors?.[`produtoList[${i}].valorTelefoneFixo`] ?? ""}
+																		/>
+																	</Grid> : ""}
+															</React.Fragment>}
+															<Grid item xs={12}>
+																<Button color="error" variant="contained" size="large" startIcon={<DeleteIcon />} onClick={() => this.deleteProduto(i)}>Remover Produto</Button>
 															</Grid>
-														</Paper>
-													)}
-												</Box>
-											</Grid>
-											<Grid item xs={12} container display="flex" justifyContent="flex-end">
-												<Button variant="contained" size="large" startIcon={<AddIcon />} onClick={this.addFatura}>Adicionar Fatura</Button>
-											</Grid>
-										</React.Fragment> : ""}
+														</Grid>
+													</Paper>
+												)}
+											</Box>
+										</Grid>
+										<Grid item xs={12} container display="flex" justifyContent="flex-end">
+											<Button variant="contained" size="large" startIcon={<AddIcon />} onClick={() => this.setState({addProdutoDialogOpen: true, addProdutoId: null})}>Adicionar Produto</Button>
+										</Grid>
+									</React.Fragment>}
+								</React.Fragment> : ""}
 
-										{this.state.tab == "OBSERVACAO" ? <React.Fragment>
-											<Grid item xs={12}>
-												<TextField
-													id="observacao"
-													value={this.state.observacao}
-													onChange={(e) => this.setState({observacao: e.target.value})}
-													fullWidth
-													label="Observação"
-													variant="outlined"
-													disabled={this.state.calling}
-													error={"observacao" in this.state.errors}
-													helperText={this.state.errors?.observacao ?? ""}
-													inputProps={{
-														maxLength: 200,
+								{this.state.tab == "DADOS_DO_CONTRATO" ? <React.Fragment>
+									<Grid item xs={4}>
+										<TextField
+											id="os"
+											value={this.state.os}
+											onChange={(e) => this.setState({os: e.target.value})}
+											fullWidth
+											label="OS"
+											variant="outlined"
+											disabled={this.state.calling}
+											error={"os" in this.state.errors}
+											helperText={this.state.errors?.os ?? ""}
+											inputProps={{
+												maxLength: 50,
+											}}
+										/>
+									</Grid>
+									<Grid item xs={4}>
+										<TextField
+											id="custcode"
+											value={this.state.custcode}
+											onChange={(e) => this.setState({custcode: e.target.value})}
+											fullWidth
+											label="Cust-Code"
+											variant="outlined"
+											disabled={this.state.calling}
+											error={"os" in this.state.errors}
+											helperText={this.state.errors?.custcode ?? ""}
+											inputProps={{
+												maxLength: 50,
+											}}
+										/>
+									</Grid>
+									<Grid item xs={4}>
+										<FormControl fullWidth>
+											<InputLabel>Sistema</InputLabel>
+											<Select
+												id="sistema"
+												value={this.state.sistema}
+												label="Sistema"
+												onChange={(e) => this.setState({sistema: e.target.value})}
+												>
+												<MenuItem key={"nenhum"} value={null}>Nenhum</MenuItem>
+												{this.sistemaEnum.map((sistema) => <MenuItem key={sistema.value} value={sistema.value}>{sistema.nome}</MenuItem>)}
+											</Select>
+										</FormControl>
+									</Grid>
+									<Grid item xs={3}>
+										<TextField
+											id="origem"
+											value={this.state.origem}
+											onChange={(e) => this.setState({origem: e.target.value})}
+											fullWidth
+											label="Mailing/Origem"
+											variant="outlined"
+											disabled={this.state.calling}
+											error={"origem" in this.state.errors}
+											helperText={this.state.errors?.origem ?? ""}
+											inputProps={{
+												maxLength: 100,
+											}}
+										/>
+									</Grid>
+									<Grid item xs={3}>
+										<DatePicker
+											label="Safra"
+											views={['month', 'year']}
+											value={this.state.safra}
+											onChange={(newValue) => this.setState({safra: newValue})}
+											slotProps={{
+												field: { clearable: true },
+												textField: {
+													required: true,
+													fullWidth: true,
+													error: "safra" in this.state.errors,
+													helperText: this.state.errors?.safra ?? "",
+												},
+											}}
+										/>
+									</Grid>
+									<Grid item xs={3}>
+										<DateTimePicker
+											label="Data da Venda"
+											value={this.state.dataVenda}
+											onChange={(newValue) => this.setState({dataVenda: newValue})}
+											slotProps={{
+												required: !this.state.createMode,
+												field: { clearable: true },
+												textField: {
+													required: true,
+													fullWidth: true,
+													error: "dataVenda" in this.state.errors,
+													helperText: this.state.errors?.dataVenda ?? (this.state.createMode ? (this.state.dataVenda == null ? "agora" : "outra data") : ""),
+												},
+											}}
+										/>
+									</Grid>
+									<Grid item xs={3}>
+											<FormControl>
+												<FormLabel id="reimputado">Reimputado</FormLabel>
+												<RadioGroup
+													row
+													aria-labelledby="reimputado"
+													value={this.state.reimputado}
+													onChange={(e) => this.setState({reimputado: e.target.value})}
+												>
+												<FormControlLabel value={true} control={<Radio />} label="Sim" />
+												<FormControlLabel value={false} control={<Radio />} label="Não" />
+												</RadioGroup>
+											</FormControl>
+										</Grid>
+									{this.state.tipoProduto == "MOVEL" ? <React.Fragment>
+										<Grid item xs={6}>
+											<DateTimePicker
+													label="Data da Ativação"
+													value={this.state.dataAtivacao}
+													onChange={(newValue) => this.setState({dataAtivacao: newValue})}
+													slotProps={{
+														field: { clearable: true },
+														textField: {
+															fullWidth: true,
+															error: "dataAtivacao" in this.state.errors,
+															helperText: this.state.errors?.dataAtivacao ?? "",
+														},
 													}}
-													multiline
-													rows={4}
 												/>
-											</Grid>
-										</React.Fragment> : ""}
-
-										{this.state.tab == "STATUS" ? <React.Fragment>
-											<Grid item xs={6}>
-												<Stack spacing={1}>
-													<Autocomplete
-														id="novo-status"
-														loading={this.state.vendaStatusList == null}
-														options={(this.state.vendaStatusList ?? []).map((vendaStatus) => vendaStatus.vendaStatusId).sort((a, b) => this.state.vendaStatusByVendaStatusId[a].ordem - this.state.vendaStatusByVendaStatusId[b].ordem)}
-														groupBy={(option) => VendaStatusCategoriaMap?.[this.state.vendaStatusByVendaStatusId?.[option]?.categoria] ?? "Sem Categoria"}
-														getOptionLabel={(option) => this.state.vendaStatusByVendaStatusId?.[option]?.nome ?? ""}
-														value={this.state.novoStatusId}
-														onChange={(event, value) => this.setState({novoStatusId: value})}
-														renderInput={(params) => (
-															<TextField
-																error={"statusId" in this.state.errors}
-																helperText={this.state.errors?.statusId}
-																	{...params}
-																variant="outlined"
-																label="Novo Status"
-															/>
-														)}
-														renderOption={(props, option) => <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props}>
-															<Stack direction="row" spacing={1} alignItems="center">
-																<Icon>{this.state.vendaStatusByVendaStatusId[option].icon}</Icon>
-																<div>{this.state.vendaStatusByVendaStatusId[option].nome}</div>
-															</Stack>
-														</Box>}
-														renderTags={(value, getTagProps) =>
-															value.map((option, index) => (
-															<VendaStatusChip
-																vendaStatus={this.state.vendaStatusByVendaStatusId[option]}
-																{...getTagProps({ index })}
-															/>
-															))
-														}
+										</Grid>
+										<Grid item xs={6}>
+											<FormControl>
+												<FormLabel id="prints">Prints</FormLabel>
+												<RadioGroup
+													row
+													aria-labelledby="prints"
+													name="controlled-radio-buttons-group"
+													value={this.state.prints}
+													onChange={(e) => this.setState({prints: e.target.value})}
+												>
+												<FormControlLabel value={true} control={<Radio />} label="Sim" />
+												<FormControlLabel value={false} control={<Radio />} label="Não" />
+												</RadioGroup>
+											</FormControl>
+										</Grid>
+									</React.Fragment> : <React.Fragment>
+										<Grid item xs={6}>
+											<DateTimePicker
+													label="Data de Agendamento"
+													value={this.state.dataAgendamento}
+													onChange={(newValue) => this.setState({dataAgendamento: newValue})}
+													slotProps={{
+														field: { clearable: true },
+														textField: {
+															fullWidth: true,
+															error: "dataAgendamento" in this.state.errors,
+															helperText: this.state.errors?.dataAgendamento ?? "",
+														},
+													}}
+												/>
+										</Grid>
+										<Grid item xs={6}>
+											<DateTimePicker
+													label="Data de Instalação"
+													value={this.state.dataInstalacao}
+													onChange={(newValue) => this.setState({dataInstalacao: newValue})}
+													slotProps={{
+														field: { clearable: true },
+														textField: {
+															fullWidth: true,
+															error: "dataInstalacao" in this.state.errors,
+															helperText: this.state.errors?.dataInstalacao ?? "",
+														},
+													}}
+												/>
+										</Grid>
+										<Grid item xs={3}>
+											<Autocomplete
+												id="pdv"
+												freeSolo
+												disableClearable
+												options={this.pdvEnum}
+												value={this.state.pdv}
+												onInputChange={(event, value) => this.setState({pdv: value})}
+												renderInput={(params) => (
+													<TextField
+														{...params}
+														variant="outlined"
+														label="PDV"
+														error={"pdv" in this.state.errors}
+														helperText={this.state.errors?.pdv ?? ""}
 													/>
-													{!this.state.createMode ? <Stack direction="row" spacing={1} justifyContent="center" alignItems="center">
-														<Typography>Status atual:</Typography>
-														<VendaStatusChip vendaStatus={this.state.vendaStatusByVendaStatusId?.[this.state.statusId]}/>
-													</Stack> : ""}
-												</Stack>
-											</Grid>
-											<Grid item xs={6}>
-												<TextField
-													id="relato"
-													value={this.state.relato}
-													onChange={(e) => this.setState({relato: e.target.value})}
-													fullWidth
-													label="Relato"
-													variant="outlined"
-													disabled={this.state.calling}
-													error={"relato" in this.state.errors}
-													helperText={this.state.errors?.relato ?? ""}
-													inputProps={{
-														maxLength: 200,
-													}}
-													multiline
-													rows={4}
-												/>
-											</Grid>
-											<Grid item xs={12}>
-												<LoadingButton color="success" fullWidth variant="contained" size="large" startIcon={<SaveIcon />} loadingPosition="start" loading={this.state.saving} disabled={this.state.calling} onClick={this.saveVenda}>Salvar Venda</LoadingButton>
-											</Grid>
-										</React.Fragment> : ""}
+												)}
+											/>
+										</Grid>
+										<Grid item xs={3}>
+											<FormControl>
+												<FormLabel id="venda-original">Venda Original</FormLabel>
+												<RadioGroup
+													row
+													aria-labelledby="venda-original"
+													name="controlled-radio-buttons-group"
+													value={this.state.vendaOriginal}
+													onChange={(e) => this.setState({vendaOriginal: e.target.value})}
+												>
+												<FormControlLabel value={true} control={<Radio />} label="Sim" />
+												<FormControlLabel value={false} control={<Radio />} label="Não" />
+												</RadioGroup>
+											</FormControl>
+										</Grid>
+										<Grid item xs={3}>
+											<FormControl fullWidth>
+												<InputLabel>BrScan</InputLabel>
+												<Select
+													value={this.state.brscan}
+													label="BrScan"
+													onChange={(e) => this.setState({brscan: e.target.value})}
+													>
+													{this.brscanEnum.map((brscan) => <MenuItem key={brscan.value} value={brscan.value}>{brscan.nome}</MenuItem>)}
+												</Select>
+											</FormControl>
+										</Grid>
+										<Grid item xs={3}>
+											<FormControl fullWidth>
+												<InputLabel>Suporte</InputLabel>
+												<Select
+													value={this.state.suporte}
+													label="Suporte"
+													onChange={(e) => this.setState({suporte: e.target.value})}
+													>
+													{this.suporteEnum.map((suporte) => <MenuItem key={suporte.value} value={suporte.value}>{suporte.nome}</MenuItem>)}
+												</Select>
+											</FormControl>
+										</Grid>
+										<Grid item xs={12}>
+											<TextField
+												id="login-vendedor"
+												value={this.state.loginVendedor}
+												onChange={(e) => this.setState({loginVendedor: e.target.value})}
+												fullWidth
+												label="Login Vendedor"
+												variant="outlined"
+												disabled={this.state.calling}
+												error={"loginVendedor" in this.state.errors}
+												helperText={this.state.errors?.loginVendedor ?? ""}
+												inputProps={{
+													maxLength: 50,
+												}}
+											/>
+										</Grid>
+									</React.Fragment>}
+								</React.Fragment> : ""}
 
-										{this.state.tab == "ANEXOS" ? <React.Fragment>
-											{!this.state.createMode ? <React.Fragment>
+								{this.state.tab == "ATORES" ? <React.Fragment>
+									{!this.state.createMode ? <React.Fragment>
+										<Grid item xs={3}>
+											<Stack spacing={3}>
+												<Typography align="center">Vendedor</Typography>
+												<UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[this.state.vendedorId]} direction="column"/>
+												{this.props.usuario.permissaoList.includes("ALTERAR_VENDEDOR") ? <Autocomplete
+													id="vendedor"
+													options={Object.keys(this.state.usuarioByUsuarioId ?? {}).map(key => parseInt(key))}
+													getOptionLabel={(option) => this.state.usuarioByUsuarioId?.[option]?.nome}
+													renderOption={(props, option) => <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props}>
+																<UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[option]}/>
+															</Box>}
+													value={this.state.vendedorId}
+													onChange={(event, value) => this.setState({vendedorId: value})}
+													renderInput={(params) => (
+														<TextField
+														{...params}
+														variant="outlined"
+														label="Vendedor"
+														/>
+													)}
+													loading={this.state.usuarioList == null}
+												/> : ""}
+											</Stack>
+										</Grid>
+										<Grid item xs={3}>
+											<Stack spacing={3}>
+												<Typography align="center">Supervisor</Typography>
+												<UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[this.state.supervisorId]} direction="column"/>
+												{this.props.usuario.permissaoList.includes("ALTERAR_VENDEDOR") ? <Autocomplete
+													id="supervisor"
+													options={Object.keys(this.state.usuarioByUsuarioId ?? {}).map(key => parseInt(key))}
+													getOptionLabel={(option) => this.state.usuarioByUsuarioId?.[option]?.nome}
+													renderOption={(props, option) => <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props}>
+																<UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[option]}/>
+															</Box>}
+													value={this.state.supervisorId}
+													onChange={(event, value) => this.setState({supervisorId: value})}
+													renderInput={(params) => (
+														<TextField
+														{...params}
+														variant="outlined"
+														label="Supervisor"
+														/>
+													)}
+													loading={this.state.usuarioList == null}
+												/> : ""}
+											</Stack>
+										</Grid>
+										<Grid item xs={3}>
+											<Stack spacing={3}>
+												<Typography align="center">Auditor</Typography>
+												<UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[this.state.auditorId]} direction="column"/>
+												{this.props.usuario.permissaoList.includes("ALTERAR_AUDITOR") ? <Autocomplete
+													id="auditor"
+													options={Object.keys(this.state.usuarioByUsuarioId ?? {}).map(key => parseInt(key))}
+													getOptionLabel={(option) => this.state.usuarioByUsuarioId?.[option]?.nome}
+													renderOption={(props, option) => <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props}>
+																<UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[option]}/>
+															</Box>}
+													value={this.state.auditorId}
+													onChange={(event, value) => this.setState({auditorId: value})}
+													renderInput={(params) => (
+														<TextField
+														{...params}
+														variant="outlined"
+														label="Auditor"
+														/>
+													)}
+													loading={this.state.usuarioList == null}
+												/> : ""}
+											</Stack>
+										</Grid>
+										<Grid item xs={3}>
+											<Stack spacing={3}>
+												<Typography align="center">Cadastrador</Typography>
+												<UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[this.state.cadastradorId]} direction="column"/>
+												{this.props.usuario.permissaoList.includes("ALTERAR_AUDITOR") ? <Autocomplete
+													id="cadastrador"
+													options={Object.keys(this.state.usuarioByUsuarioId ?? {}).map(key => parseInt(key))}
+													getOptionLabel={(option) => this.state.usuarioByUsuarioId?.[option]?.nome}
+													renderOption={(props, option) => <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props}>
+																<UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[option]}/>
+															</Box>}
+													value={this.state.cadastradorId}
+													onChange={(event, value) => this.setState({cadastradorId: value})}
+													renderInput={(params) => (
+														<TextField
+														{...params}
+														variant="outlined"
+														label="Cadastrador"
+														/>
+													)}
+													loading={this.state.usuarioList == null}
+												/> : ""}
+											</Stack>
+										</Grid>
+									</React.Fragment> : <Grid item xs={12}><Alert severity="info">Você poderá ver os atores da venda após salva-la.</Alert></Grid>}
+								</React.Fragment> : ""}
+
+								{this.state.tab == "PAGAMENTO" ? <React.Fragment>
+									<Grid item xs={12}>
+										<FormControl fullWidth required>
+											<InputLabel>Forma de Pagamento</InputLabel>
+											<Select
+												id="forma-de-pagamento"
+												value={this.state.formaDePagamento}
+												label="Forma de Pagamento"
+												onChange={(e) => this.setState({formaDePagamento: e.target.value})}
+												>
+												{this.formaDePagamentoEnum.map((formaDePagamento) => <MenuItem key={formaDePagamento.value} value={formaDePagamento.value}>{formaDePagamento.nome}</MenuItem>)}
+											</Select>
+										</FormControl>
+									</Grid>
+									<Grid item xs={12}>
+										<Autocomplete
+											id="vencimento"
+											freeSolo
+											disableClearable
+											options={this.vencimentoEnum}
+											value={this.state.vencimento}
+											onInputChange={(event, value) => this.setState({vencimento: value})}
+											renderInput={(params) => (
+												<TextField
+													{...params}
+													variant="outlined"
+													label="Vencimento"
+													error={"vencimento" in this.state.errors}
+													helperText={this.state.errors?.vencimento ?? ""}
+													type="number"
+												/>
+											)}
+										/>
+									</Grid>
+									{this.state.formaDePagamento == "DEBITO_AUTOMATICO" ? <React.Fragment>
+										<Grid item xs={4}>
+											<TextField
+												id="agencia"
+												value={this.state.agencia}
+												onChange={(e) => this.setState({agencia: e.target.value})}
+												fullWidth
+												label="Agência"
+												variant="outlined"
+												disabled={this.state.calling}
+												error={"agencia" in this.state.errors}
+												helperText={this.state.errors?.agencia ?? ""}
+												inputProps={{
+													maxLength: 50,
+												}}
+											/>
+										</Grid>
+										<Grid item xs={4}>
+											<TextField
+												id="conta"
+												value={this.state.conta}
+												onChange={(e) => this.setState({conta: e.target.value})}
+												fullWidth
+												label="Conta"
+												variant="outlined"
+												disabled={this.state.calling}
+												error={"conta" in this.state.errors}
+												helperText={this.state.errors?.conta ?? ""}
+												inputProps={{
+													maxLength: 50,
+												}}
+											/>
+										</Grid>
+										<Grid item xs={4}>
+											<TextField
+												id="banco"
+												value={this.state.banco}
+												onChange={(e) => this.setState({banco: e.target.value})}
+												fullWidth
+												label="Banco"
+												variant="outlined"
+												disabled={this.state.calling}
+												error={"banco" in this.state.errors}
+												helperText={this.state.errors?.banco ?? ""}
+												inputProps={{
+													maxLength: 50,
+												}}
+											/>
+										</Grid>
+									</React.Fragment> : ""}
+								</React.Fragment> : ""}
+
+								{this.state.tab == "FATURAS" ? <React.Fragment>
+									<Grid item xs={12}>
+										<Box display="flex" flexDirection="column" gap={3}>
+											{this.state.faturaList.length == 0 ? <Alert severity="info">As faturas que você adicionar aparecerão aqui.</Alert> : ""}
+											{this.state.faturaList.map((fatura, i) => 
+												<Paper key={i} sx={{padding: 3}}>
+													<Grid container spacing={3}>
+														<Grid item xs={4}>
+															<DatePicker
+																label="Mês"
+																views={['month', 'year']}
+																value={fatura.mes}
+																onChange={(newValue) => this.updateFatura(i, "mes", newValue)}
+																slotProps={{
+																	textField: {
+																		required: true,
+																		fullWidth: true,
+																	}
+																}}
+															/>
+														</Grid>
+														<Grid item xs={4}>
+															<FormControl fullWidth required>
+																<InputLabel>Status</InputLabel>
+																<Select
+																	value={fatura.status}
+																	label="Status"
+																	onChange={(e) => this.updateFatura(i, "status", e.target.value)}
+																	>
+																	{this.faturaStatusEnum.map((status) => <MenuItem key={status.value} value={status.value}>{status.nome}</MenuItem>)}
+																</Select>
+															</FormControl>
+														</Grid>
+														<Grid item container xs={4} display="flex" flexDirection="row" gap={3} alignItems="center">
+															<MoneyInput
+																required
+																value={fatura.valor}
+																onChange={(e) => this.updateFatura(i, "valor", e.target.value)}
+																label="Valor"
+																variant="outlined"
+																disabled={this.state.calling}
+																error={`faturaList[${i}].valor` in this.state.errors}
+																helperText={this.state.errors?.[`faturaList[${i}].valor`] ?? ""}
+																sx={{flexGrow: 1}}
+															/>
+															<IconButton
+																onClick={() => this.deleteFatura(i)}
+															>
+																<DeleteIcon/>
+															</IconButton>
+														</Grid>
+													</Grid>
+												</Paper>
+											)}
+										</Box>
+									</Grid>
+									<Grid item xs={12} container display="flex" justifyContent="flex-end">
+										<Button variant="contained" size="large" startIcon={<AddIcon />} onClick={this.addFatura}>Adicionar Fatura</Button>
+									</Grid>
+								</React.Fragment> : ""}
+
+								{this.state.tab == "OBSERVACAO" ? <React.Fragment>
+									<Grid item xs={12}>
+										<TextField
+											id="observacao"
+											value={this.state.observacao}
+											onChange={(e) => this.setState({observacao: e.target.value})}
+											fullWidth
+											label="Observação"
+											variant="outlined"
+											disabled={this.state.calling}
+											error={"observacao" in this.state.errors}
+											helperText={this.state.errors?.observacao ?? ""}
+											inputProps={{
+												maxLength: 200,
+											}}
+											multiline
+											rows={4}
+										/>
+									</Grid>
+								</React.Fragment> : ""}
+
+								{this.state.tab == "STATUS" ? <React.Fragment>
+									<Grid item xs={6}>
+										<Stack spacing={1}>
+											<Autocomplete
+												id="novo-status"
+												loading={this.state.vendaStatusList == null}
+												options={(this.state.vendaStatusList ?? []).map((vendaStatus) => vendaStatus.vendaStatusId).sort((a, b) => this.state.vendaStatusByVendaStatusId[a].ordem - this.state.vendaStatusByVendaStatusId[b].ordem)}
+												groupBy={(option) => VendaStatusCategoriaMap?.[this.state.vendaStatusByVendaStatusId?.[option]?.categoria] ?? "Sem Categoria"}
+												getOptionLabel={(option) => this.state.vendaStatusByVendaStatusId?.[option]?.nome ?? ""}
+												value={this.state.novoStatusId}
+												onChange={(event, value) => this.setState({novoStatusId: value})}
+												renderInput={(params) => (
+													<TextField
+														required
+														error={"statusId" in this.state.errors}
+														helperText={this.state.errors?.statusId}
+															{...params}
+														variant="outlined"
+														label="Novo Status"
+													/>
+												)}
+												renderOption={(props, option) => <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props}>
+													<Stack direction="row" spacing={1} alignItems="center">
+														<Icon>{this.state.vendaStatusByVendaStatusId[option].icon}</Icon>
+														<div>{this.state.vendaStatusByVendaStatusId[option].nome}</div>
+													</Stack>
+												</Box>}
+												renderTags={(value, getTagProps) =>
+													value.map((option, index) => (
+													<VendaStatusChip
+														vendaStatus={this.state.vendaStatusByVendaStatusId[option]}
+														{...getTagProps({ index })}
+													/>
+													))
+												}
+											/>
+											{!this.state.createMode ? <Stack direction="row" spacing={1} justifyContent="center" alignItems="center">
+												<Typography>Status atual:</Typography>
+												<VendaStatusChip vendaStatus={this.state.vendaStatusByVendaStatusId?.[this.state.statusId]}/>
+											</Stack> : ""}
+										</Stack>
+									</Grid>
+									<Grid item xs={6}>
+										<TextField
+											required={!this.state.createMode}
+											id="relato"
+											value={this.state.relato}
+											onChange={(e) => this.setState({relato: e.target.value})}
+											fullWidth
+											label="Relato"
+											variant="outlined"
+											disabled={this.state.calling}
+											error={"relato" in this.state.errors}
+											helperText={this.state.errors?.relato ?? ""}
+											inputProps={{
+												maxLength: 200,
+											}}
+											multiline
+											rows={4}
+										/>
+									</Grid>
+									<Grid item xs={12}>
+										<LoadingButton color="success" fullWidth variant="contained" size="large" startIcon={<SaveIcon />} loadingPosition="start" loading={this.state.saving} disabled={this.state.calling} onClick={this.saveVenda}>Salvar Venda</LoadingButton>
+									</Grid>
+								</React.Fragment> : ""}
+
+								{this.state.tab == "ANEXOS" ? <React.Fragment>
+									{!this.state.createMode ? <React.Fragment>
+										<Grid item xs={12}>
+											<ButtonGroup sx={{marginBottom: 3}}>
+												<LoadingButton component="label" variant="outlined" startIcon={<RefreshIcon />} loadingPosition="start" loading={this.state.updatingAnexoList} disabled={this.state.updatingAnexoList || this.state.calling} onClick={this.getAnexoListFromApi}>
+													Atualizar
+												</LoadingButton>
+												<LoadingButton component="label" variant="contained" startIcon={<CloudUploadIcon />} loadingPosition="start" loading={this.state.uploadingAnexo} disabled={this.state.updatingAnexoList || this.state.calling}>
+													Adicionar Anexo
+													<input type="file" id="anexo" hidden onChange={this.handleUploadAnexoChange}/>
+												</LoadingButton>
+											</ButtonGroup>
+										</Grid>
+										<Grid item xs={12}>
+											{(this.state?.anexoList ?? []).length == 0 ? <Alert severity="info">Os anexos que você adicionar aparecerão aqui.</Alert> : ""}
+											<Stack direction="row" spacing={1}>
+												{(this.state?.anexoList ?? []).map((anexo) =>
+													!anexo.trashed && <Chip
+														key={anexo.id}
+														component="a"
+														clickable
+														target="_blank"
+														label={anexo.name}
+														href={api.defaults.baseURL + "/anexo/download/" + anexo.id}
+														deleteIcon={<DeleteIcon/>}
+														onDelete={(e) => {e.preventDefault();this.trashAnexo(anexo.id)}}
+														disabled={this.state.calling}
+														color="primary"
+													/>)}
+											</Stack>
+										</Grid>
+										{this.props.usuario.permissaoList.includes("VER_LIXEIRA") && <React.Fragment>
 												<Grid item xs={12}>
-													<ButtonGroup sx={{marginBottom: 3}}>
-														<LoadingButton component="label" variant="outlined" startIcon={<RefreshIcon />} loadingPosition="start" loading={this.state.updatingAnexoList} disabled={this.state.updatingAnexoList} onClick={this.getAnexoListFromApi}>
-															Atualizar
-														</LoadingButton>
-														<LoadingButton component="label" variant="contained" startIcon={<CloudUploadIcon />} loadingPosition="start" loading={this.state.uploadingAnexo} disabled={this.state.updatingAnexoList}>
-															Adicionar Anexo
-															<input type="file" id="anexo" hidden onChange={this.handleUploadAnexoChange}/>
-														</LoadingButton>
-													</ButtonGroup>
+													<Divider><Chip icon={<RecyclingIcon />} label="Lixeira" /></Divider>
 												</Grid>
 												<Grid item xs={12}>
-													{(this.state?.anexoList ?? []).length == 0 ? <Alert severity="info">Os anexos que você adicionar aparecerão aqui.</Alert> : ""}
 													<Stack direction="row" spacing={1}>
 														{(this.state?.anexoList ?? []).map((anexo) =>
-															<Chip
-																key={anexo.id}
-																component="a"
-																clickable
-																target="_blank"
-																label={anexo.name}
-																href={api.defaults.baseURL + "/anexo/download/" + anexo.id}
-																onDelete={(e) => {e.preventDefault();this.deleteAnexo(anexo.id)}}
-															/>)}
+														anexo.trashed && <Chip
+															key={anexo.id}
+															component="a"
+															clickable
+															target="_blank"
+															label={anexo.name}
+															deleteIcon={<DeleteForeverIcon/>}
+															onClick={(e) => {e.preventDefault();this.untrashAnexo(anexo.id)}}
+															onDelete={(e) => {e.preventDefault();this.deleteAnexo(anexo.id)}}
+															disabled={this.state.calling}
+															color="error"
+														/>)}
 													</Stack>
 												</Grid>
-											</React.Fragment> : <Grid item xs={12}><Alert severity="info">Você poderá enviar anexos após salvar a venda.</Alert></Grid>}
-										</React.Fragment> : ""}
+											</React.Fragment>
+										}
+									</React.Fragment> : <Grid item xs={12}><Alert severity="info">Você poderá enviar anexos após salvar a venda.</Alert></Grid>}
+								</React.Fragment> : ""}
 
-										{this.state.tab == "ATUALIZACOES" ? <React.Fragment>
-											{!this.state.createMode ? <React.Fragment>
-												<Grid item xs={12}>
-													<CustomDataGridPremium
-														rows={this.state.atualizacaoRows}
-														columns={this.atualizacaoColumns}
-														disableRowSelectionOnClick
-														getRowHeight={() => 'auto'}
-														initialState={{
-														    pagination: { paginationModel: { pageSize: 50 } },
-														    sorting: {
-														    	sortModel: [{ field: 'data', sort: 'desc' }],
-														    }
-														  }}
-														pageSizeOptions={[5, 10, 15, 20, 50, 100]}
-														loading={this.state.calling}
-														sx={{
-															marginBottom: 3,
-															height: 800
-														}}
-														pagination
-														disableAggregation
-														slots={{
-															headerFilterMenu: null,
-														}}
-														disableColumnFilter
-													/>
-												</Grid>
-											</React.Fragment> : <Grid item xs={12}><Alert severity="info">Você poderá ver as atualizações da venda após salva-la.</Alert></Grid>}
-										</React.Fragment> : ""}
+								{this.state.tab == "ATUALIZACOES" ? <React.Fragment>
+									{!this.state.createMode ? <React.Fragment>
+										<Grid item xs={12}>
+											<CustomDataGridPremium
+												rows={this.state.atualizacaoRows}
+												columns={this.atualizacaoColumns}
+												disableRowSelectionOnClick
+												getRowHeight={() => 'auto'}
+												initialState={{
+												    pagination: { paginationModel: { pageSize: 50 } },
+												    sorting: {
+												    	sortModel: [{ field: 'data', sort: 'desc' }],
+												    }
+												  }}
+												pageSizeOptions={[5, 10, 15, 20, 50, 100]}
+												loading={this.state.calling}
+												sx={{
+													marginBottom: 3,
+													height: 800
+												}}
+												pagination
+												disableAggregation
+												slots={{
+													headerFilterMenu: null,
+												}}
+												disableColumnFilter
+											/>
+										</Grid>
+									</React.Fragment> : <Grid item xs={12}><Alert severity="info">Você poderá ver as atualizações da venda após salva-la.</Alert></Grid>}
+								</React.Fragment> : ""}
 
-									</Grid>
-								}
-							</Box>
+							</Grid>
+							: ""}
+						</Box>
 				</Paper>
 				<Snackbar open={this.state.alertOpen} onClose={(e, reason) => (reason !== "clickaway") ? this.closeAlert() : ""} anchorOrigin={{vertical: "bottom", horizontal: "right"}}>
 					<div>{this.state.alert}</div>

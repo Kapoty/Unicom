@@ -35,6 +35,7 @@ import Icon from '@mui/material/Icon';
 import Menu from '@mui/material/Menu';
 import PreviewIcon from '@mui/icons-material/Preview';
 import { useTheme } from "@mui/material/styles";
+import Snackbar from '@mui/material/Snackbar';
 
 import { DateRangePicker } from '@mui/x-date-pickers-pro/DateRangePicker';
 
@@ -67,7 +68,7 @@ const VendaListDataGrid = memo(function VendaListDataGrid({ vendaRows, columns, 
 		    density: "standard"
 		  }}
 		pageSizeOptions={[10, 30, 50, 100, 1000]}
-		loading={vendaList == null || calling}
+		loading={calling}
 		sx={{
 			marginBottom: 3,
 			height: 1000,
@@ -147,6 +148,7 @@ class VendasModule extends React.Component {
 			vendaStatusByVendaStatusId: null,
 			usuarioList: null,
 			usuarioByUsuarioId: null,
+			filtroVenda: null,
 
 			vendaRows: [],
 
@@ -159,10 +161,10 @@ class VendasModule extends React.Component {
 
 			tipoProduto: null,
 			pdv: "",
-			safra: dayjs().date(1),
+			safra: null,
 			tipoData: null,
-			dataInicio: dayjs().date(1),
-			dataFim: dayjs(),
+			dataInicio: null,
+			dataFim: null,
 			statusIdList: [],
 			os: "",
 			cpf: "",
@@ -175,6 +177,8 @@ class VendasModule extends React.Component {
 			alertOpen: false,
 			alert: null
 		}
+
+		this.state = {...this.state, ...this.getCleanFilters()};
 
 		this.tipoDataList = [
 			{nome: "Data da Venda", value: "DATA_VENDA"},
@@ -202,7 +206,8 @@ class VendasModule extends React.Component {
 			"EM_ABERTO": "Em Aberto",
 			"PAGA": "Paga",
 			"MULTA": "Multa",
-			"CHURN": "Churn"
+			"CHURN": "Churn",
+			"PARCELADA": "Parcelada"
 		};
 		this.porteMap = {
 			"MEI": "MEI",
@@ -459,8 +464,11 @@ class VendasModule extends React.Component {
 		this.getVendaListFromApi = this.getVendaListFromApi.bind(this);
 		this.getVendaStatusListFromApi = this.getVendaStatusListFromApi.bind(this);
 		this.getUsuarioListFromApi = this.getUsuarioListFromApi.bind(this);
+		this.getFiltroVendaFromApi = this.getFiltroVendaFromApi.bind(this);
 
 		this.calculateRows = this.calculateRows.bind(this);
+
+		this.resetFilters = this.resetFilters.bind(this);
 
 		this.onColumnVisibilityModelChange = this.onColumnVisibilityModelChange.bind(this);
 
@@ -469,8 +477,34 @@ class VendasModule extends React.Component {
 	}
 
 	componentDidMount() {
+		console.log("VendasModule was mounted at", new Date().toLocaleTimeString());
 		this.getVendaStatusListFromApi();
 		this.getUsuarioListFromApi();
+	}
+
+	/*shouldComponentUpdate(newProps, newState) {
+		if (this.props.location.pathname == `/vendas` || newProps.location.pathname == `/vendas`)
+			return true;
+		return false;
+	}*/
+
+	getCleanFilters() {
+		return {
+			tipoProduto: null,
+			pdv: "",
+			safra: dayjs().date(1),
+			tipoData: null,
+			dataInicio: null,//dayjs().date(1),
+			dataFim: null,//dayjs(),
+			statusIdList: (this.state.vendaStatusList ?? []).map((vendaStatus) => vendaStatus.vendaStatusId),
+			os: "",
+			cpf: "",
+			nome: "",
+		}
+	}
+
+	resetFilters(callback) {
+		this.setState({...this.getCleanFilters()}, callback);
 	}
 
 	getVendaListFromApi() {
@@ -480,8 +514,8 @@ class VendasModule extends React.Component {
 				pdv: this.state.pdv,
 				safra: this.state.safra !== null ? this.state.safra.format("YYYY-MM-DD") : null,
 				tipoData: this.state.tipoData,
-				dataInicio: this.state.dataInicio.format("YYYY-MM-DD"),
-				dataFim: this.state.dataFim.format("YYYY-MM-DD"),
+				dataInicio: this.state.dataInicio !== null ? this.state.dataInicio.format("YYYY-MM-DD") : null,
+				dataFim: this.state.dataFim !== null ? this.state.dataFim.format("YYYY-MM-DD") : null,
 				statusIdList: this.state.statusIdList,
 				os: this.state.os,
 				cpf: this.state.cpf,
@@ -489,6 +523,7 @@ class VendasModule extends React.Component {
 			})
 			.then((response) => {
 				this.setState({vendaList: response.data, errors: {}, calling: false}, () => this.calculateRows());
+				this.openAlert("success", "Vendas atualizadas!");
 			})
 			.catch((err) => {
 				this.setState({calling: false, errors: err?.response?.data?.errors ?? {}});
@@ -502,8 +537,7 @@ class VendasModule extends React.Component {
 				let vendaStatusList = response.data;
 				let vendaStatusByVendaStatusId = {};
 				vendaStatusList.forEach((vendaStatus) => vendaStatusByVendaStatusId[vendaStatus.vendaStatusId] = vendaStatus);
-				let statusIdList = vendaStatusList.map((vendaStatus) => vendaStatus.vendaStatusId);
-				this.setState({vendaStatusList: vendaStatusList, vendaStatusByVendaStatusId: vendaStatusByVendaStatusId, statusIdList: statusIdList}, () => this.getVendaListFromApi());
+				this.setState({vendaStatusList: vendaStatusList, vendaStatusByVendaStatusId: vendaStatusByVendaStatusId}, () => this.getFiltroVendaFromApi());
 			})
 			.catch((err) => {
 				console.log(err);
@@ -522,6 +556,39 @@ class VendasModule extends React.Component {
 			.catch((err) => {
 				console.log(err);
 				setTimeout(this.getUsuarioListFromApi, 3000);
+			});
+	}
+
+	getFiltroVendaFromApi() {
+		api.get("/usuario/me/filtro-venda")
+			.then((response) => {
+				try {
+					let filtroVenda = response.data;
+					this.setState({
+						filtroVenda: filtroVenda,
+						tipoProduto: filtroVenda.tipoProduto,
+						pdv: filtroVenda.pdv,
+						safra: filtroVenda.safra !== null ? dayjs(filtroVenda.safra, "YYYY-MM-DD") : null,
+						tipoData: filtroVenda.tipoData,
+						dataInicio: filtroVenda.dataInicio !== null ? dayjs(filtroVenda.dataInicio, "YYYY-MM-DD") : null,
+						dataFim: filtroVenda.dataFim !== null ? dayjs(filtroVenda.dataFim, "YYYY-MM-DD") : null,
+						statusIdList: filtroVenda.statusIdList.split(",").map(statusId => parseInt(statusId) ?? 1).filter((statusId) => statusId in this.state.vendaStatusByVendaStatusId),
+						os: filtroVenda.os,
+						cpf: filtroVenda.cpf,
+						nome: filtroVenda.nome,
+					}, () => this.getVendaListFromApi());
+				} catch (e) {
+					console.log(e);
+					this.resetFilters(() => this.getVendaListFromApi());
+				}
+			})
+			.catch((err) => {
+				console.log(err);
+				if (err?.response?.status == 404) {
+					this.resetFilters(() => this.getVendaListFromApi());
+					return;
+				}
+				setTimeout(this.getFiltroVendaFromApi, 3000);
 			});
 	}
 
@@ -558,13 +625,13 @@ class VendasModule extends React.Component {
 				produtoList: venda.produtoList,
 				totalDeProdutos: venda.produtoList.length,
 				produto: venda.produtoList?.[0]?.nome ?? "",
-				valor: "R$ " + (venda.produtoList?.[0]?.valor ?? 0).toFixed(2),
-				quantidade: venda.produtoList?.[0]?.tipoDeLinha == "NOVA" ? venda.produtoList?.[0]?.quantidade : venda.produtoList?.[0]?.portabilidadeList?.length ?? 0,
-				telefoneFixo: venda.produtoList?.[0]?.telefoneFixo ? "Sim" : "Não",
-				valorTelefoneFixo: venda.produtoList?.[0]?.telefoneFixo ? ("R$ " + (venda.produtoList?.[0]?.valorTelefoneFixo ?? 0).toFixed(2)) : "",
-				tipoDeLinha: venda.produtoList?.[0]?.tipoDeLinha !== null ? this.tipoDeLinhaMap[venda.produtoList?.[0]?.tipoDeLinha] : "",
-				ddd: venda.produtoList?.[0]?.ddd,
-				operadora: venda.produtoList?.[0]?.operadora,
+				valor: venda.produtoList?.[0] ? ("R$ " + (venda.produtoList?.[0].valor).toFixed(2)) : "",
+				quantidade: venda.produtoList?.[0] ? (venda.produtoList?.[0]?.tipoDeLinha == "NOVA" ? venda.produtoList?.[0]?.quantidade : venda.produtoList?.[0]?.portabilidadeList?.length ?? 0) : "",
+				telefoneFixo: venda.produtoList?.[0] ? (venda.produtoList?.[0]?.telefoneFixo ? "Sim" : "Não") : "",
+				valorTelefoneFixo: venda.produtoList?.[0] ? (venda.produtoList?.[0]?.telefoneFixo ? ("R$ " + (venda.produtoList?.[0]?.valorTelefoneFixo ?? 0).toFixed(2)) : "") : "",
+				tipoDeLinha: venda.produtoList?.[0] ? (venda.produtoList?.[0]?.tipoDeLinha !== null ? this.tipoDeLinhaMap[venda.produtoList?.[0]?.tipoDeLinha] : "") : "",
+				ddd: venda.produtoList?.[0] ? (venda.produtoList?.[0]?.ddd) : "",
+				operadora: venda.produtoList?.[0] ? (venda.produtoList?.[0]?.operadora) : "",
 
 				uf: venda.uf,
 				cidade: venda.cidade,
@@ -600,9 +667,9 @@ class VendasModule extends React.Component {
 			};
 
 			for (let i=1; i<=this.numeroFaturas; i++) {
-				row[`m${i}Mes`] = venda.faturaList?.[i - 1]?.mes ? new Date(venda.faturaList?.[i - 1]?.mes) : null;
-				row[`m${i}Status`] = venda.faturaList?.[i - 1]?.status ? this.faturaStatusMap[venda.faturaList?.[i - 1]?.status] : "";
-				row[`m${i}Valor`] = venda.faturaList?.[i - 1]?.valor ? ("R$ " + (venda.faturaList?.[i - 1]?.valor ?? 0).toFixed(2)) : "";
+				row[`m${i}Mes`] = venda.faturaList?.[i - 1] ? new Date(venda.faturaList?.[i - 1].mes) : null;
+				row[`m${i}Status`] = venda.faturaList?.[i - 1] ? this.faturaStatusMap[venda.faturaList?.[i - 1].status] : "";
+				row[`m${i}Valor`] = venda.faturaList?.[i - 1] ? ("R$ " + (venda.faturaList?.[i - 1].valor).toFixed(2)) : "";
 			}
 
 			return row;
@@ -623,10 +690,10 @@ class VendasModule extends React.Component {
 	}
 
 	render() {
-		//console.log("VendasModule was rendered at", new Date().toLocaleTimeString());
+		console.log("VendasModule was rendered at", new Date().toLocaleTimeString());
 		return (
 			<React.Fragment>
-				<Paper elevation={0} sx={{flexGrow: 1, padding: 5, minHeight: "100%", minWidth: "1000px", boxSizing: "border-box", display: "flex", flexDirection: "column", aligmItems: "center", justifyContent: "start", gap: 3}} className="modulePaper">
+				<Paper elevation={0} sx={{flexGrow: 1, padding: 5, minHeight: "100%", minWidth: "1000px", boxSizing: "border-box", display: "flex"/*this.props.location.pathname == `/vendas` ? "flex" : "none"*/, flexDirection: "column", aligmItems: "center", justifyContent: "start", gap: 3}} className="modulePaper">
 					<Typography variant="h3">
 						Vendas
 					</Typography>
@@ -635,21 +702,21 @@ class VendasModule extends React.Component {
 					</ButtonGroup>
 					<Divider/>
 					<Grid container spacing={3} sx={{maxWidth: 1500}}>
-						<Grid item xs={4}>
+						<Grid item xs={3}>
 							<FormControl fullWidth size="small">
 								<InputLabel>Tipo do Produto</InputLabel>
 								<Select
 									id="tipo-prduto"
-									value={this.state.tipoProduto}
+									value={this.state.tipoProduto ?? ""}
 									label="Tipo do Produto"
-									onChange={(e) => this.setState({tipoProduto: e.target.value})}
+									onChange={(e) => this.setState({tipoProduto: e.target.value !== "" ? e.target.value : null})}
 									>
-									<MenuItem key={"nenhum"} value={null}>Ambos</MenuItem>
+									<MenuItem key={"nenhum"} value={""}>Ambos</MenuItem>
 									{this.tipoProdutoEnum.map((tipoProduto) => <MenuItem key={tipoProduto.value} value={tipoProduto.value}>{tipoProduto.nome}</MenuItem>)}
 								</Select>
 							</FormControl>
 						</Grid>
-						<Grid item xs={4}>
+						<Grid item xs={3}>
 							<Autocomplete
 								id="pdv"
 								freeSolo
@@ -667,7 +734,7 @@ class VendasModule extends React.Component {
 								size="small"
 							/>
 						</Grid>
-						<Grid item xs={4}>
+						<Grid item xs={3}>
 							<DatePicker
 								label="Safra"
 								views={['month', 'year']}
@@ -685,15 +752,18 @@ class VendasModule extends React.Component {
 							/>
 						</Grid>
 						<Grid item xs={3}>
+							<Button fullWidth variant="outlined" size="large" onClick={() => this.resetFilters()}>Resetar Filtros</Button>
+						</Grid>
+						<Grid item xs={3}>
 							<FormControl fullWidth size="small">
 								<InputLabel>Tipo de Data</InputLabel>
 								<Select
 									id="tipo-de-data"
-									value={this.state.tipoData}
+									value={this.state.tipoData ?? ""}
 									label="Grupo de Status"
-									onChange={(e) => this.setState({tipoData: e.target.value})}
+									onChange={(e) => this.setState({tipoData: e.target.value !== "" ? e.target.value : null})}
 									>
-									<MenuItem key={"nenhum"} value={null}>Nenhum</MenuItem>
+									<MenuItem key={"nenhum"} value={""}>Nenhum</MenuItem>
 									{this.tipoDataList.map((tipoData) => <MenuItem key={tipoData.value} value={tipoData.value}>{tipoData.nome}</MenuItem>)}
 								</Select>
 							</FormControl>
@@ -707,6 +777,7 @@ class VendasModule extends React.Component {
 										onChange={(newValue) => this.setState({dataInicio: newValue[0], dataFim: newValue[1]})}
 										calendars={1}
 										slotProps={{
+											field: { clearable: true },
 											textField: {
 												fullWidth: true,
 												error: "dataInicio" in this.state.errors || "dataValid" in this.state.errors || "dataRangeValid" in this.state.errors,
@@ -764,7 +835,7 @@ class VendasModule extends React.Component {
 								/>
 								<ButtonGroup variant="text" size="small">
 									<Button onClick={() => this.setState({statusIdList: []})}>Nenhum</Button>
-									<Button onClick={() => this.setState({statusIdList: this.state.vendaStatusList.map((vendaStatus) => vendaStatus.vendaStatusId)})}>Todos</Button>
+									<Button onClick={() => this.setState({statusIdList: (this.state.vendaStatusList ?? []).map((vendaStatus) => vendaStatus.vendaStatusId)})}>Todos</Button>
 								</ButtonGroup>
 							</Stack>
 						</Grid>
@@ -833,9 +904,9 @@ class VendasModule extends React.Component {
 							columnGroupingModel={this.columnGroupingModel}
 						/>
 					</Box>
-					<Collapse in={this.state.alertOpen}>
-						{this.state.alert}
-					</Collapse>
+					<Snackbar open={this.state.alertOpen} onClose={(e, reason) => (reason !== "clickaway") ? this.closeAlert() : ""} anchorOrigin={{vertical: "bottom", horizontal: "right"}}>
+						<div>{this.state.alert}</div>
+					</Snackbar>
 				</Paper>
 		    </React.Fragment>
 		  );
