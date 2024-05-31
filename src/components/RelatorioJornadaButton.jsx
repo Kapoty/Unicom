@@ -76,10 +76,16 @@ export default class RelatorioJornadaButton extends React.Component {
 						<EventNoteIcon fontSize="small"/>
 					</ListItemIcon>
 					Folha de Ponto
-		        </MenuItem> :
+		        </MenuItem> : !this.props.iconButton ?
 				<Button variant="contained" startIcon={<EventNoteIcon />} onClick={() => this.setState({dialogOpen: true})} fullWidth>
 					Folha de Ponto
-				</Button>}
+				</Button> :
+				<Tooltip title="Folha de Ponto" onClick={() => this.setState({dialogOpen: true})}>
+					<IconButton color="success">
+						<EventNoteIcon />
+					</IconButton>
+				</Tooltip>
+				}
 				{this.state.dialogOpen ? 
 					<Dialog
 						fullWidth={true}

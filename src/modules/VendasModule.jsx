@@ -65,6 +65,7 @@ const VendaListDataGrid = memo(function VendaListDataGrid({ vendaRows, columns, 
 		    sorting: {
 		    	sortModel: [{ field: 'dataVenda', sort: 'desc' }],
 		    },
+		    pinnedColumns: { left: ['statusId'] },
 		    density: "standard"
 		  }}
 		pageSizeOptions={[10, 30, 50, 100, 1000]}
@@ -149,6 +150,10 @@ class VendasModule extends React.Component {
 			usuarioList: null,
 			usuarioByUsuarioId: null,
 			filtroVenda: null,
+			sistemaList: null,
+			sistemaBySistemaId: null,
+			pontoDeVendaList: null,
+			pontoDeVendaById: {},
 
 			vendaRows: [],
 
@@ -193,8 +198,6 @@ class VendasModule extends React.Component {
 			{nome: "Fibra", value: "FIBRA"},
 			{nome: "Móvel", value: "MOVEL"},
 		];
-		this.pdvEnum = ["UNICOM DF", "UNICOM GO"];
-
 		this.tipoDeLinhaMap = {
 			"NOVA": "Nova",
 			"PORTABILIDADE": "Portabilidade",
@@ -218,11 +221,6 @@ class VendasModule extends React.Component {
 			"DEBITO_AUTOMATICO": "Débito Automático",
 			"CARTAO_CREDITO": "Cartão de Crédito"
 		}
-		this.sistemaMap = {
-			"TIM_VENDAS": "TIM Vendas",
-			"TELEVENDAS": "Televendas",
-			"TBP": "TBP"
-		};
 		this.brscanMap = {
 			"SIM": "Sim",
 			"NAO": "Não",
@@ -257,7 +255,7 @@ class VendasModule extends React.Component {
 		this.numeroFaturas = 14;
 
 		this.columns = [
-			{ field: 'statusId', headerName: 'Status', valueGetter: (value, row) => this.state.vendaStatusByVendaStatusId?.[value]?.nome, minWidth: 200, flex: 1, renderCell: (params) => <VendaStatusChip
+			{ field: 'statusId', headerName: 'Status', valueGetter: (value, row) => this.state.vendaStatusByVendaStatusId?.[value]?.nome, minWidth: 200, flex: 1, hideable: false, renderCell: (params) => <VendaStatusChip
 				vendaStatus={this.state.vendaStatusByVendaStatusId?.[params.row.statusId]}
 				onClick={() => this.props.navigate("/vendas/" + params.row.vendaId)}
 			/>},
@@ -269,13 +267,17 @@ class VendasModule extends React.Component {
 			{ field: 'dataVenda', headerName: 'Data da Venda', minWidth: 200, flex: 1, type: 'date', renderCell: (params) => params.value !== null ? dayjs(params.value).format('L LTS') : "" },
 			{ field: 'loginVendedor', headerName: 'Login Vendedor', minWidth: 200, flex: 1 },
 			{ field: 'cadastradorId', headerName: 'Cadastrador', valueGetter: (value, row) => this.state.usuarioByUsuarioId?.[value]?.nome, minWidth: 200, flex: 1, renderCell: (params) => <UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[params.row.cadastradorId]}/>},
-			{ field: 'sistema', headerName: 'Sistema', minWidth: 150, flex: 1 },
+			{ field: 'sistemaId', headerName: 'Sistema', valueGetter: (value, row) => this.state.sistemaBySistemaId?.[value]?.nome, minWidth: 150, flex: 1 },
 			{ field: 'auditorId', headerName: 'Auditor', valueGetter: (value, row) => this.state.usuarioByUsuarioId?.[value]?.nome, minWidth: 200, flex: 1, renderCell: (params) => <UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[params.row.auditorId]}/>},
 			{ field: 'os', headerName: 'OS', minWidth: 100, flex: 1 },
 			{ field: 'custcode', headerName: 'Cust-Code', minWidth: 100, flex: 1 },
 			{ field: 'origem', headerName: 'Mailing/Origem', minWidth: 200, flex: 1 },
 			{ field: 'vendedorId', headerName: 'Vendedor', valueGetter: (value, row) => this.state.usuarioByUsuarioId?.[value]?.nome, minWidth: 200, flex: 1, renderCell: (params) => <UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[params.row.vendedorId]}/>},
 			{ field: 'supervisorId', headerName: 'Supervisor', valueGetter: (value, row) => this.state.usuarioByUsuarioId?.[value]?.nome, minWidth: 200, flex: 1, renderCell: (params) => <UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[params.row.supervisorId]}/>},
+			{ field: 'vendedorExterno', headerName: 'Vendedor Externo', minWidth: 200, flex: 1 },
+			{ field: 'supervisorExterno', headerName: 'Supervisor Externo', minWidth: 200, flex: 1 },
+			{ field: 'auditorExterno', headerName: 'Auditor Externo', minWidth: 200, flex: 1 },
+			{ field: 'cadastradorExterno', headerName: 'Cadastrador Externo', minWidth: 200, flex: 1 },
 			{ field: 'totalDeProdutos', headerName: 'N° de Produtos', minWidth: 100, flex: 1 },
 			{ field: 'produto', headerName: 'Produto', minWidth: 200, flex: 1 },
 			{ field: 'valor', headerName: 'Valor', minWidth: 100, flex: 1 },
@@ -295,9 +297,9 @@ class VendasModule extends React.Component {
 			{ field: 'nome', headerName: 'Nome/Razão Social', minWidth: 200, flex: 1 },
 			{ field: 'nomeContato', headerName: 'Nome Contato', minWidth: 200, flex: 1 },
 
-			{ field: 'telefoneCelular', headerName: 'Telefone Celular', minWidth: 200, flex: 1 },
-			{ field: 'telefoneWhatsapp', headerName: 'Whatsapp', minWidth: 200, flex: 1 },
-			{ field: 'telefoneResidencial', headerName: 'Telefone Residencial', minWidth: 200, flex: 1 },
+			{ field: 'contato1', headerName: 'Contato 1', minWidth: 200, flex: 1 },
+			{ field: 'contato2', headerName: 'Contato 2', minWidth: 200, flex: 1 },
+			{ field: 'contato3', headerName: 'Contato 3', minWidth: 200, flex: 1 },
 			{ field: 'email', headerName: 'Email', minWidth: 200, flex: 1 },
 			{ field: 'observacao', headerName: 'Observação', minWidth: 200, flex: 1 },
 
@@ -336,7 +338,7 @@ class VendasModule extends React.Component {
 				dataVenda: true,
 				loginVendedor: true,
 				cadastradorId: true,
-				sistema: true,
+				sistemaId: true,
 				auditorId: true,
 				os: true,
 				origem: true,
@@ -352,9 +354,9 @@ class VendasModule extends React.Component {
 				bairro: true,
 				cpf: true,
 				nome: true,
-				telefoneCelular: true,
-				telefoneWhatsapp: true,
-				telefoneResidencial: true,
+				contato1: true,
+				contato2: true,
+				contato3: true,
 				email: true,
 				observacao: true,
 				formaDePagamento: true,
@@ -374,7 +376,7 @@ class VendasModule extends React.Component {
 				dataVenda: true,
 				loginVendedor: true,
 				cadastradorId: true,
-				sistema: true,
+				sistemaId: true,
 				auditorId: true,
 				os: true,
 				origem: true,
@@ -393,9 +395,9 @@ class VendasModule extends React.Component {
 				porte: true,
 				cpf: true,
 				nome: true,
-				telefoneCelular: true,
-				telefoneWhatsapp: true,
-				telefoneResidencial: true,
+				contato1: true,
+				contato2: true,
+				contato3: true,
 				email: true,
 				observacao: true,
 				dataAtivacao: true,
@@ -411,9 +413,9 @@ class VendasModule extends React.Component {
 				os: true,
 				custcode: true,
 				dataInstalacao: true,
-				telefoneCelular: true,
-				telefoneWhatsapp: true,
-				telefoneResidencial: true,
+				contato1: true,
+				contato2: true,
+				contato3: true,
 				email: true,
 				produto: true,
 				valor: true,
@@ -433,9 +435,9 @@ class VendasModule extends React.Component {
 				safra: true,
 				os: true,
 				dataAtivacao: true,
-				telefoneCelular: true,
-				telefoneWhatsapp: true,
-				telefoneResidencial: true,
+				contato1: true,
+				contato2: true,
+				contato3: true,
 				email: true,
 				produto: true,
 				valor: true,
@@ -465,6 +467,8 @@ class VendasModule extends React.Component {
 		this.getVendaStatusListFromApi = this.getVendaStatusListFromApi.bind(this);
 		this.getUsuarioListFromApi = this.getUsuarioListFromApi.bind(this);
 		this.getFiltroVendaFromApi = this.getFiltroVendaFromApi.bind(this);
+		this.getSistemaListFromApi = this.getSistemaListFromApi.bind(this);
+		this.getPontoDeVendaListFromApi = this.getPontoDeVendaListFromApi.bind(this);
 
 		this.calculateRows = this.calculateRows.bind(this);
 
@@ -480,6 +484,8 @@ class VendasModule extends React.Component {
 		console.log("VendasModule was mounted at", new Date().toLocaleTimeString());
 		this.getVendaStatusListFromApi();
 		this.getUsuarioListFromApi();
+		this.getSistemaListFromApi();
+		this.getPontoDeVendaListFromApi();
 	}
 
 	/*shouldComponentUpdate(newProps, newState) {
@@ -559,6 +565,34 @@ class VendasModule extends React.Component {
 			});
 	}
 
+	getSistemaListFromApi() {
+		api.get("/empresa/me/sistema")
+			.then((response) => {
+				let sistemaList = response.data;
+				let sistemaBySistemaId = {};
+				sistemaList.forEach((sistema) => sistemaBySistemaId[sistema.sistemaId] = sistema);
+				this.setState({sistemaList: sistemaList, sistemaBySistemaId: sistemaBySistemaId});
+			})
+			.catch((err) => {
+				console.log(err);
+				setTimeout(this.getSistemaListFromApi, 3000);
+			});
+	}
+
+	getPontoDeVendaListFromApi() {
+		api.get("/empresa/me/ponto-de-venda")
+			.then((response) => {
+				let pontoDeVendaList = response.data;
+				let pontoDeVendaById = {};
+				pontoDeVendaList.forEach((pontoDeVenda) => pontoDeVendaById[pontoDeVenda.pontoDeVendaId] = pontoDeVenda);
+				this.setState({pontoDeVendaList: pontoDeVendaList, pontoDeVendaById: pontoDeVendaById});
+			})
+			.catch((err) => {
+				console.log(err);
+				setTimeout(this.getPontoDeVendaListFromApi, 3000);
+			});
+	}
+
 	getFiltroVendaFromApi() {
 		api.get("/usuario/me/filtro-venda")
 			.then((response) => {
@@ -614,19 +648,23 @@ class VendasModule extends React.Component {
 				dataVenda: venda.dataVenda !== null ? new Date(venda.dataVenda) : null,
 				loginVendedor: venda.loginVendedor,
 				cadastradorId: venda.cadastradorId,
-				sistema: venda?.sistema !== null ? this.sistemaMap[venda.sistema] : "",
+				sistemaId: venda.sistemaId,
 				auditorId: venda.auditorId,
 				os: venda.os,
 				custcode: venda.custcode,
 				origem: venda.origem,
 				vendedorId: venda.vendedorId,
-				supervisor: venda.supervisorId,
+				supervisorId: venda.supervisorId,
+				vendedorExterno: venda.vendedorExterno,
+				supervisorExterno: venda.supervisorExterno,
+				auditorExterno: venda.auditorExterno,
+				cadastradorExterno: venda.cadastradorExterno,
 
 				produtoList: venda.produtoList,
 				totalDeProdutos: venda.produtoList.length,
 				produto: venda.produtoList?.[0]?.nome ?? "",
 				valor: venda.produtoList?.[0] ? ("R$ " + (venda.produtoList?.[0].valor).toFixed(2)) : "",
-				quantidade: venda.produtoList?.[0] ? (venda.produtoList?.[0]?.tipoDeLinha == "NOVA" ? venda.produtoList?.[0]?.quantidade : venda.produtoList?.[0]?.portabilidadeList?.length ?? 0) : "",
+				quantidade: venda.produtoList?.[0]?.quantidade ?? "",
 				telefoneFixo: venda.produtoList?.[0] ? (venda.produtoList?.[0]?.telefoneFixo ? "Sim" : "Não") : "",
 				valorTelefoneFixo: venda.produtoList?.[0] ? (venda.produtoList?.[0]?.telefoneFixo ? ("R$ " + (venda.produtoList?.[0]?.valorTelefoneFixo ?? 0).toFixed(2)) : "") : "",
 				tipoDeLinha: venda.produtoList?.[0] ? (venda.produtoList?.[0]?.tipoDeLinha !== null ? this.tipoDeLinhaMap[venda.produtoList?.[0]?.tipoDeLinha] : "") : "",
@@ -642,9 +680,9 @@ class VendasModule extends React.Component {
 				nome: venda.tipoPessoa == "CPF" ? venda.nome : venda.razaoSocial,
 				nomeContato: venda.nomeContato,
 
-				telefoneCelular: venda.telefoneCelular.replace(/(\d{2})(\d{1})(\d{4})(\d{4})/, "($1) $2 $3-$4"),
-				telefoneWhatsapp: venda.telefoneWhatsapp.replace(/(\d{2})(\d{1})(\d{4})(\d{4})/, "($1) $2 $3-$4"),
-				telefoneResidencial: venda.telefoneResidencial.replace(/(\d{2})(\d{1})(\d{4})(\d{4})/, "($1) $2 $3-$4"),
+				contato1: venda.contato1.replace(/(\d{2})(\d{1})(\d{4})(\d{4})/, "($1) $2 $3-$4"),
+				contato2: venda.contato2.replace(/(\d{2})(\d{1})(\d{4})(\d{4})/, "($1) $2 $3-$4"),
+				contato3: venda.contato3.replace(/(\d{2})(\d{1})(\d{4})(\d{4})/, "($1) $2 $3-$4"),
 				email: venda.email,
 				observacao: venda.observacao,
 
@@ -721,7 +759,7 @@ class VendasModule extends React.Component {
 								id="pdv"
 								freeSolo
 								disableClearable
-								options={this.pdvEnum}
+								options={(this.state.pontoDeVendaList ?? []).map(pontoDeVenda => pontoDeVenda.nome)}
 								value={this.state.pdv}
 								onInputChange={(event, value) => this.setState({pdv: value})}
 								renderInput={(params) => (

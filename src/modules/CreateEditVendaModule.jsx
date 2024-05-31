@@ -81,6 +81,8 @@ import Link from '@mui/material/Link';
 import GroupsIcon from '@mui/icons-material/Groups';
 import Badge from '@mui/material/Badge';
 import RecyclingIcon from '@mui/icons-material/Recycling';
+import HubIcon from '@mui/icons-material/Hub';
+import PublicIcon from '@mui/icons-material/Public';
 
 import CPFInput from "../components/CPFInput";
 import CNPJInput from "../components/CNPJInput";
@@ -116,6 +118,10 @@ class CreateEditVendaModule extends React.Component {
 			vendaStatusByVendaStatusId: {},
 			produtoList: null,
 			produtoByProdutoId: {},
+			sistemaList: null,
+			sistemaBySistemaId: {},
+			pontoDeVendaList: null,
+			pontoDeVendaById: {},
 
 			anexoList: null,
 
@@ -150,9 +156,9 @@ class CreateEditVendaModule extends React.Component {
 			// contato
 
 			nomeContato: "",
-			telefoneCelular: "",
-			telefoneWhatsapp: "",
-			telefoneResidencial: "",
+			contato1: "",
+			contato2: "",
+			contato3: "",
 			email: "",
 
 			// endereco
@@ -175,11 +181,7 @@ class CreateEditVendaModule extends React.Component {
 
 			os: "",
 			custcode: "",
-			sistema: null,
-			supervisorId: null,
-			vendedorId: null,
-			auditorId: null,
-			cadastradorId: null,
+			sistemaId: null,
 			origem: "",
 			dataVenda: null,
 			safra: dayjs().date(1),
@@ -200,8 +202,19 @@ class CreateEditVendaModule extends React.Component {
 			suporte: "NAO",
 			loginVendedor: "",
 
+			// atores
+
+			supervisorId: null,
+			vendedorId: null,
+			auditorId: null,
+			cadastradorId: null,
+			vendedorExterno: "",
+			supervisorExterno: "",
+			auditorExterno: "",
+			cadastradorExterno: "",
+
 			//pagamento
-			formaDePagamento: "BOLETO",
+			formaDePagamento: null,
 			vencimento: "1",
 			agencia: "",
 			conta: "",
@@ -246,11 +259,6 @@ class CreateEditVendaModule extends React.Component {
 			{nome: "MEI", value: "MEI"},
 			{nome: "LTDA", value: "LTDA"},
 		];
-		this.sistemaEnum = [
-			{nome: "TIM Vendas", value: "TIM_VENDAS"},
-			{nome: "Televendas", value: "TELEVENDAS"},
-			{nome: "TBP", value: "TBP"},
-		];
 		this.formaDePagamentoEnum = [
 			{nome: "Boleto", value: "BOLETO"},
 			{nome: "Débito Automático", value: "DEBITO_AUTOMATICO"},
@@ -266,7 +274,6 @@ class CreateEditVendaModule extends React.Component {
 			{nome: "Churn", value: "CHURN"},
 			{nome: "Parcelada", value: "PARCELADA"},
 		];
-		this.pdvEnum = ["UNICOM DF", "UNICOM GO"]
 		this.tipoDeLinhaEnum = [
 			{nome: "Nova", value: "NOVA"},
 			{nome: "Portabilidade", value: "PORTABILIDADE"},
@@ -304,6 +311,8 @@ class CreateEditVendaModule extends React.Component {
 		this.getAnexoListFromApi = this.getAnexoListFromApi.bind(this);
 		this.getVendaStatusListFromApi = this.getVendaStatusListFromApi.bind(this);
 		this.getProdutoListFromApi = this.getProdutoListFromApi.bind(this);
+		this.getSistemaListFromApi = this.getSistemaListFromApi.bind(this);
+		this.getPontoDeVendaListFromApi = this.getPontoDeVendaListFromApi.bind(this);
 
 		this.getCepInfoFromApi = this.getCepInfoFromApi.bind(this);
 		this.updateCep = this.updateCep.bind(this);
@@ -341,6 +350,8 @@ class CreateEditVendaModule extends React.Component {
 		this.getUsuarioListFromApi();
 		this.getVendaStatusListFromApi();
 		this.getProdutoListFromApi();
+		this.getSistemaListFromApi();
+		this.getPontoDeVendaListFromApi();
 		if (this.props.searchParams.get("novo") !== null) {
 			this.openAlert("success", 'Venda criada com sucesso!');
 		}
@@ -400,9 +411,9 @@ class CreateEditVendaModule extends React.Component {
 					// contato
 
 					nomeContato: venda.nomeContato,
-					telefoneCelular: venda.telefoneCelular,
-					telefoneWhatsapp: venda.telefoneWhatsapp,
-					telefoneResidencial: venda.telefoneResidencial,
+					contato1: venda.contato1,
+					contato2: venda.contato2,
+					contato3: venda.contato3,
 					email: venda.email,
 
 					// endereco
@@ -423,11 +434,7 @@ class CreateEditVendaModule extends React.Component {
 
 					os: venda.os,
 					custcode: venda.custcode,
-					sistema: venda.sistema,
-					supervisorId: venda.supervisorId,
-					vendedorId: venda.vendedorId,
-					auditorId: venda.auditorId,
-					cadastradorId: venda.cadastradorId,
+					sistemaId: venda.sistemaId,
 					origem: venda.origem,
 					dataVenda: venda.dataVenda !== null ? dayjs(new Date(venda.dataVenda)) : null,
 					safra: venda.safra !== null ? dayjs(venda.safra, "YYYY-MM-DD") : null,
@@ -447,6 +454,17 @@ class CreateEditVendaModule extends React.Component {
 					brscan: venda.brscan,
 					suporte: venda.suporte,
 					loginVendedor: venda.loginVendedor,
+
+					//atores
+
+					supervisorId: venda.supervisorId,
+					vendedorId: venda.vendedorId,
+					auditorId: venda.auditorId,
+					cadastradorId: venda.cadastradorId,
+					vendedorExterno: venda.vendedorExterno,
+					supervisorExterno: venda.supervisorExterno,
+					auditorExterno: venda.auditorExterno,
+					cadastradorExterno: venda.cadastradorExterno,
 
 					//pagamento
 					formaDePagamento: venda.formaDePagamento,
@@ -547,6 +565,34 @@ class CreateEditVendaModule extends React.Component {
 			.catch((err) => {
 				console.log(err);
 				setTimeout(this.getProdutoListFromApi, 3000);
+			});
+	}
+
+	getSistemaListFromApi() {
+		api.get("/empresa/me/sistema")
+			.then((response) => {
+				let sistemaList = response.data;
+				let sistemaBySistemaId = {};
+				sistemaList.forEach((sistema) => sistemaBySistemaId[sistema.sistemaId] = sistema);
+				this.setState({sistemaList: sistemaList, sistemaBySistemaId: sistemaBySistemaId});
+			})
+			.catch((err) => {
+				console.log(err);
+				setTimeout(this.getSistemaListFromApi, 3000);
+			});
+	}
+
+	getPontoDeVendaListFromApi() {
+		api.get("/empresa/me/ponto-de-venda")
+			.then((response) => {
+				let pontoDeVendaList = response.data;
+				let pontoDeVendaById = {};
+				pontoDeVendaList.forEach((pontoDeVenda) => pontoDeVendaById[pontoDeVenda.pontoDeVendaId] = pontoDeVenda);
+				this.setState({pontoDeVendaList: pontoDeVendaList, pontoDeVendaById: pontoDeVendaById});
+			})
+			.catch((err) => {
+				console.log(err);
+				setTimeout(this.getPontoDeVendaListFromApi, 3000);
 			});
 	}
 
@@ -727,7 +773,7 @@ class CreateEditVendaModule extends React.Component {
 			"cnpj", "porte", "razaoSocial", "dataConstituicao", "dataEmissao", "representanteLegal", "cpfRepresentanteLegal"].some(r => keys.includes(r)))
 			errors["DADOS_DO_CLIENTE"] = "";
 
-		if (["nomeContato", "telefoneCelular", "telefoneWhatsapp", "telefoneResidencial", "email"].some(r => keys.includes(r)))
+		if (["nomeContato", "contato1", "contato2", "contato3", "email"].some(r => keys.includes(r)))
 			errors["CONTATO"] = "";
 
 		if (["cep", "logradouro", "numero", "complemento", "bairro", "referencia", "cidade", "uf"].some(r => keys.includes(r)))
@@ -736,7 +782,7 @@ class CreateEditVendaModule extends React.Component {
 		if (keys.some(k => k.startsWith("produtoList")))
 			errors["PRODUTOS"] = "";
 
-		if (["os", "custcode", "sistema", "origem", "safra", "dataVenda", "dataAtivacao", "prints",
+		if (["os", "custcode", "sistemaId", "origem", "safra", "dataVenda", "dataAtivacao", "prints",
 			"dataAgendamento", "dataInstalacao", "pdv", "reimputado", "vendaOriginal", "brscan", "suporte", "loginVendedor"].some(r => keys.includes(r)))
 			errors["DADOS_DO_CONTRATO"] = "";
 
@@ -834,9 +880,9 @@ class CreateEditVendaModule extends React.Component {
 			// contato
 
 			nomeContato: this.state.nomeContato,
-			telefoneCelular: this.state.telefoneCelular.replace(/\D/g, ""),
-			telefoneWhatsapp: this.state.telefoneWhatsapp.replace(/\D/g, ""),
-			telefoneResidencial: this.state.telefoneResidencial.replace(/\D/g, ""),
+			contato1: this.state.contato1.replace(/\D/g, ""),
+			contato2: this.state.contato2.replace(/\D/g, ""),
+			contato3: this.state.contato3.replace(/\D/g, ""),
 			email: this.state.email,
 
 			// endereco
@@ -857,11 +903,7 @@ class CreateEditVendaModule extends React.Component {
 
 			os: this.state.os,
 			custcode: this.state.custcode,
-			sistema: this.state.sistema,
-			supervisorId: this.state.supervisorId,
-			vendedorId: this.state.vendedorId,
-			auditorId: this.state.auditorId,
-			cadastradorId: this.state.cadastradorId,
+			sistemaId: this.state.sistemaId,
 			origem: this.state.origem,
 			dataVenda: this.state.dataVenda !== null ? this.state.dataVenda.format("YYYY-MM-DDTHH:mm:ss") : null,
 			safra: this.state.safra !== null ? this.state.safra.format("YYYY-MM-DD") : null,
@@ -881,6 +923,17 @@ class CreateEditVendaModule extends React.Component {
 			brscan: this.state.brscan,
 			suporte: this.state.suporte,
 			loginVendedor: this.state.loginVendedor,
+
+			//atores
+
+			supervisorId: this.state.supervisorId,
+			vendedorId: this.state.vendedorId,
+			auditorId: this.state.auditorId,
+			cadastradorId: this.state.cadastradorId,
+			vendedorExterno: this.state.vendedorExterno,
+			supervisorExterno: this.state.supervisorExterno,
+			auditorExterno: this.state.auditorExterno,
+			cadastradorExterno: this.state.cadastradorExterno,
 
 			//pagamento
 			formaDePagamento: this.state.formaDePagamento,
@@ -981,7 +1034,7 @@ class CreateEditVendaModule extends React.Component {
 					</Typography>
 					<ButtonGroup sx={{marginBottom: 3}}>
 							<Button variant="outlined" size="large" startIcon={<ArrowBackIcon />}  onClick={() => this.props.navigate("/vendas")}>Voltar</Button>
-							{!this.state.createMode && false && <LoadingButton color="primary" variant="outlined" size="large" startIcon={<RefreshIcon />} loadingPosition="start" loading={this.state.updatingVenda} disabled={this.state.calling} onClick={this.getVendaFromApi}>Atualizar</LoadingButton>}
+							{!this.state.createMode && <LoadingButton color="primary" variant="outlined" size="large" startIcon={<RefreshIcon />} loadingPosition="start" loading={this.state.updatingVenda} disabled={this.state.calling} onClick={this.getVendaFromApi}>Atualizar</LoadingButton>}
 					</ButtonGroup>
 					<Box display="flex" justifyContent="center">
 						{((this.state.createMode || this.state.venda !== null)) ?
@@ -1308,41 +1361,41 @@ class CreateEditVendaModule extends React.Component {
 									<Grid item xs={4}>
 										<PhoneInput
 											required
-											id="telefone-celular"
-											value={this.state.telefoneCelular}
-											onChange={(e) => this.setState({telefoneCelular: e.target.value})}
+											id="contato1"
+											value={this.state.contato1}
+											onChange={(e) => this.setState({contato1: e.target.value})}
 											fullWidth
-											label="Telefone Celular"
+											label="Contato 1"
 											variant="outlined"
 											disabled={this.state.calling}
-											error={"telefoneCelular" in this.state.errors}
-											helperText={this.state.errors?.telefoneCelular ?? ""}
+											error={"contato1" in this.state.errors}
+											helperText={this.state.errors?.contato1 ?? ""}
 										/>
 									</Grid>
 									<Grid item xs={4}>
 										<PhoneInput
-											id="telefone-whatsapp"
-											value={this.state.telefoneWhatsapp}
-											onChange={(e) => this.setState({telefoneWhatsapp: e.target.value})}
+											id="contato2"
+											value={this.state.contato2}
+											onChange={(e) => this.setState({contato2: e.target.value})}
 											fullWidth
-											label="Whatsapp"
+											label="Contato 2"
 											variant="outlined"
 											disabled={this.state.calling}
-											error={"telefoneWhatsapp" in this.state.errors}
-											helperText={this.state.errors?.telefoneWhatsapp ?? ""}
+											error={"contato2" in this.state.errors}
+											helperText={this.state.errors?.contato2 ?? ""}
 										/>
 									</Grid>
 									<Grid item xs={4}>
 										<PhoneInput
-											id="telefone-residencial"
-											value={this.state.telefoneResidencial}
-											onChange={(e) => this.setState({telefoneResidencial: e.target.value})}
+											id="contato3"
+											value={this.state.contato3}
+											onChange={(e) => this.setState({contato3: e.target.value})}
 											fullWidth
-											label="Telefone Residencial"
+											label="Contato 3"
 											variant="outlined"
 											disabled={this.state.calling}
-											error={"telefoneResidencial" in this.state.errors}
-											helperText={this.state.errors?.telefoneResidencial ?? ""}
+											error={"contato3" in this.state.errors}
+											helperText={this.state.errors?.contato3 ?? ""}
 										/>
 									</Grid>
 									<Grid item xs={12}>
@@ -1549,7 +1602,7 @@ class CreateEditVendaModule extends React.Component {
 																		)}
 																	/>
 																</Grid>
-																<Grid item xs={6}>
+																<Grid item xs={4}>
 																	<FormControl fullWidth required>
 																		<InputLabel>Tipo de Linha</InputLabel>
 																		<Select
@@ -1561,7 +1614,7 @@ class CreateEditVendaModule extends React.Component {
 																		</Select>
 																	</FormControl>
 																</Grid>
-																<Grid item xs={6}>
+																<Grid item xs={4}>
 																	<TextField
 																		value={produto.ddd}
 																		onChange={(e) => this.updateProduto(i, "ddd", e.target.value)}
@@ -1576,22 +1629,20 @@ class CreateEditVendaModule extends React.Component {
 																		}}
 																	/>
 																</Grid>
-																{produto.tipoDeLinha == "NOVA" ? 
-																	<Grid item xs={12}>
-																		<TextField
-																			required
-																			value={produto.quantidade}
-																			onChange={(e) => this.updateProduto(i, "quantidade", e.target.value)}
-																			fullWidth
-																			label="Quantidade"
-																			variant="outlined"
-																			disabled={this.state.calling}
-																			error={`produtoList[${i}].quantidade` in this.state.errors}
-																			helperText={this.state.errors?.[`produtoList[${i}].quantidade`] ?? ""}
-																			type="number"
-																		/>
-																	</Grid>
-																	: ""}
+																<Grid item xs={4}>
+																	<TextField
+																		required
+																		value={produto.quantidade}
+																		onChange={(e) => this.updateProduto(i, "quantidade", e.target.value)}
+																		fullWidth
+																		label="Quantidade"
+																		variant="outlined"
+																		disabled={this.state.calling}
+																		error={`produtoList[${i}].quantidade` in this.state.errors}
+																		helperText={this.state.errors?.[`produtoList[${i}].quantidade`] ?? ""}
+																		type="number"
+																	/>
+																</Grid>
 																{["PORTABILIDADE", "TT"].includes(produto.tipoDeLinha) ? <React.Fragment>
 																	<Grid item xs={12}>
 																		<TextField
@@ -1721,12 +1772,12 @@ class CreateEditVendaModule extends React.Component {
 											<InputLabel>Sistema</InputLabel>
 											<Select
 												id="sistema"
-												value={this.state.sistema}
+												value={this.state.sistemaId}
 												label="Sistema"
-												onChange={(e) => this.setState({sistema: e.target.value})}
+												onChange={(e) => this.setState({sistemaId: e.target.value})}
 												>
 												<MenuItem key={"nenhum"} value={null}>Nenhum</MenuItem>
-												{this.sistemaEnum.map((sistema) => <MenuItem key={sistema.value} value={sistema.value}>{sistema.nome}</MenuItem>)}
+												{(this.state.sistemaList ?? []).map((sistema) => <MenuItem key={sistema.sistemaId} value={sistema.sistemaId}>{sistema.nome}</MenuItem>)}
 											</Select>
 										</FormControl>
 									</Grid>
@@ -1861,7 +1912,7 @@ class CreateEditVendaModule extends React.Component {
 												id="pdv"
 												freeSolo
 												disableClearable
-												options={this.pdvEnum}
+												options={(this.state.pontoDeVendaList ?? []).map(pontoDeVenda => pontoDeVenda.nome)}
 												value={this.state.pdv}
 												onInputChange={(event, value) => this.setState({pdv: value})}
 												renderInput={(params) => (
@@ -1935,8 +1986,11 @@ class CreateEditVendaModule extends React.Component {
 
 								{this.state.tab == "ATORES" ? <React.Fragment>
 									{!this.state.createMode ? <React.Fragment>
+									<Grid item xs={12}>
+										<Divider><Chip icon={<HubIcon />} label="Interno" /></Divider>
+									</Grid>
 										<Grid item xs={3}>
-											<Stack spacing={3}>
+											<Stack spacing={3} justifyContent="space-between" height="100%">
 												<Typography align="center">Vendedor</Typography>
 												<UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[this.state.vendedorId]} direction="column"/>
 												{this.props.usuario.permissaoList.includes("ALTERAR_VENDEDOR") ? <Autocomplete
@@ -1960,7 +2014,7 @@ class CreateEditVendaModule extends React.Component {
 											</Stack>
 										</Grid>
 										<Grid item xs={3}>
-											<Stack spacing={3}>
+											<Stack spacing={3} justifyContent="space-between" height="100%">
 												<Typography align="center">Supervisor</Typography>
 												<UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[this.state.supervisorId]} direction="column"/>
 												{this.props.usuario.permissaoList.includes("ALTERAR_VENDEDOR") ? <Autocomplete
@@ -1984,7 +2038,7 @@ class CreateEditVendaModule extends React.Component {
 											</Stack>
 										</Grid>
 										<Grid item xs={3}>
-											<Stack spacing={3}>
+											<Stack spacing={3} justifyContent="space-between" height="100%">
 												<Typography align="center">Auditor</Typography>
 												<UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[this.state.auditorId]} direction="column"/>
 												{this.props.usuario.permissaoList.includes("ALTERAR_AUDITOR") ? <Autocomplete
@@ -2008,7 +2062,7 @@ class CreateEditVendaModule extends React.Component {
 											</Stack>
 										</Grid>
 										<Grid item xs={3}>
-											<Stack spacing={3}>
+											<Stack spacing={3} justifyContent="space-between" height="100%">
 												<Typography align="center">Cadastrador</Typography>
 												<UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[this.state.cadastradorId]} direction="column"/>
 												{this.props.usuario.permissaoList.includes("ALTERAR_AUDITOR") ? <Autocomplete
@@ -2031,12 +2085,79 @@ class CreateEditVendaModule extends React.Component {
 												/> : ""}
 											</Stack>
 										</Grid>
+										<Grid item xs={12}>
+											<Divider><Chip icon={<PublicIcon />} label="Externo" /></Divider>
+										</Grid>
+										<Grid item xs={3}>
+											<TextField
+												id="vendedor-externo"
+												value={this.state.vendedorExterno}
+												onChange={(e) => this.setState({vendedorExterno: e.target.value})}
+												fullWidth
+												label="Vendedor Externo"
+												variant="outlined"
+												disabled={this.state.calling || !this.props.usuario.permissaoList.includes("ALTERAR_VENDEDOR")}
+												error={"vendedorExterno" in this.state.errors}
+												helperText={this.state.errors?.vendedorExterno ?? ""}
+												inputProps={{
+													maxLength: 100,
+												}}
+											/>
+										</Grid>
+										<Grid item xs={3}>
+											<TextField
+												id="supervisor-externo"
+												value={this.state.supervisorExterno}
+												onChange={(e) => this.setState({supervisorExterno: e.target.value})}
+												fullWidth
+												label="Supervisor Externo"
+												variant="outlined"
+												disabled={this.state.calling || !this.props.usuario.permissaoList.includes("ALTERAR_VENDEDOR")}
+												error={"supervisorExterno" in this.state.errors}
+												helperText={this.state.errors?.supervisorExterno ?? ""}
+												inputProps={{
+													maxLength: 100,
+												}}
+											/>
+										</Grid>
+										<Grid item xs={3}>
+											<TextField
+												id="auditor-externo"
+												value={this.state.auditorExterno}
+												onChange={(e) => this.setState({auditorExterno: e.target.value})}
+												fullWidth
+												label="Auditor Externo"
+												variant="outlined"
+												disabled={this.state.calling || !this.props.usuario.permissaoList.includes("ALTERAR_AUDITOR")}
+												error={"auditorExterno" in this.state.errors}
+												helperText={this.state.errors?.auditorExterno ?? ""}
+												inputProps={{
+													maxLength: 100,
+												}}
+											/>
+										</Grid>
+										<Grid item xs={3}>
+											<TextField
+												id="cadastrador-externo"
+												value={this.state.cadastradorExterno}
+												onChange={(e) => this.setState({cadastradorExterno: e.target.value})}
+												fullWidth
+												label="Cadastrador Externo"
+												variant="outlined"
+												disabled={this.state.calling || !this.props.usuario.permissaoList.includes("ALTERAR_AUDITOR")}
+												error={"cadastradorExterno" in this.state.errors}
+												helperText={this.state.errors?.cadastradorExterno ?? ""}
+												inputProps={{
+													maxLength: 100,
+												}}
+											/>
+										</Grid>
 									</React.Fragment> : <Grid item xs={12}><Alert severity="info">Você poderá ver os atores da venda após salva-la.</Alert></Grid>}
 								</React.Fragment> : ""}
 
 								{this.state.tab == "PAGAMENTO" ? <React.Fragment>
 									<Grid item xs={12}>
-										<FormControl fullWidth required>
+										<FormControl fullWidth>
 											<InputLabel>Forma de Pagamento</InputLabel>
 											<Select
 												id="forma-de-pagamento"
@@ -2044,6 +2165,7 @@ class CreateEditVendaModule extends React.Component {
 												label="Forma de Pagamento"
 												onChange={(e) => this.setState({formaDePagamento: e.target.value})}
 												>
+												<MenuItem key={"nenhum"} value={null}>Nenhum</MenuItem>
 												{this.formaDePagamentoEnum.map((formaDePagamento) => <MenuItem key={formaDePagamento.value} value={formaDePagamento.value}>{formaDePagamento.nome}</MenuItem>)}
 											</Select>
 										</FormControl>
@@ -2303,6 +2425,7 @@ class CreateEditVendaModule extends React.Component {
 												<Grid item xs={12}>
 													<Divider><Chip icon={<RecyclingIcon />} label="Lixeira" /></Divider>
 												</Grid>
+												<Grid item xs={12}><Alert severity="warning">Os itens da lixeira serão excluídos definitivamente após 30 dias</Alert></Grid>
 												<Grid item xs={12}>
 													<Stack direction="row" spacing={1}>
 														{(this.state?.anexoList ?? []).map((anexo) =>

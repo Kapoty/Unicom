@@ -29,12 +29,15 @@ import Backdrop from '@mui/material/Backdrop';
 import CircularProgress from '@mui/material/CircularProgress';
 import Snackbar from '@mui/material/Snackbar';
 
+import dayjs from 'dayjs';
+
 class LoginRoute extends React.Component {
 
 	constructor(props) {
 		super(props);
 		this.state = {
 			isAuth: isAuth(),
+			today: dayjs(),
 			login: "",
 			senha: "",
 			showSenha: false,
@@ -147,7 +150,7 @@ class LoginRoute extends React.Component {
 					</Backdrop>
 				</Paper>
 				<Typography variant="subtitle1" component="h6" sx={{color: "white", marginTop: 3}}>
-				UniSystem | 05/03/2024 | {window.location.hostname}
+				UniSystem | {this.state.today.format("L")} | {window.location.hostname}
 				</Typography>
 			</Box>
 			

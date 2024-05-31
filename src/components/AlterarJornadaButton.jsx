@@ -21,6 +21,7 @@ import AccordionDetails from '@mui/material/AccordionDetails';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CloseIcon from '@mui/icons-material/Close';
 import IconButton from '@mui/material/IconButton';
+import Tooltip from '@mui/material/Tooltip';
 
 import AlterarJornadaBox from "./AlterarJornadaBox";
 
@@ -44,9 +45,17 @@ export default class AlterarJornadaButton extends React.Component {
 	
 		return (
 			<React.Fragment>
-				<Button variant="contained" startIcon={<CalendarMonthIcon />} onClick={() => this.setState({dialogOpen: true})} fullWidth>
-					Alterar Jornada
-				</Button>
+				{!this.props.iconButton ?
+					<Button variant="contained" startIcon={<CalendarMonthIcon />} onClick={() => this.setState({dialogOpen: true})} fullWidth>
+						Alterar Jornada
+					</Button> :
+					<Tooltip title="Alterar Jornada" onClick={() => this.setState({dialogOpen: true})}>
+						<IconButton color="success">
+							<CalendarMonthIcon />
+						</IconButton>
+					</Tooltip>
+				}
+
 				{this.state.dialogOpen ?
 					<Dialog
 						fullWidth={true}
