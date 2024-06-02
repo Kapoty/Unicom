@@ -1556,6 +1556,9 @@ class CreateEditVendaModule extends React.Component {
 												{this.state.vendaProdutoList.map((produto, i) => 
 													<Paper key={i} sx={{padding: 3}}>
 														<Grid container spacing={3}>
+															<Grid item xs={12}>
+																<Divider><Chip label={i + 1} /></Divider>
+															</Grid>
 															<Grid item xs={6}>
 																<TextField
 																	required
@@ -1643,52 +1646,50 @@ class CreateEditVendaModule extends React.Component {
 																		type="number"
 																	/>
 																</Grid>
-																{["PORTABILIDADE", "TT"].includes(produto.tipoDeLinha) ? <React.Fragment>
-																	<Grid item xs={12}>
-																		<TextField
-																			value={produto.operadora}
-																			onChange={(e) => this.updateProduto(i, "operadora", e.target.value)}
+																<Grid item xs={12}>
+																	<TextField
+																		value={produto.operadora}
+																		onChange={(e) => this.updateProduto(i, "operadora", e.target.value)}
+																		fullWidth
+																		label="Operadora"
+																		variant="outlined"
+																		disabled={this.state.calling}
+																		error={`produtoList[${i}].operadora` in this.state.errors}
+																		helperText={this.state.errors?.[`produtoList[${i}].operadora`] ?? ""}
+																		inputProps={{
+																			maxLength: 20,
+																		}}
+																	/>
+																</Grid>
+																{produto.portabilidadeList.length == 0 ? <Grid item xs={12}><Alert severity="info">Os telefones que você adicionar aparecerão aqui.</Alert></Grid> : ""}
+																{produto.portabilidadeList.map((portabilidade, j) =>
+																	<Grid item xs={3} key={j}>
+																		<PhoneInput
+																			required
+																			value={portabilidade.telefone}
+																			onChange={(e) => this.updatePortabilidade(i, j, "telefone", e.target.value)}
 																			fullWidth
-																			label="Operadora"
+																			label="Telefone (sem DDD)"
 																			variant="outlined"
 																			disabled={this.state.calling}
-																			error={`produtoList[${i}].operadora` in this.state.errors}
-																			helperText={this.state.errors?.[`produtoList[${i}].operadora`] ?? ""}
-																			inputProps={{
-																				maxLength: 20,
+																			error={`produtoList[${i}].portabilidadeList[${i}].telefone` in this.state.errors}
+																			helperText={this.state.errors?.[`produtoList[${i}].portabilidadeList[${i}].telefone`] ?? ""}
+																			ddd={false}
+																			InputProps={{
+																				endAdornment: 	<InputAdornment position="end">
+																									<IconButton
+																										onClick={() => this.deletePortabilidade(i, j)}
+																									>
+																										<DeleteIcon/>
+																									</IconButton>
+																								</InputAdornment>,
 																			}}
 																		/>
 																	</Grid>
-																	{produto.portabilidadeList.length == 0 ? <Grid item xs={12}><Alert severity="info">Os telefones que você adicionar aparecerão aqui.</Alert></Grid> : ""}
-																	{produto.portabilidadeList.map((portabilidade, j) =>
-																		<Grid item xs={3} key={j}>
-																			<PhoneInput
-																				required
-																				value={portabilidade.telefone}
-																				onChange={(e) => this.updatePortabilidade(i, j, "telefone", e.target.value)}
-																				fullWidth
-																				label="Telefone (sem DDD)"
-																				variant="outlined"
-																				disabled={this.state.calling}
-																				error={`produtoList[${i}].portabilidadeList[${i}].telefone` in this.state.errors}
-																				helperText={this.state.errors?.[`produtoList[${i}].portabilidadeList[${i}].telefone`] ?? ""}
-																				ddd={false}
-																				InputProps={{
-																					endAdornment: 	<InputAdornment position="end">
-																										<IconButton
-																											onClick={() => this.deletePortabilidade(i, j)}
-																										>
-																											<DeleteIcon/>
-																										</IconButton>
-																									</InputAdornment>,
-																				}}
-																			/>
-																		</Grid>
-																	)}
-																	<Grid item xs={12} container display="flex" justifyContent="flex-end">
-																		<Button variant="contained" size="large" startIcon={<AddIcon />} onClick={() => this.addPortabilidade(i)}>Adicionar Telefone</Button>
-																	</Grid>
-																</React.Fragment> : ""}
+																)}
+																<Grid item xs={12} container display="flex" justifyContent="flex-end">
+																	<Button variant="contained" size="large" startIcon={<AddIcon />} onClick={() => this.addPortabilidade(i)}>Adicionar Telefone</Button>
+																</Grid>
 															</React.Fragment> : <React.Fragment>
 																<Grid item xs={3}>
 																	<FormControl>
@@ -2249,6 +2250,9 @@ class CreateEditVendaModule extends React.Component {
 											{this.state.faturaList.map((fatura, i) => 
 												<Paper key={i} sx={{padding: 3}}>
 													<Grid container spacing={3}>
+														<Grid item xs={12}>
+															<Divider><Chip label={i + 1} /></Divider>
+														</Grid>
 														<Grid item xs={4}>
 															<DatePicker
 																label="Mês"

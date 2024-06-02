@@ -12,7 +12,7 @@ module.exports = {
     "output": {
         "path": __dirname+'/docs',
         "filename": "assets/js/[name].[chunkhash:8].js",
-        "publicPath": process.env.NODE_ENV === "development" ? "/" : "/",
+        "publicPath": "/",
     },
     "module": {
         "rules": [

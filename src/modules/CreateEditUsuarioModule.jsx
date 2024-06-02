@@ -49,6 +49,8 @@ import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import { TimePicker } from '@mui/x-date-pickers';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 
+import CPFInput from "../components/CPFInput";
+import PhoneInput from "../components/PhoneInput";
 import UsuarioAvatar from "../components/UsuarioAvatar";
 
 import dayjs from 'dayjs';
@@ -80,6 +82,7 @@ class CreateEditUsuarioModule extends React.Component {
 
 			usuarioId: "",
 			nome: "",
+			nomeCompleto: "",
 			email: "",
 			matricula: "",
 			senha: "",
@@ -158,6 +161,7 @@ class CreateEditUsuarioModule extends React.Component {
 				this.setState({
 					usuario: usuario,
 					nome: usuario.nome,
+					nomeCompleto: usuario.nomeCompleto,
 					email: usuario.email,
 					matricula: usuario.matricula,
 					ativo: usuario.ativo,
@@ -317,14 +321,15 @@ class CreateEditUsuarioModule extends React.Component {
 
 		let data = {
 			nome: this.state.nome,
+			nomeCompleto: this.state.nomeCompleto,
 			email: this.state.email,
 			matricula: this.state.matricula,
 			ativo: this.state.ativo,
 			papelId: this.state.papelId,
 			dataNascimento: this.state.dataNascimento,
-			cpf: this.state.cpf != "" ? this.state.cpf : null,
-			telefoneCelular:  this.state.telefoneCelular != "" ? this.state.telefoneCelular : null,
-			whatsapp:  this.state.whatsapp != "" ? this.state.whatsapp : null,
+			cpf: this.state.cpf != "" ? this.state.cpf.replace(/\D/g, "") : null,
+			telefoneCelular:  this.state.telefoneCelular != "" ? this.state.telefoneCelular.replace(/\D/g, "") : null,
+			whatsapp:  this.state.whatsapp != "" ? this.state.whatsapp.replace(/\D/g, "") : null,
 			dataContratacao: this.state.dataContratacao,
 			cargoId: this.state.cargoId,
 			contratoId: this.state.contratoId,
@@ -426,7 +431,7 @@ class CreateEditUsuarioModule extends React.Component {
 							<Grid item xs={12}>
 								<form onSubmit={(e) => e.preventDefault()} disabled={this.state.createMode && this.state.usuario == null}>
 									<Grid container spacing={3}>
-										<Grid item xs={6}>
+										<Grid item xs={4}>
 											<TextField
 												id="nome"
 												value={this.state.nome}
@@ -435,6 +440,7 @@ class CreateEditUsuarioModule extends React.Component {
 												label="Nome"
 												required
 												InputProps={{
+													maxLength: 200,
 													startAdornment: (
 														<InputAdornment position="start">
 															<AccountCircle />
@@ -447,7 +453,29 @@ class CreateEditUsuarioModule extends React.Component {
 												helperText={"nome" in this.state.errors ? this.state.errors["nome"] : ""}
 											/>
 										</Grid>
-										<Grid item xs={6}>
+										<Grid item xs={8}>
+											<TextField
+												id="nome-completo"
+												value={this.state.nomeCompleto}
+												onChange={(e) => this.setState({nomeCompleto: e.target.value})}
+												fullWidth
+												label="Nome Completo"
+												required
+												InputProps={{
+													maxLength: 200,
+													startAdornment: (
+														<InputAdornment position="start">
+															<AccountCircle />
+														</InputAdornment>
+													)
+												}}
+												variant="outlined"
+												disabled={this.state.calling}
+												error={"nomeCompleto" in this.state.errors}
+												helperText={"nomeCompleto" in this.state.errors ? this.state.errors["nomeCompleto"] : ""}
+											/>
+										</Grid>
+										<Grid item xs={12}>
 											<TextField
 												id="email"
 												value={this.state.email}
@@ -456,6 +484,7 @@ class CreateEditUsuarioModule extends React.Component {
 												label="Email"
 												required
 												InputProps={{
+													maxLength: 256,
 													startAdornment: (
 														<InputAdornment position="start">
 															<EmailIcon />
@@ -504,10 +533,11 @@ class CreateEditUsuarioModule extends React.Component {
 												disabled={this.state.calling}
 												error={"matricula" in this.state.errors}
 												helperText={"matricula" in this.state.errors ? this.state.errors["matricula"] : ""}
+												type="number"
 											/>
 										</Grid>
 										<Grid item xs={4}>
-											<TextField
+											<CPFInput
 												id="cpf"
 												value={this.state.cpf}
 												onChange={(e) => this.setState({cpf: e.target.value})}
@@ -527,7 +557,7 @@ class CreateEditUsuarioModule extends React.Component {
 											/>
 										</Grid>
 										<Grid item xs={4}>
-											<TextField
+											<PhoneInput
 												id="telefone-celular"
 												value={this.state.telefoneCelular}
 												onChange={(e) => this.setState({telefoneCelular: e.target.value})}
@@ -547,7 +577,7 @@ class CreateEditUsuarioModule extends React.Component {
 											/>
 										</Grid>
 										<Grid item xs={4}>
-											<TextField
+											<PhoneInput
 												id="whatsapp"
 												value={this.state.whatsapp}
 												onChange={(e) => this.setState({whatsapp: e.target.value})}

@@ -45,6 +45,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import Chip from '@mui/material/Chip';
 import ListItemIcon from '@mui/material/ListItemIcon';
 
+import CPFInput from "./CPFInput";
 import CustomDataGridPremium from "./CustomDataGridPremium";
 
 import dayjs from 'dayjs';
@@ -692,14 +693,14 @@ export default class RelatorioJornadaBox extends React.Component {
 									<Grid item xs={6}>
 										<TextField
 											id="nome"
-											value={this.state.report.usuario.nome}
+											value={this.state.report.usuario.nomeCompleto}
 											fullWidth
 											label="Nome"
 											variant="outlined"
 										/>
 									</Grid>
 									<Grid item xs={6}>
-										<TextField
+										<CPFInput
 											id="cpf"
 											value={this.state.report.usuario.cpf !== null ? this.state.report.usuario.cpf : ""}
 											fullWidth
@@ -1171,11 +1172,11 @@ export default class RelatorioJornadaBox extends React.Component {
 									<tr>
 										<td>
 											<span className="name">Nome</span>
-											<span className="value">{this.state.report.usuario.nome}</span>
+											<span className="value">{this.state.report.usuario.nomeCompleto}</span>
 										</td>
 										<td>
 											<span className="name">CPF</span>
-											<span className="value">{this.state.report.usuario.cpf ?? ""}</span>
+											<span className="value">{this.state.report.usuario?.cpf?.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4") ?? ""}</span>
 										</td>
 									</tr>
 									<tr>

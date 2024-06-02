@@ -54,6 +54,7 @@ class UsuariosModule extends React.Component {
 		this.columns = [
 			//{ field: 'usuarioId', headerName: 'ID', minWidth: 100, flex: 1},
 			{ field: 'usuario', headerName: 'Nome', valueGetter: (value, row) => value?.nome, minWidth: 200, flex: 1, renderCell: (params) => <UsuarioDisplayStack usuario={params.row.usuario}/>},
+			{ field: 'nomeCompleto', headerName: 'Nome Completo', minWidth: 200, flex: 1 },
 			{ field: 'email', headerName: 'Email', minWidth: 200, flex: 1 },
 			{ field: 'papel', headerName: 'Papel', valueGetter: (value, row) => value.nome, minWidth: 200, flex: 1, renderCell: (params) => 
 				<Chip label={params.row.papel.nome} variant="outlined" />
@@ -65,7 +66,7 @@ class UsuariosModule extends React.Component {
 			{ field: 'contrato', headerName: 'Contrato', valueGetter: (value, row) => value?.nome, minWidth: 200, flex: 1 },
 			{ field: 'cpf', headerName: 'CPF', minWidth: 200, flex: 1 },
 			{ field: 'telefoneCelular', headerName: 'Telefone Celular', minWidth: 200, flex: 1 },
-			{ field: 'telefoneWhatsapp', headerName: 'Whatsapp', minWidth: 200, flex: 1 },
+			{ field: 'whatsapp', headerName: 'Whatsapp', minWidth: 200, flex: 1 },
 			{ field: 'dataNascimento', headerName: 'Data de Nascimento', minWidth: 200, flex: 1, type: 'date', renderCell: (params) => params.value !== null ? dayjs(params.value).format('L') : "" },
 			{ field: 'dataContratacao', headerName: 'Data Contratação', minWidth: 200, flex: 1, type: 'date', renderCell: (params) => params.value !== null ? dayjs(params.value).format('L') : "" },
 			{ field: 'jornadaStatusGrupo', headerName: 'Grupo de Status', valueGetter: (value, row) => value?.nome, minWidth: 200, flex: 1 },
@@ -115,16 +116,17 @@ class UsuariosModule extends React.Component {
 					id: usuario.usuarioId,
 					usuario: usuario,
 					usuarioId: usuario.usuarioId,
+					nomeCompleto: usuario.nomeCompleto,
 					email: usuario.email,
 					papel: usuario.papel,
 					matricula: usuario.matricula,
-					departamento: usuario.departamento !== null ? usuario.departamento.nome : "",
-					cargo: usuario.cargo !== null ? usuario.cargo.nome : "",
+					departamento: usuario.departamento?.nome,
+					cargo: usuario.cargo?.nome,
 					equipe: usuario.equipe,
 					contrato: usuario.contrato,
-					cpf: usuario.cpf,
+					cpf: usuario.cpf?.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4"),
 					telefoneCelular: usuario.telefoneCelular?.replace(/(\d{2})(\d{1})(\d{4})(\d{4})/, "($1) $2 $3-$4"),
-					telefoneWhatsapp: usuario.telefoneWhatsapp?.replace(/(\d{2})(\d{1})(\d{4})(\d{4})/, "($1) $2 $3-$4"),
+					whatsapp: usuario.whatsapp?.replace(/(\d{2})(\d{1})(\d{4})(\d{4})/, "($1) $2 $3-$4"),
 					dataNascimento: usuario.dataNascimento !== null ? new Date(usuario.dataNascimento) : null,
 					dataContratacao: usuario.dataContratacao !== null ? new Date(usuario.dataContratacao) : null,
 					jornadaStatusGrupo: usuario.jornadaStatusGrupo,
@@ -182,7 +184,7 @@ class UsuariosModule extends React.Component {
 							rows={this.state.usuarioRows}
 							columns={this.columns}
 							initialState={{
-							    pagination: { paginationModel: { pageSize: 10 } },
+							    pagination: { paginationModel: { pageSize: 50 } },
 							    columns: {
 							    	/*columnVisibilityModel: {
 							    		contrato: false,
