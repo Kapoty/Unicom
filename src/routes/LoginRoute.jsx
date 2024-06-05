@@ -28,6 +28,7 @@ import IconButton from '@mui/material/IconButton';
 import Backdrop from '@mui/material/Backdrop';
 import CircularProgress from '@mui/material/CircularProgress';
 import Snackbar from '@mui/material/Snackbar';
+import DomainIcon from '@mui/icons-material/Domain';
 
 import dayjs from 'dayjs';
 
@@ -38,6 +39,8 @@ class LoginRoute extends React.Component {
 		this.state = {
 			isAuth: isAuth(),
 			today: dayjs(),
+			showDominioInput: false,
+			dominio: "",
 			login: "",
 			senha: "",
 			showSenha: false,
@@ -55,7 +58,7 @@ class LoginRoute extends React.Component {
 		api.post("auth/login", {
 			"login": this.state.login,
 			"senha": this.state.senha,
-			"dominio": window.location.hostname
+			"dominio": this.state.dominio == "" ? window.location.hostname : this.state.dominio,
 		}, {redirect401: false}).then((response) => {
 			setToken(response.data.token);
 			this.props.navigate("/");
@@ -73,6 +76,13 @@ class LoginRoute extends React.Component {
 	componentDidMount() {
 		if (this.state.isAuth)
 			 setTimeout(() => this.props.navigate("/")) 
+		else
+			this.props.updateThemePrimaryColor("");
+	}
+
+	setLogin = (e) => {
+		let login = e.target.value;
+		this.setState({login: login, showDominioInput: login == "dominio" || this.state.showDominioInput});
 	}
 
 	render() {
@@ -91,10 +101,28 @@ class LoginRoute extends React.Component {
 					</Box>
 					<form onSubmit={this.handleLogin} disabled>
 						<Box display="flex" justifyContent="center" alignItems="center" flexDirection="column" gap={3}>
+							{this.state.showDominioInput && <TextField
+								id="dominio"
+								value={this.state.dominio}
+								onChange={(e) => this.setState({dominio: e.target.value})}
+								fullWidth
+								label="Domínio"
+								InputProps={{
+									startAdornment: (
+										<InputAdornment position="start">
+											<DomainIcon />
+										</InputAdornment>
+									),
+								}}
+								variant="outlined"
+								disabled={this.state.calling}
+								error={"dominio" in this.state.errors}
+								helperText={"dominio" in this.state.errors ? this.state.errors["dominio"] : ""}
+							/>}
 							<TextField
 								id="login"
 								value={this.state.login}
-								onChange={(e) => this.setState({login: e.target.value})}
+								onChange={this.setLogin}
 								fullWidth
 								autoComplete="new-password"
 								label="Email ou Matrícula"

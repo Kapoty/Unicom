@@ -228,66 +228,64 @@ class CreateEditEquipeModule extends React.Component {
 							<LoadingButton variant="contained" size="large" startIcon={<SaveIcon />} loadingPosition="start" loading={this.state.saving} disabled={this.state.calling} onClick={this.saveEquipe}>Salvar</LoadingButton>
 							{!this.state.createMode ? <LoadingButton variant="contained" color="error" size="large" startIcon={<DeleteIcon />} loadingPosition="start" loading={this.state.deletando} disabled={this.state.calling} onClick={this.deleteEquipe}>Deletar</LoadingButton> : ""}
 					</ButtonGroup>
-					<Box sx={{ flexGrow: 1 }}>
+					<Box sx={{ width: "100%", display: "flex", justifyContent: "center", marginBottom: 3}}>
 						{((!this.state.createMode && this.state.equipe == null) ||
 							this.state.usuarioList == null
 							) ? <Box width="100%" display="flex" justifyContent="center" m={3}><CircularProgress/></Box> :
-									<form onSubmit={(e) => e.preventDefault()} disabled={this.state.createMode && this.state.equipe == null}>
-										<Grid container spacing={3}>
-											<Grid item xs={6}>
-												<TextField
-													id="nome"
-													value={this.state.nome}
-													onChange={(e) => this.setState({nome: e.target.value})}
-													fullWidth
-													label="Nome"
-													required
-													variant="outlined"
-													disabled={this.state.calling}
-													error={"nome" in this.state.errors}
-													helperText={"nome" in this.state.errors ? this.state.errors["nome"] : ""}
-												/>
-											</Grid>
-											<Grid item xs={6}>
-												 <Autocomplete
-													id="supervisor"
-													options={Object.keys(this.state.usuarioByUsuarioId).map(key => parseInt(key))}
-													getOptionLabel={(option) => this.state.usuarioByUsuarioId[option].nome}
-													renderOption={(props, option) => <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props}>
-																	<UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[option]}/>
-																</Box>}
-													value={this.state.supervisorId}
-													onChange={(event, value) => this.setState({supervisorId: value})}
-													renderInput={(params) => (
-														<TextField
-														{...params}
-													variant="outlined"
-													label="Supervisor"
-													/>
-													)}
-												/>
-											</Grid>
-											<Grid item xs={6}>
-												 <Autocomplete
-													id="gerente"
-													options={Object.keys(this.state.usuarioByUsuarioId).map(key => parseInt(key))}
-													getOptionLabel={(option) => this.state.usuarioByUsuarioId[option].nome}
-													renderOption={(props, option) => <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props}>
+									<Grid container spacing={3} maxWidth="xl">
+										<Grid item xs={6}>
+											<TextField
+												id="nome"
+												value={this.state.nome}
+												onChange={(e) => this.setState({nome: e.target.value})}
+												fullWidth
+												label="Nome"
+												required
+												variant="outlined"
+												disabled={this.state.calling}
+												error={"nome" in this.state.errors}
+												helperText={"nome" in this.state.errors ? this.state.errors["nome"] : ""}
+											/>
+										</Grid>
+										<Grid item xs={6}>
+											 <Autocomplete
+												id="supervisor"
+												options={Object.keys(this.state.usuarioByUsuarioId).map(key => parseInt(key))}
+												getOptionLabel={(option) => this.state.usuarioByUsuarioId[option].nome}
+												renderOption={(props, option) => <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props}>
 																<UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[option]}/>
 															</Box>}
-													value={this.state.gerenteId}
-													onChange={(event, value) => this.setState({gerenteId: value})}
-													renderInput={(params) => (
-														<TextField
-														{...params}
-													variant="outlined"
-													label="Gerente"
-													/>
-													)}
+												value={this.state.supervisorId}
+												onChange={(event, value) => this.setState({supervisorId: value})}
+												renderInput={(params) => (
+													<TextField
+													{...params}
+												variant="outlined"
+												label="Supervisor"
 												/>
-											</Grid>
+												)}
+											/>
 										</Grid>
-									</form>
+										<Grid item xs={6}>
+											 <Autocomplete
+												id="gerente"
+												options={Object.keys(this.state.usuarioByUsuarioId).map(key => parseInt(key))}
+												getOptionLabel={(option) => this.state.usuarioByUsuarioId[option].nome}
+												renderOption={(props, option) => <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props}>
+															<UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[option]}/>
+														</Box>}
+												value={this.state.gerenteId}
+												onChange={(event, value) => this.setState({gerenteId: value})}
+												renderInput={(params) => (
+													<TextField
+													{...params}
+												variant="outlined"
+												label="Gerente"
+												/>
+												)}
+											/>
+										</Grid>
+									</Grid>
 								}
 							</Box>
 					<Collapse in={this.state.alertOpen}>

@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useCallback} from "react";
 
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
@@ -83,6 +83,7 @@ import Badge from '@mui/material/Badge';
 import RecyclingIcon from '@mui/icons-material/Recycling';
 import HubIcon from '@mui/icons-material/Hub';
 import PublicIcon from '@mui/icons-material/Public';
+import Pagination from '@mui/material/Pagination';
 
 import CPFInput from "../components/CPFInput";
 import CNPJInput from "../components/CNPJInput";
@@ -93,7 +94,15 @@ import UsuarioDisplayStack from "../components/UsuarioDisplayStack";
 import VendaStatusChip from '../components/VendaStatusChip';
 import CustomDataGridPremium from "../components/CustomDataGridPremium";
 
-import VendaStatusCategoriaMap from "../model/VendaStatusCategoriaMap";
+import VendaStatusCategoriaEnum from "../model/VendaStatusCategoriaEnum";
+import VendaTipoProdutoEnum from "../model/VendaTipoProdutoEnum";
+import VendaProdutoTipoDeLinhaEnum from "../model/VendaProdutoTipoDeLinhaEnum";
+import VendaPorteEnum from "../model/VendaPorteEnum";
+import VendaFaturaStatusEnum from "../model/VendaFaturaStatusEnum";
+import VendaFormaDePagamentoEnum from "../model/VendaFormaDePagamentoEnum";
+import VendaBrscanEnum from "../model/VendaBrscanEnum";
+import VendaSuporteEnum from "../model/VendaSuporteEnum";
+import VendaGeneroEnum from "../model/VendaGeneroEnum";
 
 import axios from "axios";
 
@@ -102,6 +111,256 @@ import dayjs from 'dayjs';
 import api from "../services/api";
 
 import { useParams, useLocation, useNavigate, useHistory, useSearchParams } from 'react-router-dom';
+
+const adicionaisEnum = ["Apps", "Aparelho", "Mob", "Deezer"];
+
+const ProdutoPaper = React.memo(({ produto, i, errors, calling, updateProduto, deleteProduto, addPortabilidade, portabilidadeList, updatePortabilidade, deletePortabilidade, tipoProduto }) => {
+
+	const updateProdutoNome = useCallback((e) => updateProduto(i, "nome", e.target.value), [i]);
+	const updateProdutoValor = useCallback((e) => updateProduto(i, "valor", e.target.value), [i]);
+	const updateProdutoAdicionais = useCallback((event, value) => updateProduto(i, "adicionais", value), [i]);
+	const updateProdutoTipoDeLinha = useCallback((e) => updateProduto(i, "tipoDeLinha", e.target.value), [i]);
+	const updateProdutoDdd = useCallback((e) => updateProduto(i, "ddd", e.target.value), [i]);
+	const updateProdutoQuantidade = useCallback((e) => updateProduto(i, "quantidade", e.target.value), [i]);
+	const updateProdutoOperadora = useCallback((e) => updateProduto(i, "operadora", e.target.value), [i]);
+	const updateProdutoTelefoneFixo = useCallback((e) => updateProduto(i, "telefoneFixo", e.target.value), [i]);
+	const updateProdutoValorTelefoneFixo = useCallback((e) => updateProduto(i, "valorTelefoneFixo", e.target.value), [i]);
+	const _addPortabilidade = useCallback(() => addPortabilidade(i), [i]);
+	const _deleteProduto = useCallback(() => deleteProduto(i), [i])
+
+	return <Paper key={i} sx={{padding: 3}}>
+				<Grid container spacing={3}>
+					<Grid item xs={12}>
+						<Divider><Chip label={i + 1} /></Divider>
+					</Grid>
+					<Grid item xs={6}>
+						<TextField
+							required
+							value={produto.nome}
+							onChange={updateProdutoNome}
+							fullWidth
+							label="Nome"
+							variant="outlined"
+							disabled={calling}
+							error={`produtoList[${i}].nome` in errors}
+							helperText={errors?.[`produtoList[${i}].nome`] ?? ""}
+							inputProps={{
+								maxLength: 100,
+							}}
+						/>
+					</Grid>
+					<Grid item xs={6}>
+						<MoneyInput
+							required
+							value={produto.valor}
+							onChange={updateProdutoValor}
+							fullWidth
+							label="Valor"
+							variant="outlined"
+							error={`produtoList[${i}].valor` in errors}
+							helperText={errors?.[`produtoList[${i}].valor`] ?? ""}
+							disabled={calling}
+						/>
+					</Grid>
+					{tipoProduto == "MOVEL" ? <React.Fragment>
+						<Grid item xs={12}>
+							<Autocomplete
+								freeSolo
+								disableClearable
+								options={adicionaisEnum}
+								value={produto.adicionais}
+								onInputChange={updateProdutoAdicionais}
+								renderInput={(params) => (
+									<TextField
+										{...params}
+										variant="outlined"
+										label="Adicionais"
+									/>
+								)}
+							/>
+						</Grid>
+						<Grid item xs={4}>
+							<FormControl fullWidth required>
+								<InputLabel>Tipo de Linha</InputLabel>
+								<Select
+									value={produto.tipoDeLinha}
+									label="Tipo de Linha"
+									onChange={updateProdutoTipoDeLinha}
+									>
+									{Object.keys(VendaProdutoTipoDeLinhaEnum).map((tipoDeLinha) => <MenuItem key={tipoDeLinha} value={tipoDeLinha}>{VendaProdutoTipoDeLinhaEnum[tipoDeLinha]}</MenuItem>)}
+								</Select>
+							</FormControl>
+						</Grid>
+						<Grid item xs={4}>
+							<TextField
+								value={produto.ddd}
+								onChange={updateProdutoDdd}
+								fullWidth
+								label="DDD"
+								variant="outlined"
+								disabled={calling}
+								error={`produtoList[${i}].ddd` in errors}
+								helperText={errors?.[`produtoList[${i}].ddd`] ?? ""}
+								inputProps={{
+									maxLength: 2,
+								}}
+							/>
+						</Grid>
+						<Grid item xs={4}>
+							<TextField
+								required
+								value={produto.quantidade}
+								onChange={updateProdutoQuantidade}
+								fullWidth
+								label="Quantidade"
+								variant="outlined"
+								disabled={calling}
+								error={`produtoList[${i}].quantidade` in errors}
+								helperText={errors?.[`produtoList[${i}].quantidade`] ?? ""}
+								type="number"
+							/>
+						</Grid>
+						<Grid item xs={12}>
+							<TextField
+								value={produto.operadora}
+								onChange={updateProdutoOperadora}
+								fullWidth
+								label="Operadora"
+								variant="outlined"
+								disabled={calling}
+								error={`produtoList[${i}].operadora` in errors}
+								helperText={errors?.[`produtoList[${i}].operadora`] ?? ""}
+								inputProps={{
+									maxLength: 20,
+								}}
+							/>
+						</Grid>
+						{portabilidadeList.length == 0 ? <Grid item xs={12}><Alert severity="info">Os telefones que você adicionar aparecerão aqui.</Alert></Grid> : ""}
+						{portabilidadeList.map((portabilidade, j) =>
+							<Grid item xs={3} key={j}>
+								<PhoneInput
+									required
+									value={portabilidade.telefone}
+									onChange={(e) => updatePortabilidade(i, j, "telefone", e.target.value)}
+									fullWidth
+									label="Telefone (sem DDD)"
+									variant="outlined"
+									disabled={calling}
+									error={`produtoList[${i}].portabilidadeList[${j}].telefone` in errors}
+									helperText={errors?.[`produtoList[${i}].portabilidadeList[${j}].telefone`] ?? ""}
+									ddd={false}
+									InputProps={{
+										endAdornment: 	<InputAdornment position="end">
+															<IconButton
+																onClick={() => deletePortabilidade(i, j)}
+															>
+																<DeleteIcon/>
+															</IconButton>
+														</InputAdornment>,
+									}}
+								/>
+							</Grid>
+						)}
+						<Grid item xs={12} container display="flex" justifyContent="flex-end">
+							<Button variant="contained" size="large" startIcon={<AddIcon />} onClick={_addPortabilidade}>Adicionar Telefone</Button>
+						</Grid>
+					</React.Fragment> : <React.Fragment>
+						<Grid item xs={3}>
+							<FormControl>
+								<FormLabel id={"telefone-fixo" + i}>Telefone Fixo</FormLabel>
+								<RadioGroup
+									row
+									aria-labelledby={"telefone-fixo" + i}
+									name="controlled-radio-buttons-group"
+									value={produto.telefoneFixo}
+									onChange={updateProdutoTelefoneFixo}
+								>
+								<FormControlLabel value={true} control={<Radio />} label="Sim" />
+								<FormControlLabel value={false} control={<Radio />} label="Não" />
+								</RadioGroup>
+							</FormControl>
+						</Grid>
+						{String(produto.telefoneFixo) == "true" ?
+							<Grid item xs={3}>
+								<MoneyInput
+									required
+									value={produto.valorTelefoneFixo}
+									onChange={updateProdutoValorTelefoneFixo}
+									fullWidth
+									label="Valor Telefone Fixo"
+									variant="outlined"
+									disabled={calling}
+									error={`produtoList[${i}].valorTelefoneFixo` in errors}
+									helperText={errors?.[`produtoList[${i}].valorTelefoneFixo`] ?? ""}
+								/>
+							</Grid> : ""}
+					</React.Fragment>}
+					<Grid item xs={12}>
+						<Button color="error" variant="contained" size="large" startIcon={<DeleteIcon />} onClick={_deleteProduto}>Remover Produto</Button>
+					</Grid>
+				</Grid>
+			</Paper>
+});
+
+const FaturaPaper = React.memo(({fatura, i, errors, calling, updateFatura, deleteFatura}) => {
+
+	const updateFaturaMes = useCallback((newValue) => updateFatura(i, "mes", newValue), [i]);
+	const updateFaturaStatus = useCallback((e) => updateFatura(i, "status", e.target.value), [i]);
+	const updateFaturaValor = useCallback((e) => updateFatura(i, "valor", e.target.value), [i]);
+	const _deleteFatura = useCallback(() => deleteFatura(i), [i]);
+
+	return <Paper sx={{padding: 3}}>
+				<Grid container spacing={3}>
+					<Grid item xs={12}>
+						<Divider><Chip label={i + 1} /></Divider>
+					</Grid>
+					<Grid item xs={4}>
+						<DatePicker
+							label="Mês"
+							views={['month', 'year']}
+							value={fatura.mes}
+							onChange={updateFaturaMes}
+							slotProps={{
+								textField: {
+									required: true,
+									fullWidth: true,
+								}
+							}}
+						/>
+					</Grid>
+					<Grid item xs={4}>
+						<FormControl fullWidth required>
+							<InputLabel>Status</InputLabel>
+							<Select
+								value={fatura.status}
+								label="Status"
+								onChange={updateFaturaStatus}
+								>
+								{Object.keys(VendaFaturaStatusEnum).map((faturaStatus) => <MenuItem key={faturaStatus} value={faturaStatus}>{VendaFaturaStatusEnum[faturaStatus]}</MenuItem>)}
+							</Select>
+						</FormControl>
+					</Grid>
+					<Grid item container xs={4} display="flex" flexDirection="row" gap={3} alignItems="center">
+						<MoneyInput
+							required
+							value={fatura.valor}
+							onChange={updateFaturaValor}
+							label="Valor"
+							variant="outlined"
+							disabled={calling}
+							error={`faturaList[${i}].valor` in errors}
+							helperText={errors?.[`faturaList[${i}].valor`] ?? ""}
+							sx={{flexGrow: 1}}
+						/>
+						<IconButton
+							onClick={_deleteFatura}
+						>
+							<DeleteIcon/>
+						</IconButton>
+					</Grid>
+				</Grid>
+			</Paper>
+});
 
 class CreateEditVendaModule extends React.Component {
 
@@ -247,55 +506,7 @@ class CreateEditVendaModule extends React.Component {
 			errors: {},
 		}
 
-		this.tipoPessoaEnum = ["CPF", "CNPJ"];
-		this.tipoProdutoEnum = ["FIBRA", "MOVEL"];
-		this.generoEnum = [
-			{nome: "Masculino", value: "MASCULINO"},
-			{nome: "Feminino", value: "FEMININO"},
-			{nome: "Não Informado", value: "NAO_INFORMADO"},
-			{nome: "Outros", value: "OUTROS"},
-		];
-		this.porteEnum = [
-			{nome: "MEI", value: "MEI"},
-			{nome: "LTDA", value: "LTDA"},
-		];
-		this.formaDePagamentoEnum = [
-			{nome: "Boleto", value: "BOLETO"},
-			{nome: "Débito Automático", value: "DEBITO_AUTOMATICO"},
-			{nome: "Cartão de Crédito", value: "CARTAO_CREDITO"},
-		];
 		this.vencimentoEnum = ["1", "3", "7", "10"];
-		this.faturaStatusEnum = [
-			{nome: "N/A", value: "NA"},
-			{nome: "A Vencer", value: "A_VENCER"},
-			{nome: "Em Aberto", value: "EM_ABERTO"},
-			{nome: "Paga", value: "PAGA"},
-			{nome: "Multa", value: "MULTA"},
-			{nome: "Churn", value: "CHURN"},
-			{nome: "Parcelada", value: "PARCELADA"},
-		];
-		this.tipoDeLinhaEnum = [
-			{nome: "Nova", value: "NOVA"},
-			{nome: "Portabilidade", value: "PORTABILIDADE"},
-			{nome: "TT", value: "TT"},
-		];
-		this.brscanEnum = [
-			{nome: "Sim", value: "SIM"},
-			{nome: "Não", value: "NAO"},
-			{nome: "Exceção", value: "EXCECAO"},
-			{nome: "Cancelada Internamente", value: "CANCELADA_INTERNAMENTE"},
-			{nome: "Aguardando Aceite Digital", value: "AGUARDANDO_ACEITE_DIGITAL"},
-			{nome: "Sem Whatsapp", value: "SEM_WHATSAPP"},
-		];
-
-		this.suporteEnum = [
-			{nome: "Sim", value: "SIM"},
-			{nome: "Não", value: "NAO"},
-			{nome: "Exceção", value: "EXCECAO"},
-			{nome: "Cancelada Internamente", value: "CANCELADA_INTERNAMENTE"},
-		];
-
-		this.adicionaisEnum = ["Apps", "Aparelho", "Mob", "Deezer"];
 
 		this.atualizacaoColumns = [
 			{ field: 'statusId', headerName: 'Status', valueGetter: (value, row) => this.state.vendaStatusByVendaStatusId?.[value]?.nome, minWidth: 100, flex: 1, renderCell: (params) => <VendaStatusChip
@@ -331,6 +542,23 @@ class CreateEditVendaModule extends React.Component {
 		this.updateFatura = this.updateFatura.bind(this);
 		this.deleteFatura = this.deleteFatura.bind(this);
 
+		this.updateOs = this.updateOs.bind(this);
+		this.updateCustcode = this.updateCustcode.bind(this);
+		this.updateSistemaId = this.updateSistemaId.bind(this);
+		this.updateOrigem = this.updateOrigem.bind(this);
+		this.updateSafra = this.updateSafra.bind(this);
+		this.updateDataVenda = this.updateDataVenda.bind(this);
+		this.updateReimputado = this.updateReimputado.bind(this);
+		this.updateDataAtivacao = this.updateDataAtivacao.bind(this);
+		this.updatePrints = this.updatePrints.bind(this);
+		this.updateDataAgendamento = this.updateDataAgendamento.bind(this);
+		this.updateDataInstalacao = this.updateDataInstalacao.bind(this);
+		this.updatePdv = this.updatePdv.bind(this);
+		this.updateVendaOriginal = this.updateVendaOriginal.bind(this);
+		this.updateBrscan = this.updateBrscan.bind(this);
+		this.updateSuporte = this.updateSuporte.bind(this);
+		this.updateLoginVendedor = this.updateLoginVendedor.bind(this);
+
 		this.saveVenda = this.saveVenda.bind(this);
 		this.patchVenda = this.patchVenda.bind(this);
 		this.postVenda = this.postVenda.bind(this);
@@ -340,13 +568,14 @@ class CreateEditVendaModule extends React.Component {
 		this.deleteAnexo = this.deleteAnexo.bind(this);
 
 		this.setVendaIdFromParams = this.setVendaIdFromParams.bind(this);
+		this.setVendaIdFromProps = this.setVendaIdFromProps.bind(this);
 
 		this.openAlert = this.openAlert.bind(this);
 		this.closeAlert = this.closeAlert.bind(this);
 	}
 
 	componentDidMount() {
-		this.setVendaIdFromParams();
+		!this.props.inlineMode ? this.setVendaIdFromParams() : this.setVendaIdFromProps();
 		this.getUsuarioListFromApi();
 		this.getVendaStatusListFromApi();
 		this.getProdutoListFromApi();
@@ -368,6 +597,12 @@ class CreateEditVendaModule extends React.Component {
 			this.setState({createMode: true});
 	}
 
+	setVendaIdFromProps() {
+		this.setState({createMode: false, vendaId: this.props.vendaId}, () => {
+			this.getVendaFromApi();
+			this.getAnexoListFromApi();
+		});
+	}
 
 	getVendaFromApi() {
 		this.setState({calling: true, updatingVenda: true})
@@ -489,7 +724,9 @@ class CreateEditVendaModule extends React.Component {
 
 					calling: false,
 					updatingVenda: false,
-				}, () => this.calculateAtualizacaoRows());
+				}, () => {
+					this.calculateAtualizacaoRows()
+				});
 				console.log(venda);
 			})
 			.catch((err) => {
@@ -662,6 +899,8 @@ class CreateEditVendaModule extends React.Component {
 
 		produto[atributo] = valor;
 
+		vendaProdutoList[produtoIndex] = Object.assign({}, produto);
+
 		this.setState({vendaProdutoList: vendaProdutoList});
 	}
 
@@ -684,6 +923,8 @@ class CreateEditVendaModule extends React.Component {
 			telefone: "",
 		})
 
+		produto.portabilidadeList = [...produto.portabilidadeList];
+
 		this.setState({
 			vendaProdutoList: vendaProdutoList
 		})
@@ -699,6 +940,8 @@ class CreateEditVendaModule extends React.Component {
 
 		portabilidade[atributo] = valor;
 
+		produto.portabilidadeList = [...produto.portabilidadeList];
+
 		this.setState({vendaProdutoList: vendaProdutoList});
 	}
 
@@ -709,6 +952,8 @@ class CreateEditVendaModule extends React.Component {
 		let produto = vendaProdutoList[produtoIndex];
 
 		produto.portabilidadeList.splice(portabilidadeIndex, 1);
+
+		produto.portabilidadeList = [...produto.portabilidadeList];
 
 		this.setState({vendaProdutoList: vendaProdutoList});
 
@@ -736,6 +981,8 @@ class CreateEditVendaModule extends React.Component {
 
 		fatura[atributo] = valor;
 
+		faturaList[faturaIndex] = Object.assign({}, fatura);
+
 		this.setState({faturaList: faturaList});
 	}
 
@@ -748,6 +995,42 @@ class CreateEditVendaModule extends React.Component {
 		this.setState({faturaList: faturaList});
 
 	}
+
+	// otimização
+
+	updateOs = (e) => this.setState({os: e.target.value});
+
+	updateCustcode = (e) => this.setState({custcode: e.target.value});
+
+	updateSistemaId = (e) => this.setState({sistemaId: e.target.value});
+
+	updateOrigem = (e) => this.setState({origem: e.target.value});
+
+	updateSafra = (newValue) => this.setState({safra: newValue});
+
+	updateDataVenda = (newValue) => this.setState({dataVenda: newValue});
+
+	updateReimputado = (e) => this.setState({reimputado: e.target.value});
+
+	updateDataAtivacao = (newValue) => this.setState({dataAtivacao: newValue});
+
+	updatePrints = (e) => this.setState({prints: e.target.value});
+
+	updateDataAgendamento = (newValue) => this.setState({dataAgendamento: newValue});
+
+	updateDataInstalacao = (newValue) => this.setState({dataInstalacao: newValue});
+
+	updatePdv = (event, value) => this.setState({pdv: value});
+
+	updateVendaOriginal = (e) => this.setState({vendaOriginal: e.target.value});
+
+	updateBrscan = (e) => this.setState({brscan: e.target.value});
+
+	updateSuporte = (e) => this.setState({suporte: e.target.value});
+
+	updateLoginVendedor = (e) => this.setState({loginVendedor: e.target.value});
+
+	// fim otimização
 
 	openAlert(severity, message) {
 		this.setState({alert: <Alert severity={severity} onClose={this.closeAlert} sx={{ whiteSpace: 'pre-line' }}>{message}</Alert>, alertOpen: true});
@@ -1026,19 +1309,22 @@ class CreateEditVendaModule extends React.Component {
 	}
 
 	render() {
+
 		return (
 			<React.Fragment>
-				<Paper elevation={0} sx={{flexGrow: 1, padding: 5, minHeight: "100%", minWidth: "1000px", boxSizing: "border-box", display: "flex", flexDirection: "column", justifyContent: "start"}} className="modulePaper">
-					<Typography variant="h3" gutterBottom>
-					{this.state.createMode ? "Nova Venda" : "Editar Venda"}
-					</Typography>
-					<ButtonGroup sx={{marginBottom: 3}}>
-							<Button variant="outlined" size="large" startIcon={<ArrowBackIcon />}  onClick={() => this.props.navigate("/vendas")}>Voltar</Button>
-							{!this.state.createMode && <LoadingButton color="primary" variant="outlined" size="large" startIcon={<RefreshIcon />} loadingPosition="start" loading={this.state.updatingVenda} disabled={this.state.calling} onClick={this.getVendaFromApi}>Atualizar</LoadingButton>}
-					</ButtonGroup>
+				<Paper elevation={0} sx={{flexGrow: 1, padding: this.props.inlineMode ? 0 : 5, minHeight: "100%", minWidth: "1000px", boxSizing: "border-box", display: "flex", flexDirection: "column", justifyContent: "start"}} className="modulePaper">
+					{!this.props.inlineMode && <React.Fragment>
+						<Typography variant="h3" gutterBottom>
+						{this.state.createMode ? "Nova Venda" : "Editar Venda"}
+						</Typography>
+						<ButtonGroup sx={{marginBottom: 3}}>
+								<Button variant="outlined" size="large" startIcon={<ArrowBackIcon />}  onClick={() => this.props.navigate("/vendas")}>Voltar</Button>
+								{!this.state.createMode && <LoadingButton color="primary" variant="outlined" size="large" startIcon={<RefreshIcon />} loadingPosition="start" loading={this.state.updatingVenda} disabled={this.state.calling} onClick={this.getVendaFromApi}>Atualizar</LoadingButton>}
+						</ButtonGroup>
+					</React.Fragment>}
 					<Box display="flex" justifyContent="center">
 						{((this.state.createMode || this.state.venda !== null)) ?
-							<Grid container spacing={3} sx={{margin: 0, width: "100%"}}>
+							<Grid container spacing={3} sx={{margin: 0}} maxWidth="xl">
 								<Grid item xs={12}>
 									<Tabs
 										value={this.state.tab}
@@ -1162,7 +1448,7 @@ class CreateEditVendaModule extends React.Component {
 													onChange={(e) => this.setState({genero: e.target.value})}
 													>
 													<MenuItem key={"nenhum"} value={null}>Nenhum</MenuItem>
-													{this.generoEnum.map((genero) => <MenuItem key={genero.value} value={genero.value}>{genero.nome}</MenuItem>)}
+													{Object.keys(VendaGeneroEnum).map((genero) => <MenuItem key={genero} value={genero}>{VendaGeneroEnum[genero]}</MenuItem>)}
 												</Select>
 											</FormControl>
 										</Grid>
@@ -1255,7 +1541,7 @@ class CreateEditVendaModule extends React.Component {
 													onChange={(e) => this.setState({porte: e.target.value})}
 													>
 													<MenuItem key={"nenhum"} value={null}>Nenhum</MenuItem>
-													{this.porteEnum.map((porte) => <MenuItem key={porte.value} value={porte.value}>{porte.nome}</MenuItem>)}
+													{Object.keys(VendaPorteEnum).map((porte) => <MenuItem key={porte} value={porte}>{VendaPorteEnum[porte]}</MenuItem>)}
 												</Select>
 											</FormControl>
 										</Grid>
@@ -1554,178 +1840,20 @@ class CreateEditVendaModule extends React.Component {
 											<Box display="flex" flexDirection="column" gap={3}>
 												{this.state.vendaProdutoList.length == 0 ? <Alert severity="info">Os produtos que você adicionar aparecerão aqui.</Alert> : ""}
 												{this.state.vendaProdutoList.map((produto, i) => 
-													<Paper key={i} sx={{padding: 3}}>
-														<Grid container spacing={3}>
-															<Grid item xs={12}>
-																<Divider><Chip label={i + 1} /></Divider>
-															</Grid>
-															<Grid item xs={6}>
-																<TextField
-																	required
-																	value={produto.nome}
-																	onChange={(e) => this.updateProduto(i, "nome", e.target.value)}
-																	fullWidth
-																	label="Nome"
-																	variant="outlined"
-																	disabled={this.state.calling}
-																	error={`produtoList[${i}].nome` in this.state.errors}
-																	helperText={this.state.errors?.[`produtoList[${i}].nome`] ?? ""}
-																	inputProps={{
-																		maxLength: 100,
-																	}}
-																/>
-															</Grid>
-															<Grid item xs={6}>
-																<MoneyInput
-																	required
-																	value={produto.valor}
-																	onChange={(e) => this.updateProduto(i, "valor", e.target.value)}
-																	fullWidth
-																	label="Valor"
-																	variant="outlined"
-																	error={`produtoList[${i}].valor` in this.state.errors}
-																	helperText={this.state.errors?.[`produtoList[${i}].valor`] ?? ""}
-																	disabled={this.state.calling}
-																/>
-															</Grid>
-															{this.state.tipoProduto == "MOVEL" ? <React.Fragment>
-																<Grid item xs={12}>
-																	<Autocomplete
-																		freeSolo
-																		disableClearable
-																		options={this.adicionaisEnum}
-																		value={produto.adicionais}
-																		onInputChange={(event, value) => this.updateProduto(i, "adicionais", value)}
-																		renderInput={(params) => (
-																			<TextField
-																				{...params}
-																				variant="outlined"
-																				label="Adicionais"
-																			/>
-																		)}
-																	/>
-																</Grid>
-																<Grid item xs={4}>
-																	<FormControl fullWidth required>
-																		<InputLabel>Tipo de Linha</InputLabel>
-																		<Select
-																			value={produto.tipoDeLinha}
-																			label="Tipo de Linha"
-																			onChange={(e) => this.updateProduto(i, "tipoDeLinha", e.target.value)}
-																			>
-																			{this.tipoDeLinhaEnum.map((tipoDeLinha) => <MenuItem key={tipoDeLinha.value} value={tipoDeLinha.value}>{tipoDeLinha.nome}</MenuItem>)}
-																		</Select>
-																	</FormControl>
-																</Grid>
-																<Grid item xs={4}>
-																	<TextField
-																		value={produto.ddd}
-																		onChange={(e) => this.updateProduto(i, "ddd", e.target.value)}
-																		fullWidth
-																		label="DDD"
-																		variant="outlined"
-																		disabled={this.state.calling}
-																		error={`produtoList[${i}].ddd` in this.state.errors}
-																		helperText={this.state.errors?.[`produtoList[${i}].ddd`] ?? ""}
-																		inputProps={{
-																			maxLength: 2,
-																		}}
-																	/>
-																</Grid>
-																<Grid item xs={4}>
-																	<TextField
-																		required
-																		value={produto.quantidade}
-																		onChange={(e) => this.updateProduto(i, "quantidade", e.target.value)}
-																		fullWidth
-																		label="Quantidade"
-																		variant="outlined"
-																		disabled={this.state.calling}
-																		error={`produtoList[${i}].quantidade` in this.state.errors}
-																		helperText={this.state.errors?.[`produtoList[${i}].quantidade`] ?? ""}
-																		type="number"
-																	/>
-																</Grid>
-																<Grid item xs={12}>
-																	<TextField
-																		value={produto.operadora}
-																		onChange={(e) => this.updateProduto(i, "operadora", e.target.value)}
-																		fullWidth
-																		label="Operadora"
-																		variant="outlined"
-																		disabled={this.state.calling}
-																		error={`produtoList[${i}].operadora` in this.state.errors}
-																		helperText={this.state.errors?.[`produtoList[${i}].operadora`] ?? ""}
-																		inputProps={{
-																			maxLength: 20,
-																		}}
-																	/>
-																</Grid>
-																{produto.portabilidadeList.length == 0 ? <Grid item xs={12}><Alert severity="info">Os telefones que você adicionar aparecerão aqui.</Alert></Grid> : ""}
-																{produto.portabilidadeList.map((portabilidade, j) =>
-																	<Grid item xs={3} key={j}>
-																		<PhoneInput
-																			required
-																			value={portabilidade.telefone}
-																			onChange={(e) => this.updatePortabilidade(i, j, "telefone", e.target.value)}
-																			fullWidth
-																			label="Telefone (sem DDD)"
-																			variant="outlined"
-																			disabled={this.state.calling}
-																			error={`produtoList[${i}].portabilidadeList[${i}].telefone` in this.state.errors}
-																			helperText={this.state.errors?.[`produtoList[${i}].portabilidadeList[${i}].telefone`] ?? ""}
-																			ddd={false}
-																			InputProps={{
-																				endAdornment: 	<InputAdornment position="end">
-																									<IconButton
-																										onClick={() => this.deletePortabilidade(i, j)}
-																									>
-																										<DeleteIcon/>
-																									</IconButton>
-																								</InputAdornment>,
-																			}}
-																		/>
-																	</Grid>
-																)}
-																<Grid item xs={12} container display="flex" justifyContent="flex-end">
-																	<Button variant="contained" size="large" startIcon={<AddIcon />} onClick={() => this.addPortabilidade(i)}>Adicionar Telefone</Button>
-																</Grid>
-															</React.Fragment> : <React.Fragment>
-																<Grid item xs={3}>
-																	<FormControl>
-																		<FormLabel id={"telefone-fixo" + i}>Telefone Fixo</FormLabel>
-																		<RadioGroup
-																			row
-																			aria-labelledby={"telefone-fixo" + i}
-																			name="controlled-radio-buttons-group"
-																			value={produto.telefoneFixo}
-																			onChange={(e) => this.updateProduto(i, "telefoneFixo", e.target.value)}
-																		>
-																		<FormControlLabel value={true} control={<Radio />} label="Sim" />
-																		<FormControlLabel value={false} control={<Radio />} label="Não" />
-																		</RadioGroup>
-																	</FormControl>
-																</Grid>
-																{String(produto.telefoneFixo) == "true" ?
-																	<Grid item xs={3}>
-																		<MoneyInput
-																			required
-																			value={produto.valorTelefoneFixo}
-																			onChange={(e) => this.updateProduto(i, "valorTelefoneFixo", e.target.value)}
-																			fullWidth
-																			label="Valor Telefone Fixo"
-																			variant="outlined"
-																			disabled={this.state.calling}
-																			error={`produtoList[${i}].valorTelefoneFixo` in this.state.errors}
-																			helperText={this.state.errors?.[`produtoList[${i}].valorTelefoneFixo`] ?? ""}
-																		/>
-																	</Grid> : ""}
-															</React.Fragment>}
-															<Grid item xs={12}>
-																<Button color="error" variant="contained" size="large" startIcon={<DeleteIcon />} onClick={() => this.deleteProduto(i)}>Remover Produto</Button>
-															</Grid>
-														</Grid>
-													</Paper>
+													<ProdutoPaper
+														key={i}
+														produto={produto}
+														i={i}
+														errors={this.state.errors}
+														calling={this.state.calling}
+														updateProduto={this.updateProduto}
+														deleteProduto={this.deleteProduto}
+														portabilidadeList={produto.portabilidadeList}
+														addPortabilidade={this.addPortabilidade}
+														updatePortabilidade={this.updatePortabilidade}
+														deletePortabilidade={this.deletePortabilidade}
+														tipoProduto={this.state.tipoProduto}
+													/>
 												)}
 											</Box>
 										</Grid>
@@ -1740,7 +1868,7 @@ class CreateEditVendaModule extends React.Component {
 										<TextField
 											id="os"
 											value={this.state.os}
-											onChange={(e) => this.setState({os: e.target.value})}
+											onChange={this.updateOs}
 											fullWidth
 											label="OS"
 											variant="outlined"
@@ -1756,7 +1884,7 @@ class CreateEditVendaModule extends React.Component {
 										<TextField
 											id="custcode"
 											value={this.state.custcode}
-											onChange={(e) => this.setState({custcode: e.target.value})}
+											onChange={this.updateCustcode}
 											fullWidth
 											label="Cust-Code"
 											variant="outlined"
@@ -1775,7 +1903,7 @@ class CreateEditVendaModule extends React.Component {
 												id="sistema"
 												value={this.state.sistemaId}
 												label="Sistema"
-												onChange={(e) => this.setState({sistemaId: e.target.value})}
+												onChange={this.updateSistemaId}
 												>
 												<MenuItem key={"nenhum"} value={null}>Nenhum</MenuItem>
 												{(this.state.sistemaList ?? []).map((sistema) => <MenuItem key={sistema.sistemaId} value={sistema.sistemaId}>{sistema.nome}</MenuItem>)}
@@ -1786,7 +1914,7 @@ class CreateEditVendaModule extends React.Component {
 										<TextField
 											id="origem"
 											value={this.state.origem}
-											onChange={(e) => this.setState({origem: e.target.value})}
+											onChange={this.updateOrigem}
 											fullWidth
 											label="Mailing/Origem"
 											variant="outlined"
@@ -1803,7 +1931,7 @@ class CreateEditVendaModule extends React.Component {
 											label="Safra"
 											views={['month', 'year']}
 											value={this.state.safra}
-											onChange={(newValue) => this.setState({safra: newValue})}
+											onChange={this.updateSafra}
 											slotProps={{
 												field: { clearable: true },
 												textField: {
@@ -1819,7 +1947,7 @@ class CreateEditVendaModule extends React.Component {
 										<DateTimePicker
 											label="Data da Venda"
 											value={this.state.dataVenda}
-											onChange={(newValue) => this.setState({dataVenda: newValue})}
+											onChange={this.updateDataVenda}
 											slotProps={{
 												required: !this.state.createMode,
 												field: { clearable: true },
@@ -1839,7 +1967,7 @@ class CreateEditVendaModule extends React.Component {
 													row
 													aria-labelledby="reimputado"
 													value={this.state.reimputado}
-													onChange={(e) => this.setState({reimputado: e.target.value})}
+													onChange={this.updateReimputado}
 												>
 												<FormControlLabel value={true} control={<Radio />} label="Sim" />
 												<FormControlLabel value={false} control={<Radio />} label="Não" />
@@ -1851,7 +1979,7 @@ class CreateEditVendaModule extends React.Component {
 											<DateTimePicker
 													label="Data da Ativação"
 													value={this.state.dataAtivacao}
-													onChange={(newValue) => this.setState({dataAtivacao: newValue})}
+													onChange={this.updateDataAtivacao}
 													slotProps={{
 														field: { clearable: true },
 														textField: {
@@ -1870,7 +1998,7 @@ class CreateEditVendaModule extends React.Component {
 													aria-labelledby="prints"
 													name="controlled-radio-buttons-group"
 													value={this.state.prints}
-													onChange={(e) => this.setState({prints: e.target.value})}
+													onChange={this.updatePrints}
 												>
 												<FormControlLabel value={true} control={<Radio />} label="Sim" />
 												<FormControlLabel value={false} control={<Radio />} label="Não" />
@@ -1882,7 +2010,7 @@ class CreateEditVendaModule extends React.Component {
 											<DateTimePicker
 													label="Data de Agendamento"
 													value={this.state.dataAgendamento}
-													onChange={(newValue) => this.setState({dataAgendamento: newValue})}
+													onChange={this.updateDataAgendamento}
 													slotProps={{
 														field: { clearable: true },
 														textField: {
@@ -1897,7 +2025,7 @@ class CreateEditVendaModule extends React.Component {
 											<DateTimePicker
 													label="Data de Instalação"
 													value={this.state.dataInstalacao}
-													onChange={(newValue) => this.setState({dataInstalacao: newValue})}
+													onChange={this.updateDataInstalacao}
 													slotProps={{
 														field: { clearable: true },
 														textField: {
@@ -1915,7 +2043,7 @@ class CreateEditVendaModule extends React.Component {
 												disableClearable
 												options={(this.state.pontoDeVendaList ?? []).map(pontoDeVenda => pontoDeVenda.nome)}
 												value={this.state.pdv}
-												onInputChange={(event, value) => this.setState({pdv: value})}
+												onInputChange={this.updatePdv}
 												renderInput={(params) => (
 													<TextField
 														{...params}
@@ -1935,7 +2063,7 @@ class CreateEditVendaModule extends React.Component {
 													aria-labelledby="venda-original"
 													name="controlled-radio-buttons-group"
 													value={this.state.vendaOriginal}
-													onChange={(e) => this.setState({vendaOriginal: e.target.value})}
+													onChange={this.updateVendaOriginal}
 												>
 												<FormControlLabel value={true} control={<Radio />} label="Sim" />
 												<FormControlLabel value={false} control={<Radio />} label="Não" />
@@ -1948,9 +2076,9 @@ class CreateEditVendaModule extends React.Component {
 												<Select
 													value={this.state.brscan}
 													label="BrScan"
-													onChange={(e) => this.setState({brscan: e.target.value})}
+													onChange={this.updateBrscan}
 													>
-													{this.brscanEnum.map((brscan) => <MenuItem key={brscan.value} value={brscan.value}>{brscan.nome}</MenuItem>)}
+													{Object.keys(VendaBrscanEnum).map((brscan) => <MenuItem key={brscan} value={brscan}>{VendaBrscanEnum[brscan]}</MenuItem>)}
 												</Select>
 											</FormControl>
 										</Grid>
@@ -1960,9 +2088,9 @@ class CreateEditVendaModule extends React.Component {
 												<Select
 													value={this.state.suporte}
 													label="Suporte"
-													onChange={(e) => this.setState({suporte: e.target.value})}
+													onChange={this.updateSuporte}
 													>
-													{this.suporteEnum.map((suporte) => <MenuItem key={suporte.value} value={suporte.value}>{suporte.nome}</MenuItem>)}
+													{Object.keys(VendaSuporteEnum).map((suporte) => <MenuItem key={suporte} value={suporte}>{VendaSuporteEnum[suporte]}</MenuItem>)}
 												</Select>
 											</FormControl>
 										</Grid>
@@ -1970,7 +2098,7 @@ class CreateEditVendaModule extends React.Component {
 											<TextField
 												id="login-vendedor"
 												value={this.state.loginVendedor}
-												onChange={(e) => this.setState({loginVendedor: e.target.value})}
+												onChange={this.updateLoginVendedor}
 												fullWidth
 												label="Login Vendedor"
 												variant="outlined"
@@ -2167,7 +2295,7 @@ class CreateEditVendaModule extends React.Component {
 												onChange={(e) => this.setState({formaDePagamento: e.target.value})}
 												>
 												<MenuItem key={"nenhum"} value={null}>Nenhum</MenuItem>
-												{this.formaDePagamentoEnum.map((formaDePagamento) => <MenuItem key={formaDePagamento.value} value={formaDePagamento.value}>{formaDePagamento.nome}</MenuItem>)}
+												{Object.keys(VendaFormaDePagamentoEnum).map((formaDePagamento) => <MenuItem key={formaDePagamento} value={formaDePagamento}>{VendaFormaDePagamentoEnum[formaDePagamento]}</MenuItem>)}
 											</Select>
 										</FormControl>
 									</Grid>
@@ -2246,60 +2374,19 @@ class CreateEditVendaModule extends React.Component {
 								{this.state.tab == "FATURAS" ? <React.Fragment>
 									<Grid item xs={12}>
 										<Box display="flex" flexDirection="column" gap={3}>
-											{this.state.faturaList.length == 0 ? <Alert severity="info">As faturas que você adicionar aparecerão aqui.</Alert> : ""}
-											{this.state.faturaList.map((fatura, i) => 
-												<Paper key={i} sx={{padding: 3}}>
-													<Grid container spacing={3}>
-														<Grid item xs={12}>
-															<Divider><Chip label={i + 1} /></Divider>
-														</Grid>
-														<Grid item xs={4}>
-															<DatePicker
-																label="Mês"
-																views={['month', 'year']}
-																value={fatura.mes}
-																onChange={(newValue) => this.updateFatura(i, "mes", newValue)}
-																slotProps={{
-																	textField: {
-																		required: true,
-																		fullWidth: true,
-																	}
-																}}
-															/>
-														</Grid>
-														<Grid item xs={4}>
-															<FormControl fullWidth required>
-																<InputLabel>Status</InputLabel>
-																<Select
-																	value={fatura.status}
-																	label="Status"
-																	onChange={(e) => this.updateFatura(i, "status", e.target.value)}
-																	>
-																	{this.faturaStatusEnum.map((status) => <MenuItem key={status.value} value={status.value}>{status.nome}</MenuItem>)}
-																</Select>
-															</FormControl>
-														</Grid>
-														<Grid item container xs={4} display="flex" flexDirection="row" gap={3} alignItems="center">
-															<MoneyInput
-																required
-																value={fatura.valor}
-																onChange={(e) => this.updateFatura(i, "valor", e.target.value)}
-																label="Valor"
-																variant="outlined"
-																disabled={this.state.calling}
-																error={`faturaList[${i}].valor` in this.state.errors}
-																helperText={this.state.errors?.[`faturaList[${i}].valor`] ?? ""}
-																sx={{flexGrow: 1}}
-															/>
-															<IconButton
-																onClick={() => this.deleteFatura(i)}
-															>
-																<DeleteIcon/>
-															</IconButton>
-														</Grid>
-													</Grid>
-												</Paper>
-											)}
+											{this.state.faturaList.length == 0 ? <Alert severity="info">As faturas que você adicionar aparecerão aqui.</Alert> :
+												this.state.faturaList.map((fatura, i) =>
+													<FaturaPaper
+														key={i}
+														fatura={fatura}
+														i={i}
+														errors={this.state.errors}
+														calling={this.state.calling}
+														updateFatura={this.updateFatura}
+														deleteFatura={this.deleteFatura}
+													/>
+												)
+											}
 										</Box>
 									</Grid>
 									<Grid item xs={12} container display="flex" justifyContent="flex-end">
@@ -2335,7 +2422,7 @@ class CreateEditVendaModule extends React.Component {
 												id="novo-status"
 												loading={this.state.vendaStatusList == null}
 												options={(this.state.vendaStatusList ?? []).map((vendaStatus) => vendaStatus.vendaStatusId).sort((a, b) => this.state.vendaStatusByVendaStatusId[a].ordem - this.state.vendaStatusByVendaStatusId[b].ordem)}
-												groupBy={(option) => VendaStatusCategoriaMap?.[this.state.vendaStatusByVendaStatusId?.[option]?.categoria] ?? "Sem Categoria"}
+												groupBy={(option) => VendaStatusCategoriaEnum?.[this.state.vendaStatusByVendaStatusId?.[option]?.categoria] ?? "Sem Categoria"}
 												getOptionLabel={(option) => this.state.vendaStatusByVendaStatusId?.[option]?.nome ?? ""}
 												value={this.state.novoStatusId}
 												onChange={(event, value) => this.setState({novoStatusId: value})}
@@ -2411,7 +2498,7 @@ class CreateEditVendaModule extends React.Component {
 											{(this.state?.anexoList ?? []).length == 0 ? <Alert severity="info">Os anexos que você adicionar aparecerão aqui.</Alert> : ""}
 											<Stack direction="row" spacing={1}>
 												{(this.state?.anexoList ?? []).map((anexo) =>
-													!anexo.trashed && <Chip
+													!anexo.trashed && <Tooltip title={anexo.thumbnailLink ? <img width="200px" src={anexo.thumbnailLink}/> : "Pré-visualização indisponível"} arrow><Chip
 														key={anexo.id}
 														component="a"
 														clickable
@@ -2422,7 +2509,7 @@ class CreateEditVendaModule extends React.Component {
 														onDelete={(e) => {e.preventDefault();this.trashAnexo(anexo.id)}}
 														disabled={this.state.calling}
 														color="primary"
-													/>)}
+													/></Tooltip>)}
 											</Stack>
 										</Grid>
 										{this.props.usuario.permissaoList.includes("VER_LIXEIRA") && <React.Fragment>
@@ -2433,7 +2520,7 @@ class CreateEditVendaModule extends React.Component {
 												<Grid item xs={12}>
 													<Stack direction="row" spacing={1}>
 														{(this.state?.anexoList ?? []).map((anexo) =>
-														anexo.trashed && <Chip
+														anexo.trashed && <Tooltip title={anexo.thumbnailLink ? <img width="200px" src={anexo.thumbnailLink}/> : "Pré-visualização indisponível"} arrow><Chip
 															key={anexo.id}
 															component="a"
 															clickable
@@ -2444,7 +2531,7 @@ class CreateEditVendaModule extends React.Component {
 															onDelete={(e) => {e.preventDefault();this.deleteAnexo(anexo.id)}}
 															disabled={this.state.calling}
 															color="error"
-														/>)}
+														/></Tooltip>)}
 													</Stack>
 												</Grid>
 											</React.Fragment>
@@ -2487,9 +2574,11 @@ class CreateEditVendaModule extends React.Component {
 							: ""}
 						</Box>
 				</Paper>
-				<Snackbar open={this.state.alertOpen} onClose={(e, reason) => (reason !== "clickaway") ? this.closeAlert() : ""} anchorOrigin={{vertical: "bottom", horizontal: "right"}}>
+				{!this.props.inlineMode ? <Snackbar open={this.state.alertOpen} onClose={(e, reason) => (reason !== "clickaway") ? this.closeAlert() : ""} anchorOrigin={{vertical: "bottom", horizontal: "right"}}>
 					<div>{this.state.alert}</div>
-				</Snackbar>
+				</Snackbar> : <Collapse in={this.state.alertOpen}>
+						{this.state.alert}
+					</Collapse>}
 				<Dialog
 					disableEscapeKeyDown
 					open={this.state.addProdutoDialogOpen}

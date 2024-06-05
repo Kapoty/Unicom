@@ -70,7 +70,7 @@ class CustomAppBar extends React.Component {
 			          >
 			            <MenuIcon />
 			         </IconButton>
-		           	<Box sx={{display: "flex", flexGrow: 1, justifyContent: "left", alignItems: "center", gap: "10px", "&:hover": {cursor: "pointer"}}} onClick={() => {}}>
+		           	<Box sx={{display: "flex", flexGrow: 1, justifyContent: "left", alignItems: "center", gap: "10px", height: "100%", gap: "10px"}}>
 	           			<Link to="/">
            					<Box sx={{ display: { xs: 'none', md: 'block' } }}>
 		           				<img style={{width: "auto", height: "24px"}} src='/assets/image/UniSystem_Logo.png'/>
@@ -79,6 +79,10 @@ class CustomAppBar extends React.Component {
 		           				<img style={{width: "auto", height: "12px"}} src='/assets/image/UniSystem_Logo.png'/>
 		           			</Box>
 		           		</Link>
+		           		<Divider orientation="vertical" variant="middle" flexItem/>
+		           		<Typography>
+		           			{this.props.usuario.empresa.nome}
+		           		</Typography>
 		           	</Box>
 		           	{this.props.usuario !== null && this.props.usuario.permissaoList.includes("VER_MODULO_IFRAME") && this.props.location.pathname.startsWith("/i/") ? <React.Fragment>
 			           	<Tooltip title="Recarregar">

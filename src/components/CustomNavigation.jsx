@@ -127,6 +127,40 @@ class CustomNavigation extends React.Component {
 							</ListItem>*/}
 						{this.props.usuario !== null ?
 							<React.Fragment>
+								{this.props.usuario.permissaoList.includes("CADASTRAR_VENDAS") ?
+								<React.Fragment>
+									<ListItemButton divider onClick={() => this.setState({vendaModuleOpen: !this.state.vendaModuleOpen})}>
+										<ListItemIcon>
+											<Icon>credit_card</Icon>
+										</ListItemIcon>
+										<ListItemText primary={"Vendas"} sx={{wordBreak: "break-all"}}/>
+										{this.state.vendaModuleOpen ? <ExpandLess /> : <ExpandMore />}
+									</ListItemButton>
+									<Collapse in={this.state.vendaModuleOpen}>
+										<List component="div" disablePadding>
+											<ListItem disablePadding>
+												<ListItemButton onClick={() => {this.props.navigate(`vendas`)}} sx={{ pl: 3 }}
+													selected={this.props.location.pathname == `/vendas`}
+													>
+													<ListItemIcon>
+														<Icon>credit_card</Icon>
+													</ListItemIcon>
+													<ListItemText primary={"Vendas"}/>
+												</ListItemButton>
+											</ListItem>
+											<ListItem disablePadding>
+												<ListItemButton onClick={() => {this.props.navigate(`vendas/novo`)}} sx={{ pl: 3 }}
+													selected={/^\/vendas\/(\d|(novo))+$/.test(this.props.location.pathname)}
+													>
+													<ListItemIcon>
+														<Icon>add_card</Icon>
+													</ListItemIcon>
+													<ListItemText primary={"Nova Venda"}/>
+												</ListItemButton>
+											</ListItem>
+										</List>
+									</Collapse>
+								</React.Fragment> : ""}
 						      	{this.props.usuario.permissaoList.includes("VER_MODULO_IFRAME") ?
 						      	<React.Fragment>
 								 	<ListItemButton divider onClick={() => this.setState({iframeListOpen: !this.state.iframeListOpen})}>
@@ -272,40 +306,6 @@ class CustomNavigation extends React.Component {
 														<Icon>group_add</Icon>
 													</ListItemIcon>
 													<ListItemText primary={"Nova Equipe"}/>
-												</ListItemButton>
-											</ListItem>
-										</List>
-									</Collapse>
-								</React.Fragment> : ""}
-								{this.props.usuario.permissaoList.includes("CADASTRAR_VENDAS") ?
-								<React.Fragment>
-									<ListItemButton divider onClick={() => this.setState({vendaModuleOpen: !this.state.vendaModuleOpen})}>
-										<ListItemIcon>
-											<Icon>credit_card</Icon>
-										</ListItemIcon>
-										<ListItemText primary={"Vendas"} sx={{wordBreak: "break-all"}}/>
-										{this.state.vendaModuleOpen ? <ExpandLess /> : <ExpandMore />}
-									</ListItemButton>
-									<Collapse in={this.state.vendaModuleOpen}>
-										<List component="div" disablePadding>
-											<ListItem disablePadding>
-												<ListItemButton onClick={() => {this.props.navigate(`vendas`)}} sx={{ pl: 3 }}
-													selected={this.props.location.pathname == `/vendas`}
-													>
-													<ListItemIcon>
-														<Icon>credit_card</Icon>
-													</ListItemIcon>
-													<ListItemText primary={"Vendas"}/>
-												</ListItemButton>
-											</ListItem>
-											<ListItem disablePadding>
-												<ListItemButton onClick={() => {this.props.navigate(`vendas/novo`)}} sx={{ pl: 3 }}
-													selected={/^\/vendas\/(\d|(novo))+$/.test(this.props.location.pathname)}
-													>
-													<ListItemIcon>
-														<Icon>add_card</Icon>
-													</ListItemIcon>
-													<ListItemText primary={"Nova Venda"}/>
 												</ListItemButton>
 											</ListItem>
 										</List>

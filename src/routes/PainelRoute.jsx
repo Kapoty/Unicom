@@ -128,13 +128,19 @@ class PainelRoute extends React.Component {
 	getUsuarioFromApi() {
 		api.get("/usuario/me")
 			.then((response) => {
-				this.setState({isAuth: true, usuario: response.data});
-				if (response.data.permissaoList.includes("VER_MODULO_IFRAME"))
+				let usuario = response.data;
+
+				this.setState({isAuth: true, usuario: usuario});
+				
+				if (usuario.permissaoList.includes("VER_MODULO_IFRAME"))
 					this.getIframeCategoryListFromApi();
-				if (response.data.permissaoList.includes("VER_MODULO_MINHA_EQUIPE"))
+				if (usuario.permissaoList.includes("VER_MODULO_MINHA_EQUIPE"))
 					this.getMinhaEquipeListFromApi();
+
+				this.props.updateThemePrimaryColor("#" + usuario.empresa.themePrimaryColor);
 			})
 			.catch((err) => {
+				console.error(err);
 				setTimeout(this.getUsuarioFromApi, 3000);
 			});
 	}

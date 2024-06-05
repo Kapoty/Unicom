@@ -31,112 +31,141 @@ import { LicenseInfo } from '@mui/x-license';
 
 LicenseInfo.setLicenseKey('e0d9bb8070ce0054c9d9ecb6e82cb58fTz0wLEU9MzI0NzIxNDQwMDAwMDAsUz1wcmVtaXVtLExNPXBlcnBldHVhbCxLVj0y');
 
-const theme = createTheme({
-	palette: {
-			mode: "dark",
-			primary: {
-				main: "#1976d2"//"#00c853"
+const SiteRouter = React.memo(({themePrimaryColor, updateThemePrimaryColor}) => {
+
+	const theme = React.useMemo(() =>
+		createTheme({
+			palette: {
+					mode: "dark",
+					primary: {
+						main: themePrimaryColor//"#1976d2"//"#00c853"
+					},
+					secondary: red,
+					success: {
+						main: "#388e3c"
+					},
+					error: {
+						main: "#d32f2f"
+					},
+					info: {
+						main: "#303f9f"
+					},
+					warning: {
+						main: "#fbc02d"//"#e64a19"
+					},
+					background: {
+						default: "#0f1214",//"#0a0b0c",
+						paper: "#0f1214",
+						light: "#13181b",
+					 },
+					green: green,
+					grey: {
+						light: grey[300],
+						main: grey[500],
+						dark: grey[700],
+						contrastText: "#111",
+					}
 			},
-			secondary: red,
-			success: {
-				main: "#388e3c"
+			/*mixins: {
+				MuiDataGrid: {
+				// Pinned columns sections
+				pinnedBackground: '#000',
+				// Headers, and top & bottom fixed rows
+				containerBackground: '#000',
+				},
+			},*/
+			components: {
+				/*MuiButtonBase: {
+					defaultProps: {
+						disableRipple: true,
+					},
+				},*/
+				MuiAccordionSummary: {
+					styleOverrides: {
+						root: {
+							fontFamily: "Roboto",
+						}
+					},
+				},
+				MuiPaper: {
+					defaultProps: {
+						//elevation: 0,
+						//variant: "outlined",
+					}
+				},
+				MuiDialog: {
+					defaultProps: {
+						PaperProps: {
+							elevation: 0,
+							variant: "outlined",
+						}
+					}
+				},
+				MuiAlert: {
+					defaultProps: {
+						variant: "standard",
+					}
+				},
 			},
-			error: {
-				main: "#d32f2f"
+			/*transitions: {
+				// So we have `transition: none;` everywhere
+				create: () => 'none',
+			},*/
 			},
-			info: {
-				main: "#303f9f"
-			},
-			warning: {
-				main: "#fbc02d"//"#e64a19"
-			},
-			background: {
-				default: "#0f1214",//"#0a0b0c",
-				paper: "#0f1214",
-				light: "#13181b",
-			 },
-			green: green,
-			grey: {
-				light: grey[300],
-				main: grey[500],
-				dark: grey[700],
-				contrastText: "#111",
-			}
-	},
-	/*mixins: {
-		MuiDataGrid: {
-		// Pinned columns sections
-		pinnedBackground: '#000',
-		// Headers, and top & bottom fixed rows
-		containerBackground: '#000',
-		},
-	},*/
-	components: {
-		/*MuiButtonBase: {
-			defaultProps: {
-				disableRipple: true,
-			},
-		},*/
-		MuiAccordionSummary: {
-			styleOverrides: {
-				root: {
-					fontFamily: "Roboto",
-				}
-			},
-		},
-		MuiPaper: {
-			defaultProps: {
-				//elevation: 0,
-				//variant: "outlined",
-			}
-		},
-		MuiDialog: {
-			defaultProps: {
-				PaperProps: {
-					elevation: 0,
-					variant: "outlined",
-				}
-			}
-		},
-		MuiAlert: {
-			defaultProps: {
-				variant: "standard",
-			}
-		},
-	},
-	/*transitions: {
-		// So we have `transition: none;` everywhere
-		create: () => 'none',
-	},*/
-	},
-	ptBR,	
-);
-class SiteRouter extends React.Component {
+			ptBR,	
+		)
+	, [themePrimaryColor]);
+
+	console.log("SiteRouter was rendered at", new Date().toLocaleTimeString());
+
+	return <HistoryRouter history={history}>
+					<ThemeProvider theme={theme}>
+						<LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="pt">
+							<div id="app">
+								<Suspense fallback={<Backdrop sx={{color: "primary.main"}} open={true}>
+														<CircularProgress color="inherit"/>
+													</Backdrop>}>
+									<Routes>
+										 <Route path="/login" element={<LoginRoute updateThemePrimaryColor={updateThemePrimaryColor}/>} />
+										 {/*<Route path="/ponto-facial" element={<PontoFacialRoute/>} />*/}
+										 <Route path="/*" element={<PainelRoute updateThemePrimaryColor={updateThemePrimaryColor}/>} />
+									</Routes>
+								</Suspense>
+							</div>
+						</LocalizationProvider>
+				 	</ThemeProvider>
+				</HistoryRouter>
+
+});
+
+class App extends React.Component {
+
+	constructor(props) {
+		super(props);
+
+		this.defaultThemePrimaryColor = "#455a64";
+
+		this.state = {
+			themePrimaryColor: this.defaultThemePrimaryColor
+		};
+
+		this.updateThemePrimaryColor = this.updateThemePrimaryColor.bind(this);
+	}
+
+	updateThemePrimaryColor(themePrimaryColor) {
+		this.setState({themePrimaryColor: themePrimaryColor !== "" ? themePrimaryColor : this.defaultThemePrimaryColor});
+	}
 
 	render() {
-	return <HistoryRouter history={history}>
-				<ThemeProvider theme={theme}>
-					<LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="pt">
-						<div id="app">
-							<Suspense fallback={<Backdrop sx={{color: "primary.main"}} open={true}>
-													<CircularProgress color="inherit"/>
-												</Backdrop>}>
-								<Routes>
-									 <Route path="/login" element={<LoginRoute/>} />
-									 {/*<Route path="/ponto-facial" element={<PontoFacialRoute/>} />*/}
-									 <Route path="/*" element={<PainelRoute/>} />
-								</Routes>
-							</Suspense>
-						</div>
-					</LocalizationProvider>
-			 	</ThemeProvider>
-			</HistoryRouter>
-	 }
+		console.log("App was rendered at", new Date().toLocaleTimeString());
+
+		return <SiteRouter themePrimaryColor={this.state.themePrimaryColor} updateThemePrimaryColor={this.updateThemePrimaryColor} />
+	}
 }
 
-const root = createRoot( document.getElementById("root"));
+const root = createRoot(document.getElementById("root"));
 
-root.render(<SiteRouter/>,);
+root.render(<App/>,);
 
 if ('serviceWorker' in navigator) {
 	window.addEventListener('load', () => {

@@ -3,7 +3,7 @@ import React, {memo} from "react";
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import CircularProgress from '@mui/material/CircularProgress';
-import { DataGridPremium, GridToolbar, GridToolbarContainer, GridToolbarExport, GridToolbarColumnsButton, GridToolbarDensitySelector, gridClasses } from '@mui/x-data-grid-premium';
+import { DataGridPremium, GridToolbar, GridToolbarContainer, GridToolbarExport, GridToolbarColumnsButton, GridToolbarDensitySelector, gridClasses, useGridApiRef } from '@mui/x-data-grid-premium';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import ButtonGroup from '@mui/material/ButtonGroup';
@@ -36,14 +36,29 @@ import Menu from '@mui/material/Menu';
 import PreviewIcon from '@mui/icons-material/Preview';
 import { useTheme } from "@mui/material/styles";
 import Snackbar from '@mui/material/Snackbar';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
+import CloseIcon from '@mui/icons-material/Close';
+import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 
 import { DateRangePicker } from '@mui/x-date-pickers-pro/DateRangePicker';
 
 import VendaStatusChip from '../components/VendaStatusChip';
 import UsuarioDisplayStack from "../components/UsuarioDisplayStack";
 import CustomDataGridPremium from "../components/CustomDataGridPremium";
+import CreateEditVendaModule from "./CreateEditVendaModule";
 
-import VendaStatusCategoriaMap from "../model/VendaStatusCategoriaMap";
+import VendaStatusCategoriaEnum from "../model/VendaStatusCategoriaEnum";
+import VendaTipoProdutoEnum from "../model/VendaTipoProdutoEnum";
+import VendaTipoDataEnum from "../model/VendaTipoDataEnum";
+import VendaProdutoTipoDeLinhaEnum from "../model/VendaProdutoTipoDeLinhaEnum";
+import VendaPorteEnum from "../model/VendaPorteEnum";
+import VendaFaturaStatusEnum from "../model/VendaFaturaStatusEnum";
+import VendaFormaDePagamentoEnum from "../model/VendaFormaDePagamentoEnum";
+import VendaBrscanEnum from "../model/VendaBrscanEnum";
+import VendaSuporteEnum from "../model/VendaSuporteEnum";
 
 import dayjs from 'dayjs';
 
@@ -51,7 +66,7 @@ import api from "../services/api";
 
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 
-const VendaListDataGrid = memo(function VendaListDataGrid({ vendaRows, columns, vendaList, calling, columnVisibilityModel, onColumnVisibilityModelChange, projecaoList, setColumnVisibilityModel, columnGroupingModel }) {
+const VendaListDataGrid = memo(function VendaListDataGrid({ vendaRows, columns, vendaList, calling, columnVisibilityModel, onColumnVisibilityModelChange, projecaoList, setColumnVisibilityModel, columnGroupingModel, apiRef }) {
   console.log("VendaListDataGrid was rendered at", new Date().toLocaleTimeString());
 
   const theme = useTheme();
@@ -91,6 +106,7 @@ const VendaListDataGrid = memo(function VendaListDataGrid({ vendaRows, columns, 
 		columnVisibilityModel={columnVisibilityModel}
 		onColumnVisibilityModelChange={onColumnVisibilityModelChange}
 		columnGroupingModel={columnGroupingModel}
+		apiRef={apiRef}
 	/>
   );
 });
@@ -156,11 +172,11 @@ class VendasModule extends React.Component {
 			pontoDeVendaById: {},
 
 			vendaRows: [],
+			vendaListDataGridApiRef: this.props.vendaListDataGridApiRef,
 
 			// projecao
 
 			columnVisibilityModel: {},
-			projecao: "TUDO",
 
 			// filtros
 
@@ -180,69 +196,13 @@ class VendasModule extends React.Component {
 			errors: {},
 
 			alertOpen: false,
-			alert: null
+			alert: null,
+
+			// editar venda inline
+			editingVendaId: -1,
 		}
 
 		this.state = {...this.state, ...this.getCleanFilters()};
-
-		this.tipoDataList = [
-			{nome: "Data da Venda", value: "DATA_VENDA"},
-			{nome: "Data do Status", value: "DATA_STATUS"},
-			{nome: "Data da Ativação", value: "DATA_ATIVACAO"},
-			{nome: "Data de Agendamento", value: "DATA_AGENDAMENTO"},
-			{nome: "Data da Instalação", value: "DATA_INSTALACAO"},
-			{nome: "Data do Cadastro", value: "DATA_CADASTRO"},
-		];
-
-		this.tipoProdutoEnum = [
-			{nome: "Fibra", value: "FIBRA"},
-			{nome: "Móvel", value: "MOVEL"},
-		];
-		this.tipoDeLinhaMap = {
-			"NOVA": "Nova",
-			"PORTABILIDADE": "Portabilidade",
-			"TT": "TT",
-		};
-		this.faturaStatusMap = {
-			"NA": "N/A",
-			"A_VENCER": "A Vencer",
-			"EM_ABERTO": "Em Aberto",
-			"PAGA": "Paga",
-			"MULTA": "Multa",
-			"CHURN": "Churn",
-			"PARCELADA": "Parcelada"
-		};
-		this.porteMap = {
-			"MEI": "MEI",
-			"LTDA": "LTDA",
-		};
-		this.formaDePagamentoMap = {
-			"BOLETO": "Boleto",
-			"DEBITO_AUTOMATICO": "Débito Automático",
-			"CARTAO_CREDITO": "Cartão de Crédito"
-		}
-		this.brscanMap = {
-			"SIM": "Sim",
-			"NAO": "Não",
-			"EXCECAO": "Exceção",
-			"CANCELADA_INTERNAMENTE": "Cancelada Internamente",
-			"AGUARDANDO_ACEITE_DIGITAL": "Aguardando Aceite Digital",
-			"SEM_WHATSAPP": "Sem Whatsapp"
-		};
-		this.suporteMap = {
-			"SIM": "Sim",
-			"NAO": "Não",
-			"EXCECAO": "Exceção",
-			"CANCELADA_INTERNAMENTE": "Cancelada Internamente",
-		};
-		this.faturaStatusMap = {
-			"NA": "N/A",
-			"A_VENCER": "A Vencer",
-			"EM_ABERTO": "Em Aberto",
-			"PAGA": "Paga",
-			"MULTA": "Multa",
-			"CHURN": "Churn",
-		};
 
 		this.columnGroupingModel = [
 			/*{
@@ -255,11 +215,21 @@ class VendasModule extends React.Component {
 		this.numeroFaturas = 14;
 
 		this.columns = [
-			{ field: 'statusId', headerName: 'Status', valueGetter: (value, row) => this.state.vendaStatusByVendaStatusId?.[value]?.nome, minWidth: 200, flex: 1, hideable: false, renderCell: (params) => <VendaStatusChip
-				vendaStatus={this.state.vendaStatusByVendaStatusId?.[params.row.statusId]}
-				onClick={() => this.props.navigate("/vendas/" + params.row.vendaId)}
-			/>},
+			{ field: 'statusId', headerName: 'Status', valueGetter: (value, row) => this.state.vendaStatusByVendaStatusId?.[value]?.nome, minWidth: 275, hideable: false, renderCell: (params) =>
+				<Stack direction="row" justifyContent="space-around" alignItems="center" spacing={1} height="100%">
+					<VendaStatusChip
+						sx={{flexGrow: 1, overflow: "hidden"}}
+						vendaStatus={this.state.vendaStatusByVendaStatusId?.[params.row.statusId]}
+						onClick={() => this.setState({editingVendaId: params.row.vendaId})}
+					/>
+				 	<IconButton onClick={() => this.props.navigate("/vendas/" + params.row.vendaId)} /*sx={{position: "absolute", right: 3, top: "50%", transform: "translate(0, -50%)"}}*/>
+						<KeyboardArrowRightIcon />
+					</IconButton>
+				</Stack>
+			},
 			{ field: 'dataStatus', headerName: 'Data do Status', minWidth: 200, flex: 1, type: 'date', renderCell: (params) => params.value !== null ? dayjs(params.value).format('L LTS') : "" },
+			{ field: 'cpf', headerName: 'CPF/CNPJ', minWidth: 200, flex: 1 },
+			{ field: 'nome', headerName: 'Nome/Razão Social', minWidth: 200, flex: 1 },
 			{ field: 'dataCadastro', headerName: 'Data do Cadastro', minWidth: 200, flex: 1, type: 'date', renderCell: (params) => params.value !== null ? dayjs(params.value).format('L LTS') : "" },
 			{ field: 'tipoProduto', headerName: 'Tipo', minWidth: 100, flex: 1 },
 			{ field: 'pdv', headerName: 'PDV', minWidth: 100, flex: 1 },
@@ -293,8 +263,6 @@ class VendasModule extends React.Component {
 			{ field: 'bairro', headerName: 'Bairro', minWidth: 200, flex: 1 },
 
 			{ field: 'porte', headerName: 'Porte', minWidth: 200, flex: 1 },
-			{ field: 'cpf', headerName: 'CPF/CNPJ', minWidth: 200, flex: 1 },
-			{ field: 'nome', headerName: 'Nome/Razão Social', minWidth: 200, flex: 1 },
 			{ field: 'nomeContato', headerName: 'Nome Contato', minWidth: 200, flex: 1 },
 
 			{ field: 'contato1', headerName: 'Contato 1', minWidth: 200, flex: 1 },
@@ -328,6 +296,25 @@ class VendasModule extends React.Component {
 		Object.keys(this.columns).forEach((column) => this.allHiddenColumnVisibilityModel[this.columns[column].field] = false);
 
 		this.projecaoList = [
+			{nome: "Resumo", value: "RESUMO", columnVisibilityModel: {
+				...this.allHiddenColumnVisibilityModel,
+				statusId: true,
+				dataStatus: true,
+				tipoProduto: true,
+				pdv: true,
+				safra: true,
+				dataVenda: true,
+				os: true,
+				vendedorId: true,
+				produto: true,
+				valor: true,
+				quantidade: true,
+				uf: true,
+				cpf: true,
+				nome: true,
+				contato1: true,
+				observacao: true,
+			}},
 			{nome: "Fibra - Vendas", value: "FIBRA_VENDAS", columnVisibilityModel: {
 				...this.allHiddenColumnVisibilityModel,
 				statusId: true,
@@ -453,7 +440,7 @@ class VendasModule extends React.Component {
 			}},
 		];
 
-		for (let j=2; j<=3; j++) {
+		for (let j=3; j<=4; j++) {
 			for (let i=1; i<=this.numeroFaturas; i++) {
 				this.projecaoList[j].columnVisibilityModel[`m${i}Mes`] = true;
 				this.projecaoList[j].columnVisibilityModel[`m${i}Status`] = true;
@@ -464,6 +451,7 @@ class VendasModule extends React.Component {
 		this.state.columnVisibilityModel = this.projecaoList[0].columnVisibilityModel;
 
 		this.getVendaListFromApi = this.getVendaListFromApi.bind(this);
+		this.getVendaFromApi = this.getVendaFromApi.bind(this);
 		this.getVendaStatusListFromApi = this.getVendaStatusListFromApi.bind(this);
 		this.getUsuarioListFromApi = this.getUsuarioListFromApi.bind(this);
 		this.getFiltroVendaFromApi = this.getFiltroVendaFromApi.bind(this);
@@ -471,6 +459,9 @@ class VendasModule extends React.Component {
 		this.getPontoDeVendaListFromApi = this.getPontoDeVendaListFromApi.bind(this);
 
 		this.calculateRows = this.calculateRows.bind(this);
+		this.calculateRow = this.calculateRow.bind(this);
+		this.updateVendaRow = this.updateVendaRow.bind(this);
+		this.closeEditingVenda = this.closeEditingVenda.bind(this);
 
 		this.resetFilters = this.resetFilters.bind(this);
 
@@ -534,6 +525,19 @@ class VendasModule extends React.Component {
 			.catch((err) => {
 				this.setState({calling: false, errors: err?.response?.data?.errors ?? {}});
 				this.openAlert("error", "Falha ao atualizar vendas!");
+			});
+	}
+
+	getVendaFromApi(vendaId) {
+		this.setState({calling: true})
+		api.get(`/venda/${vendaId}`)
+			.then((response) => {
+				this.setState({calling: false}, () => this.updateVendaRow(response.data));
+				this.openAlert("success", "Venda atualizada!");
+			})
+			.catch((err) => {
+				this.setState({calling: false, errors: err?.response?.data?.errors ?? {}});
+				this.openAlert("error", "Falha ao atualizar venda!");
 			});
 	}
 
@@ -627,92 +631,103 @@ class VendasModule extends React.Component {
 	}
 
 	calculateRows() {
-		let vendaRows = this.state.vendaList.map((venda) => {
-
-			let situacao = "Adimplente";
-			for (let i=0; i<venda.faturaList.length; i++) {
-				if (venda.faturaList[i].status == "EM_ABERTO") {
-					situacao = "Inadimplente";
-					break;
-				}
-			}
-
-			let row = {
-				id: venda.vendaId,
-				vendaId: venda.vendaId,
-				statusId: venda.statusId,
-
-				tipoProduto: venda.tipoProduto,
-				pdv: venda.pdv,
-				safra: venda.safra !== null ? new Date(venda.safra) : null,
-				dataVenda: venda.dataVenda !== null ? new Date(venda.dataVenda) : null,
-				loginVendedor: venda.loginVendedor,
-				cadastradorId: venda.cadastradorId,
-				sistemaId: venda.sistemaId,
-				auditorId: venda.auditorId,
-				os: venda.os,
-				custcode: venda.custcode,
-				origem: venda.origem,
-				vendedorId: venda.vendedorId,
-				supervisorId: venda.supervisorId,
-				vendedorExterno: venda.vendedorExterno,
-				supervisorExterno: venda.supervisorExterno,
-				auditorExterno: venda.auditorExterno,
-				cadastradorExterno: venda.cadastradorExterno,
-
-				produtoList: venda.produtoList,
-				totalDeProdutos: venda.produtoList.length,
-				produto: venda.produtoList?.[0]?.nome ?? "",
-				valor: venda.produtoList?.[0] ? ("R$ " + (venda.produtoList?.[0].valor).toFixed(2)) : "",
-				quantidade: venda.produtoList?.[0]?.quantidade ?? "",
-				telefoneFixo: venda.produtoList?.[0] ? (venda.produtoList?.[0]?.telefoneFixo ? "Sim" : "Não") : "",
-				valorTelefoneFixo: venda.produtoList?.[0] ? (venda.produtoList?.[0]?.telefoneFixo ? ("R$ " + (venda.produtoList?.[0]?.valorTelefoneFixo ?? 0).toFixed(2)) : "") : "",
-				tipoDeLinha: venda.produtoList?.[0] ? (venda.produtoList?.[0]?.tipoDeLinha !== null ? this.tipoDeLinhaMap[venda.produtoList?.[0]?.tipoDeLinha] : "") : "",
-				ddd: venda.produtoList?.[0] ? (venda.produtoList?.[0]?.ddd) : "",
-				operadora: venda.produtoList?.[0] ? (venda.produtoList?.[0]?.operadora) : "",
-
-				uf: venda.uf,
-				cidade: venda.cidade,
-				bairro: venda.bairro,
-
-				porte: venda?.porte !== null ? this.porteMap[venda.porte] : "",
-				cpf: venda.tipoPessoa == "CPF" ? venda.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4") : venda.cnpj.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4.$5"),
-				nome: venda.tipoPessoa == "CPF" ? venda.nome : venda.razaoSocial,
-				nomeContato: venda.nomeContato,
-
-				contato1: venda.contato1.replace(/(\d{2})(\d{1})(\d{4})(\d{4})/, "($1) $2 $3-$4"),
-				contato2: venda.contato2.replace(/(\d{2})(\d{1})(\d{4})(\d{4})/, "($1) $2 $3-$4"),
-				contato3: venda.contato3.replace(/(\d{2})(\d{1})(\d{4})(\d{4})/, "($1) $2 $3-$4"),
-				email: venda.email,
-				observacao: venda.observacao,
-
-				formaDePagamento: venda?.formaDePagamento !== null ? this.formaDePagamentoMap[venda.formaDePagamento] : "",
-				vencimento: venda.vencimento,
-
-				dataStatus: venda.dataStatus !== null ? new Date(venda.dataStatus) : null,
-				dataAtivacao: venda.dataAtivacao !== null ? new Date(venda.dataAtivacao) : null,
-				dataAgendamento: venda.dataAgendamento !== null ? new Date(venda.dataAgendamento) : null,
-				dataInstalacao: venda.dataInstalacao !== null ? new Date(venda.dataInstalacao) : null,
-				dataCadastro: venda.dataCadastro !== null ? new Date(venda.dataCadastro) : null,
-
-				vendaOriginal: venda.vendaOriginal ? "Sim" : "Não",
-				brscan: venda?.brscan !== null ? this.brscanMap[venda.brscan] : "",
-				suporte: venda?.suporte !== null ? this.suporteMap[venda.suporte] : "",
-				prints: venda.prints ? "Sim" : "Não",
-
-				situacao: situacao,
-
-			};
-
-			for (let i=1; i<=this.numeroFaturas; i++) {
-				row[`m${i}Mes`] = venda.faturaList?.[i - 1] ? new Date(venda.faturaList?.[i - 1].mes) : null;
-				row[`m${i}Status`] = venda.faturaList?.[i - 1] ? this.faturaStatusMap[venda.faturaList?.[i - 1].status] : "";
-				row[`m${i}Valor`] = venda.faturaList?.[i - 1] ? ("R$ " + (venda.faturaList?.[i - 1].valor).toFixed(2)) : "";
-			}
-
-			return row;
-		});
+		let vendaRows = this.state.vendaList.map((venda) => this.calculateRow(venda));
 		this.setState({vendaRows: vendaRows});
+	}
+
+	calculateRow(venda) {
+
+		let situacao = "Adimplente";
+		for (let i=0; i<venda.faturaList.length; i++) {
+			if (venda.faturaList[i].status == "EM_ABERTO") {
+				situacao = "Inadimplente";
+				break;
+			}
+		}
+
+		let row = {
+			id: venda.vendaId,
+			vendaId: venda.vendaId,
+			statusId: venda.statusId,
+
+			tipoProduto: venda.tipoProduto,
+			pdv: venda.pdv,
+			safra: venda.safra !== null ? new Date(venda.safra) : null,
+			dataVenda: venda.dataVenda !== null ? new Date(venda.dataVenda) : null,
+			loginVendedor: venda.loginVendedor,
+			cadastradorId: venda.cadastradorId,
+			sistemaId: venda.sistemaId,
+			auditorId: venda.auditorId,
+			os: venda.os,
+			custcode: venda.custcode,
+			origem: venda.origem,
+			vendedorId: venda.vendedorId,
+			supervisorId: venda.supervisorId,
+			vendedorExterno: venda.vendedorExterno,
+			supervisorExterno: venda.supervisorExterno,
+			auditorExterno: venda.auditorExterno,
+			cadastradorExterno: venda.cadastradorExterno,
+
+			produtoList: venda.produtoList,
+			totalDeProdutos: venda.produtoList.length,
+			produto: venda.produtoList?.[0]?.nome ?? "",
+			valor: venda.produtoList?.[0] ? ("R$ " + (venda.produtoList?.[0].valor).toFixed(2)) : "",
+			quantidade: venda.produtoList?.[0]?.quantidade ?? "",
+			telefoneFixo: venda.produtoList?.[0] ? (venda.produtoList?.[0]?.telefoneFixo ? "Sim" : "Não") : "",
+			valorTelefoneFixo: venda.produtoList?.[0] ? (venda.produtoList?.[0]?.telefoneFixo ? ("R$ " + (venda.produtoList?.[0]?.valorTelefoneFixo ?? 0).toFixed(2)) : "") : "",
+			tipoDeLinha: venda.produtoList?.[0] ? (venda.produtoList?.[0]?.tipoDeLinha !== null ? VendaProdutoTipoDeLinhaEnum[venda.produtoList?.[0]?.tipoDeLinha] : "") : "",
+			ddd: venda.produtoList?.[0] ? (venda.produtoList?.[0]?.ddd) : "",
+			operadora: venda.produtoList?.[0] ? (venda.produtoList?.[0]?.operadora) : "",
+
+			uf: venda.uf,
+			cidade: venda.cidade,
+			bairro: venda.bairro,
+
+			porte: venda?.porte !== null ? VendaPorteEnum[venda.porte] : "",
+			cpf: venda.tipoPessoa == "CPF" ? venda.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4") : venda.cnpj.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4.$5"),
+			nome: venda.tipoPessoa == "CPF" ? venda.nome : venda.razaoSocial,
+			nomeContato: venda.nomeContato,
+
+			contato1: venda.contato1.replace(/(\d{2})(\d{1})(\d{4})(\d{4})/, "($1) $2 $3-$4"),
+			contato2: venda.contato2.replace(/(\d{2})(\d{1})(\d{4})(\d{4})/, "($1) $2 $3-$4"),
+			contato3: venda.contato3.replace(/(\d{2})(\d{1})(\d{4})(\d{4})/, "($1) $2 $3-$4"),
+			email: venda.email,
+			observacao: venda.observacao,
+
+			formaDePagamento: venda?.formaDePagamento !== null ? VendaFormaDePagamentoEnum[venda.formaDePagamento] : "",
+			vencimento: venda.vencimento,
+
+			dataStatus: venda.dataStatus !== null ? new Date(venda.dataStatus) : null,
+			dataAtivacao: venda.dataAtivacao !== null ? new Date(venda.dataAtivacao) : null,
+			dataAgendamento: venda.dataAgendamento !== null ? new Date(venda.dataAgendamento) : null,
+			dataInstalacao: venda.dataInstalacao !== null ? new Date(venda.dataInstalacao) : null,
+			dataCadastro: venda.dataCadastro !== null ? new Date(venda.dataCadastro) : null,
+
+			vendaOriginal: venda.vendaOriginal ? "Sim" : "Não",
+			brscan: venda?.brscan !== null ? VendaBrscanEnum[venda.brscan] : "",
+			suporte: venda?.suporte !== null ? VendaSuporteEnum[venda.suporte] : "",
+			prints: venda.prints ? "Sim" : "Não",
+
+			situacao: situacao,
+
+		};
+
+		for (let i=1; i<=this.numeroFaturas; i++) {
+			row[`m${i}Mes`] = venda.faturaList?.[i - 1] ? new Date(venda.faturaList?.[i - 1].mes) : null;
+			row[`m${i}Status`] = venda.faturaList?.[i - 1] ? VendaFaturaStatusEnum[venda.faturaList?.[i - 1].status] : "";
+			row[`m${i}Valor`] = venda.faturaList?.[i - 1] ? ("R$ " + (venda.faturaList?.[i - 1].valor).toFixed(2)) : "";
+		}
+
+		return row;
+	}
+
+	updateVendaRow(venda) {
+		this.state.vendaListDataGridApiRef.current.updateRows([this.calculateRow(venda)]);
+	}
+
+	closeEditingVenda() {
+		this.getVendaFromApi(this.state.editingVendaId);
+		this.setState({editingVendaId: -1});
 	}
 
 	onColumnVisibilityModelChange(newModel) {
@@ -750,7 +765,7 @@ class VendasModule extends React.Component {
 									onChange={(e) => this.setState({tipoProduto: e.target.value !== "" ? e.target.value : null})}
 									>
 									<MenuItem key={"nenhum"} value={""}>Ambos</MenuItem>
-									{this.tipoProdutoEnum.map((tipoProduto) => <MenuItem key={tipoProduto.value} value={tipoProduto.value}>{tipoProduto.nome}</MenuItem>)}
+									{Object.keys(VendaTipoProdutoEnum).map((tipoProduto) => <MenuItem key={tipoProduto} value={tipoProduto}>{VendaTipoProdutoEnum[tipoProduto]}</MenuItem>)}
 								</Select>
 							</FormControl>
 						</Grid>
@@ -802,7 +817,7 @@ class VendasModule extends React.Component {
 									onChange={(e) => this.setState({tipoData: e.target.value !== "" ? e.target.value : null})}
 									>
 									<MenuItem key={"nenhum"} value={""}>Nenhum</MenuItem>
-									{this.tipoDataList.map((tipoData) => <MenuItem key={tipoData.value} value={tipoData.value}>{tipoData.nome}</MenuItem>)}
+									{Object.keys(VendaTipoDataEnum).map((tipoData) => <MenuItem key={tipoData} value={tipoData}>{VendaTipoDataEnum[tipoData]}</MenuItem>)}
 								</Select>
 							</FormControl>
 						</Grid>
@@ -842,7 +857,7 @@ class VendasModule extends React.Component {
 									id="venda-status"
 									loading={this.state.vendaStatusList == null}
 									options={(this.state.vendaStatusList ?? []).map((vendaStatus) => vendaStatus.vendaStatusId).sort((a, b) => this.state.vendaStatusByVendaStatusId[a].ordem - this.state.vendaStatusByVendaStatusId[b].ordem)}
-									groupBy={(option) => VendaStatusCategoriaMap?.[this.state.vendaStatusByVendaStatusId?.[option]?.categoria] ?? "Sem Categoria"}
+									groupBy={(option) => VendaStatusCategoriaEnum?.[this.state.vendaStatusByVendaStatusId?.[option]?.categoria] ?? "Sem Categoria"}
 									getOptionLabel={(option) => this.state.vendaStatusByVendaStatusId[option].nome}
 									value={this.state.statusIdList}
 									onChange={(event, value) => this.setState({statusIdList: value})}
@@ -940,11 +955,37 @@ class VendasModule extends React.Component {
 							projecaoList={this.projecaoList}
 							setColumnVisibilityModel={this.onColumnVisibilityModelChange}
 							columnGroupingModel={this.columnGroupingModel}
+							apiRef={this.state.vendaListDataGridApiRef}
 						/>
 					</Box>
-					<Snackbar open={this.state.alertOpen} onClose={(e, reason) => (reason !== "clickaway") ? this.closeAlert() : ""} anchorOrigin={{vertical: "bottom", horizontal: "right"}}>
+					<Snackbar open={this.state.alertOpen} onClose={(e, reason) => (reason !== "clickaway") ? this.closeAlert() : ""} anchorOrigin={{vertical: "bottom", horizontal: "right"}} autoHideDuration={2000}>
 						<div>{this.state.alert}</div>
 					</Snackbar>
+					<Dialog
+						disableEscapeKeyDown
+						open={this.state.editingVendaId !== -1}
+						onClose={this.closeEditingVenda}
+						fullWidth={true}
+	        			maxWidth={"xl"}
+					>
+						<DialogTitle>Editar Venda</DialogTitle>
+						<IconButton
+							onClick={this.closeEditingVenda}
+							sx={{
+								position: 'absolute',
+									right: 8,
+								top: 8,
+								color: (theme) => theme.palette.grey[500],
+							}}
+						>
+						<CloseIcon />
+						</IconButton>
+						<DialogContent dividers>
+							<Box>
+								<CreateEditVendaModule usuario={this.props.usuario} vendaId={this.state.editingVendaId} inlineMode/>
+							</Box>
+						</DialogContent>
+					</Dialog>
 				</Paper>
 		    </React.Fragment>
 		  );
@@ -956,5 +997,6 @@ export default (props) => {
 	const params = useParams();
 	const location = useLocation();
 	const navigate = useNavigate();
-	return <VendasModule params={params} location={location} navigate={navigate} {...props}/>
+	const vendaListDataGridApiRef = useGridApiRef();
+	return <VendasModule params={params} location={location} navigate={navigate} vendaListDataGridApiRef={vendaListDataGridApiRef} {...props}/>
 }
