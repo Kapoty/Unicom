@@ -138,6 +138,8 @@ class PainelRoute extends React.Component {
 					this.getMinhaEquipeListFromApi();
 
 				this.props.updateThemePrimaryColor("#" + usuario.empresa.themePrimaryColor);
+				
+				document.title = "UniSystem - " + usuario.empresa.nome;
 			})
 			.catch((err) => {
 				console.error(err);

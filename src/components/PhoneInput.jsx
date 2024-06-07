@@ -4,7 +4,7 @@ import TextField from '@mui/material/TextField';
 
 export default class PhoneInput extends React.Component {
 	render() {
-		return <InputMask {...this.props} mask={(this.props?.ddd ?? true) ? "(99) 9 9999-9999" : "9 9999-9999"} maskChar="_"
+		return <InputMask {...this.props} mask={((this.props?.ddd ?? true) ? "(99) " : "") + ((this.props?.fixo ?? false) ? "" : "9 ") + "9999-9999"} maskChar="_"
 			formatChars = {{
 				"9": "[0-9]",
 			}}

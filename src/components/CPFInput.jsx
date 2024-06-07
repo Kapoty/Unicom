@@ -9,7 +9,11 @@ export default class CPFInput extends React.Component {
 				"9": "[0-9]",
 			}}
 		>
-			{(inputProps) => <TextField {...inputProps} disabled={this.props.disabled}/>}
+			{(inputProps) => 
+				<TextField
+					{...inputProps}
+					disabled={this.props.disabled} 
+				/>}
 		</InputMask>
 	}
 }

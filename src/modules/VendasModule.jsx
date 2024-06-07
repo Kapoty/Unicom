@@ -241,6 +241,7 @@ class VendasModule extends React.Component {
 			{ field: 'auditorId', headerName: 'Auditor', valueGetter: (value, row) => this.state.usuarioByUsuarioId?.[value]?.nome, minWidth: 200, flex: 1, renderCell: (params) => <UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[params.row.auditorId]}/>},
 			{ field: 'os', headerName: 'OS', minWidth: 100, flex: 1 },
 			{ field: 'custcode', headerName: 'Cust-Code', minWidth: 100, flex: 1 },
+			{ field: 'ordem', headerName: 'Ordem', minWidth: 100, flex: 1 },
 			{ field: 'origem', headerName: 'Mailing/Origem', minWidth: 200, flex: 1 },
 			{ field: 'vendedorId', headerName: 'Vendedor', valueGetter: (value, row) => this.state.usuarioByUsuarioId?.[value]?.nome, minWidth: 200, flex: 1, renderCell: (params) => <UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[params.row.vendedorId]}/>},
 			{ field: 'supervisorId', headerName: 'Supervisor', valueGetter: (value, row) => this.state.usuarioByUsuarioId?.[value]?.nome, minWidth: 200, flex: 1, renderCell: (params) => <UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[params.row.supervisorId]}/>},
@@ -254,6 +255,7 @@ class VendasModule extends React.Component {
 			{ field: 'quantidade', headerName: 'Quantidade', minWidth: 100, flex: 1 },
 			{ field: 'telefoneFixo', headerName: 'Telefone Fixo', minWidth: 200, flex: 1 },
 			{ field: 'valorTelefoneFixo', headerName: 'Valor Telefone Fixo', minWidth: 200, flex: 1 },
+			{ field: 'numeroTelefoneFixo', headerName: 'Número Telefone Fixo', minWidth: 200, flex: 1 },
 			{ field: 'tipoDeLinha', headerName: 'Tipo de Linha', minWidth: 200, flex: 1 },
 			{ field: 'ddd', headerName: 'DDD', minWidth: 100, flex: 1 },
 			{ field: 'operadora', headerName: 'Operadora', minWidth: 150, flex: 1 },
@@ -305,6 +307,7 @@ class VendasModule extends React.Component {
 				safra: true,
 				dataVenda: true,
 				os: true,
+				ordem: true,
 				vendedorId: true,
 				produto: true,
 				valor: true,
@@ -328,6 +331,7 @@ class VendasModule extends React.Component {
 				sistemaId: true,
 				auditorId: true,
 				os: true,
+				ordem: true,
 				origem: true,
 				vendedorId: true,
 				supervisorId: true,
@@ -336,6 +340,7 @@ class VendasModule extends React.Component {
 				quantidade: true,
 				telefoneFixo: true,
 				valorTelefoneFixo: true,
+				numeroTelefoneFixo: true,
 				uf: true,
 				cidade: true,
 				bairro: true,
@@ -366,6 +371,7 @@ class VendasModule extends React.Component {
 				sistemaId: true,
 				auditorId: true,
 				os: true,
+				ordem: true,
 				origem: true,
 				vendedorId: true,
 				supervisorId: true,
@@ -398,6 +404,7 @@ class VendasModule extends React.Component {
 				pdv: true,
 				safra: true,
 				os: true,
+				ordem: true,
 				custcode: true,
 				dataInstalacao: true,
 				contato1: true,
@@ -421,6 +428,7 @@ class VendasModule extends React.Component {
 				pdv: true,
 				safra: true,
 				os: true,
+				ordem: true,
 				dataAtivacao: true,
 				contato1: true,
 				contato2: true,
@@ -652,7 +660,7 @@ class VendasModule extends React.Component {
 
 			tipoProduto: venda.tipoProduto,
 			pdv: venda.pdv,
-			safra: venda.safra !== null ? new Date(venda.safra) : null,
+			safra: venda.safra !== null ? new Date(venda.safra + "T00:00:00") : null,
 			dataVenda: venda.dataVenda !== null ? new Date(venda.dataVenda) : null,
 			loginVendedor: venda.loginVendedor,
 			cadastradorId: venda.cadastradorId,
@@ -660,6 +668,7 @@ class VendasModule extends React.Component {
 			auditorId: venda.auditorId,
 			os: venda.os,
 			custcode: venda.custcode,
+			ordem: venda.ordem,
 			origem: venda.origem,
 			vendedorId: venda.vendedorId,
 			supervisorId: venda.supervisorId,
@@ -675,6 +684,7 @@ class VendasModule extends React.Component {
 			quantidade: venda.produtoList?.[0]?.quantidade ?? "",
 			telefoneFixo: venda.produtoList?.[0] ? (venda.produtoList?.[0]?.telefoneFixo ? "Sim" : "Não") : "",
 			valorTelefoneFixo: venda.produtoList?.[0] ? (venda.produtoList?.[0]?.telefoneFixo ? ("R$ " + (venda.produtoList?.[0]?.valorTelefoneFixo ?? 0).toFixed(2)) : "") : "",
+			numeroTelefoneFixo: venda.produtoList?.[0] ? (venda.produtoList?.[0]?.numeroTelefoneFixo.replace(/(\d{4})(\d{4})/, "$1-$2") ?? "") : "",
 			tipoDeLinha: venda.produtoList?.[0] ? (venda.produtoList?.[0]?.tipoDeLinha !== null ? VendaProdutoTipoDeLinhaEnum[venda.produtoList?.[0]?.tipoDeLinha] : "") : "",
 			ddd: venda.produtoList?.[0] ? (venda.produtoList?.[0]?.ddd) : "",
 			operadora: venda.produtoList?.[0] ? (venda.produtoList?.[0]?.operadora) : "",
@@ -726,6 +736,8 @@ class VendasModule extends React.Component {
 	}
 
 	closeEditingVenda() {
+		if (this.state.editingVendaId == -1)
+			return;
 		this.getVendaFromApi(this.state.editingVendaId);
 		this.setState({editingVendaId: -1});
 	}

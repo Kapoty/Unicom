@@ -84,6 +84,7 @@ import RecyclingIcon from '@mui/icons-material/Recycling';
 import HubIcon from '@mui/icons-material/Hub';
 import PublicIcon from '@mui/icons-material/Public';
 import Pagination from '@mui/material/Pagination';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 
 import CPFInput from "../components/CPFInput";
 import CNPJInput from "../components/CNPJInput";
@@ -103,6 +104,7 @@ import VendaFormaDePagamentoEnum from "../model/VendaFormaDePagamentoEnum";
 import VendaBrscanEnum from "../model/VendaBrscanEnum";
 import VendaSuporteEnum from "../model/VendaSuporteEnum";
 import VendaGeneroEnum from "../model/VendaGeneroEnum";
+import VendaReimputadoEnum from "../model/VendaReimputadoEnum";
 
 import axios from "axios";
 
@@ -112,19 +114,20 @@ import api from "../services/api";
 
 import { useParams, useLocation, useNavigate, useHistory, useSearchParams } from 'react-router-dom';
 
-const adicionaisEnum = ["Apps", "Aparelho", "Mob", "Deezer"];
-
-const ProdutoPaper = React.memo(({ produto, i, errors, calling, updateProduto, deleteProduto, addPortabilidade, portabilidadeList, updatePortabilidade, deletePortabilidade, tipoProduto }) => {
+const ProdutoPaper = React.memo(({ produto, i, errors, calling, updateProduto, deleteProduto, addPortabilidade, portabilidadeList, updatePortabilidade, deletePortabilidade, tipoProduto, adicionalList }) => {
 
 	const updateProdutoNome = useCallback((e) => updateProduto(i, "nome", e.target.value), [i]);
 	const updateProdutoValor = useCallback((e) => updateProduto(i, "valor", e.target.value), [i]);
-	const updateProdutoAdicionais = useCallback((event, value) => updateProduto(i, "adicionais", value), [i]);
+	//const updateProdutoAdicionais = useCallback((event, value) => updateProduto(i, "adicionais", value), [i]);
+	const updateProdutoAdicionais = useCallback((event, newValue) => updateProduto(i, "adicionais", newValue.join(",")), [i]);
+	const getProdutoAdicionaisOptionList = useCallback(() => adicionalList.filter((adicional) => adicional.tipo == tipoProduto).map((adicional) => adicional.nome), [adicionalList]);
 	const updateProdutoTipoDeLinha = useCallback((e) => updateProduto(i, "tipoDeLinha", e.target.value), [i]);
 	const updateProdutoDdd = useCallback((e) => updateProduto(i, "ddd", e.target.value), [i]);
 	const updateProdutoQuantidade = useCallback((e) => updateProduto(i, "quantidade", e.target.value), [i]);
 	const updateProdutoOperadora = useCallback((e) => updateProduto(i, "operadora", e.target.value), [i]);
 	const updateProdutoTelefoneFixo = useCallback((e) => updateProduto(i, "telefoneFixo", e.target.value), [i]);
 	const updateProdutoValorTelefoneFixo = useCallback((e) => updateProduto(i, "valorTelefoneFixo", e.target.value), [i]);
+	const updateProdutoNumeroTelefoneFixo = useCallback((e) => updateProduto(i, "numeroTelefoneFixo", e.target.value), [i]);
 	const _addPortabilidade = useCallback(() => addPortabilidade(i), [i]);
 	const _deleteProduto = useCallback(() => deleteProduto(i), [i])
 
@@ -162,51 +165,133 @@ const ProdutoPaper = React.memo(({ produto, i, errors, calling, updateProduto, d
 							disabled={calling}
 						/>
 					</Grid>
-					{tipoProduto == "MOVEL" ? <React.Fragment>
-						<Grid item xs={12}>
-							<Autocomplete
-								freeSolo
-								disableClearable
-								options={adicionaisEnum}
-								value={produto.adicionais}
-								onInputChange={updateProdutoAdicionais}
-								renderInput={(params) => (
-									<TextField
-										{...params}
-										variant="outlined"
-										label="Adicionais"
-									/>
-								)}
-							/>
-						</Grid>
+					{/*<Grid item xs={12}>
+						<Autocomplete
+							freeSolo
+							disableClearable
+							options={adicionalList.filter((adicional) => adicional.tipo == tipoProduto).map((adicional) => adicional.nome)}
+							value={produto.adicionais}
+							onInputChange={updateProdutoAdicionais}
+							renderInput={(params) => (
+								<TextField
+									{...params}
+									variant="outlined"
+									label="Adicionais"
+								/>
+							)}
+						/>
+					</Grid>*/}
+					<Grid item xs={12}>
+						<Autocomplete
+							multiple
+							freeSolo
+							options={getProdutoAdicionaisOptionList()}
+							value={produto.adicionais.split(",").filter(Boolean)}
+							onChange={updateProdutoAdicionais}
+							renderInput={(params) => (
+								<TextField
+									{...params}
+									variant="outlined"
+									label="Adicionais"
+									error={`produtoList[${i}].adicionais` in errors}
+									helperText={errors?.[`produtoList[${i}].adicionais`] ?? "Pressione ENTER para adicionar"}
+								/>
+							)}
+						/>
+					</Grid>
+					{tipoProduto == "FIBRA" && <React.Fragment>
 						<Grid item xs={4}>
-							<FormControl fullWidth required>
-								<InputLabel>Tipo de Linha</InputLabel>
-								<Select
-									value={produto.tipoDeLinha}
-									label="Tipo de Linha"
-									onChange={updateProdutoTipoDeLinha}
-									>
-									{Object.keys(VendaProdutoTipoDeLinhaEnum).map((tipoDeLinha) => <MenuItem key={tipoDeLinha} value={tipoDeLinha}>{VendaProdutoTipoDeLinhaEnum[tipoDeLinha]}</MenuItem>)}
-								</Select>
+							<FormControl>
+								<FormLabel id={"telefone-fixo" + i}>Telefone Fixo</FormLabel>
+								<RadioGroup
+									row
+									aria-labelledby={"telefone-fixo" + i}
+									name="controlled-radio-buttons-group"
+									value={produto.telefoneFixo}
+									onChange={updateProdutoTelefoneFixo}
+								>
+								<FormControlLabel value={true} control={<Radio />} label="Sim" />
+								<FormControlLabel value={false} control={<Radio />} label="Não" />
+								</RadioGroup>
 							</FormControl>
 						</Grid>
-						<Grid item xs={4}>
-							<TextField
-								value={produto.ddd}
-								onChange={updateProdutoDdd}
-								fullWidth
-								label="DDD"
-								variant="outlined"
-								disabled={calling}
-								error={`produtoList[${i}].ddd` in errors}
-								helperText={errors?.[`produtoList[${i}].ddd`] ?? ""}
-								inputProps={{
-									maxLength: 2,
-								}}
-							/>
-						</Grid>
-						<Grid item xs={4}>
+						{String(produto.telefoneFixo) == "true" && <React.Fragment>
+								<Grid item xs={4}>
+									<MoneyInput
+										required
+										value={produto.valorTelefoneFixo}
+										onChange={updateProdutoValorTelefoneFixo}
+										fullWidth
+										label="Valor Telefone Fixo"
+										variant="outlined"
+										disabled={calling}
+										error={`produtoList[${i}].valorTelefoneFixo` in errors}
+										helperText={errors?.[`produtoList[${i}].valorTelefoneFixo`] ?? ""}
+									/>
+								</Grid>
+								<Grid item xs={4}>
+									<PhoneInput
+										value={produto.numeroTelefoneFixo}
+										onChange={updateProdutoNumeroTelefoneFixo}
+										fullWidth
+										label="Número Telefone Fixo"
+										variant="outlined"
+										disabled={calling}
+										error={`produtoList[${i}].numeroTelefoneFixo` in errors}
+										helperText={errors?.[`produtoList[${i}].numeroTelefoneFixo`] ?? ""}
+										ddd={false}
+										fixo={true}
+									/>
+								</Grid>
+							</React.Fragment>}
+					</React.Fragment>}
+					{(tipoProduto == "MOVEL" || String(produto.telefoneFixo) == "true") && <React.Fragment>
+							<Grid item xs={4}>
+								<FormControl fullWidth required>
+									<InputLabel>Tipo de Linha</InputLabel>
+									<Select
+										value={produto.tipoDeLinha}
+										label="Tipo de Linha"
+										onChange={updateProdutoTipoDeLinha}
+										>
+										{Object.keys(VendaProdutoTipoDeLinhaEnum).map((tipoDeLinha) => <MenuItem key={tipoDeLinha} value={tipoDeLinha}>{VendaProdutoTipoDeLinhaEnum[tipoDeLinha]}</MenuItem>)}
+									</Select>
+								</FormControl>
+							</Grid>
+							<Grid item xs={4}>
+								<TextField
+									value={produto.ddd}
+									onChange={updateProdutoDdd}
+									fullWidth
+									label="DDD"
+									variant="outlined"
+									disabled={calling}
+									error={`produtoList[${i}].ddd` in errors}
+									helperText={errors?.[`produtoList[${i}].ddd`] ?? ""}
+									inputProps={{
+										maxLength: 2,
+									}}
+								/>
+							</Grid>
+							<Grid item xs={4}>
+								<TextField
+									value={produto.operadora}
+									onChange={updateProdutoOperadora}
+									fullWidth
+									label="Operadora"
+									variant="outlined"
+									disabled={calling}
+									error={`produtoList[${i}].operadora` in errors}
+									helperText={errors?.[`produtoList[${i}].operadora`] ?? ""}
+									inputProps={{
+										maxLength: 20,
+									}}
+								/>
+							</Grid>
+						</React.Fragment>
+					}
+					{tipoProduto == "MOVEL" && <React.Fragment>
+						<Grid item xs={12}>
 							<TextField
 								required
 								value={produto.quantidade}
@@ -218,21 +303,6 @@ const ProdutoPaper = React.memo(({ produto, i, errors, calling, updateProduto, d
 								error={`produtoList[${i}].quantidade` in errors}
 								helperText={errors?.[`produtoList[${i}].quantidade`] ?? ""}
 								type="number"
-							/>
-						</Grid>
-						<Grid item xs={12}>
-							<TextField
-								value={produto.operadora}
-								onChange={updateProdutoOperadora}
-								fullWidth
-								label="Operadora"
-								variant="outlined"
-								disabled={calling}
-								error={`produtoList[${i}].operadora` in errors}
-								helperText={errors?.[`produtoList[${i}].operadora`] ?? ""}
-								inputProps={{
-									maxLength: 20,
-								}}
 							/>
 						</Grid>
 						{portabilidadeList.length == 0 ? <Grid item xs={12}><Alert severity="info">Os telefones que você adicionar aparecerão aqui.</Alert></Grid> : ""}
@@ -264,36 +334,6 @@ const ProdutoPaper = React.memo(({ produto, i, errors, calling, updateProduto, d
 						<Grid item xs={12} container display="flex" justifyContent="flex-end">
 							<Button variant="contained" size="large" startIcon={<AddIcon />} onClick={_addPortabilidade}>Adicionar Telefone</Button>
 						</Grid>
-					</React.Fragment> : <React.Fragment>
-						<Grid item xs={3}>
-							<FormControl>
-								<FormLabel id={"telefone-fixo" + i}>Telefone Fixo</FormLabel>
-								<RadioGroup
-									row
-									aria-labelledby={"telefone-fixo" + i}
-									name="controlled-radio-buttons-group"
-									value={produto.telefoneFixo}
-									onChange={updateProdutoTelefoneFixo}
-								>
-								<FormControlLabel value={true} control={<Radio />} label="Sim" />
-								<FormControlLabel value={false} control={<Radio />} label="Não" />
-								</RadioGroup>
-							</FormControl>
-						</Grid>
-						{String(produto.telefoneFixo) == "true" ?
-							<Grid item xs={3}>
-								<MoneyInput
-									required
-									value={produto.valorTelefoneFixo}
-									onChange={updateProdutoValorTelefoneFixo}
-									fullWidth
-									label="Valor Telefone Fixo"
-									variant="outlined"
-									disabled={calling}
-									error={`produtoList[${i}].valorTelefoneFixo` in errors}
-									helperText={errors?.[`produtoList[${i}].valorTelefoneFixo`] ?? ""}
-								/>
-							</Grid> : ""}
 					</React.Fragment>}
 					<Grid item xs={12}>
 						<Button color="error" variant="contained" size="large" startIcon={<DeleteIcon />} onClick={_deleteProduto}>Remover Produto</Button>
@@ -324,6 +364,8 @@ const FaturaPaper = React.memo(({fatura, i, errors, calling, updateFatura, delet
 								textField: {
 									required: true,
 									fullWidth: true,
+									error: `faturaList[${i}].mes` in errors,
+									helperText: errors?.[`faturaList[${i}].mes`] ?? ""
 								}
 							}}
 						/>
@@ -381,6 +423,8 @@ class CreateEditVendaModule extends React.Component {
 			sistemaBySistemaId: {},
 			pontoDeVendaList: null,
 			pontoDeVendaById: {},
+			adicionalList: null,
+			adicionalByAdicionalId: {},
 
 			anexoList: null,
 
@@ -441,6 +485,7 @@ class CreateEditVendaModule extends React.Component {
 			os: "",
 			custcode: "",
 			sistemaId: null,
+			ordem: "",
 			origem: "",
 			dataVenda: null,
 			safra: dayjs().date(1),
@@ -455,7 +500,7 @@ class CreateEditVendaModule extends React.Component {
 			dataAgendamento: null,
 			dataInstalacao: null,
 			pdv: "",
-			reimputado: false,
+			reimputado: "NAO",
 			vendaOriginal: false,
 			brscan: "NAO",
 			suporte: "NAO",
@@ -524,6 +569,7 @@ class CreateEditVendaModule extends React.Component {
 		this.getProdutoListFromApi = this.getProdutoListFromApi.bind(this);
 		this.getSistemaListFromApi = this.getSistemaListFromApi.bind(this);
 		this.getPontoDeVendaListFromApi = this.getPontoDeVendaListFromApi.bind(this);
+		this.getAdicionalListFromApi = this.getAdicionalListFromApi.bind(this);
 
 		this.getCepInfoFromApi = this.getCepInfoFromApi.bind(this);
 		this.updateCep = this.updateCep.bind(this);
@@ -581,6 +627,7 @@ class CreateEditVendaModule extends React.Component {
 		this.getProdutoListFromApi();
 		this.getSistemaListFromApi();
 		this.getPontoDeVendaListFromApi();
+		this.getAdicionalListFromApi();
 		if (this.props.searchParams.get("novo") !== null) {
 			this.openAlert("success", 'Venda criada com sucesso!');
 		}
@@ -670,6 +717,7 @@ class CreateEditVendaModule extends React.Component {
 					os: venda.os,
 					custcode: venda.custcode,
 					sistemaId: venda.sistemaId,
+					ordem: venda.ordem,
 					origem: venda.origem,
 					dataVenda: venda.dataVenda !== null ? dayjs(new Date(venda.dataVenda)) : null,
 					safra: venda.safra !== null ? dayjs(venda.safra, "YYYY-MM-DD") : null,
@@ -833,6 +881,20 @@ class CreateEditVendaModule extends React.Component {
 			});
 	}
 
+	getAdicionalListFromApi() {
+		api.get("/empresa/me/adicional")
+			.then((response) => {
+				let adicionalList = response.data;
+				let adicionalByAdicionalId = {};
+				adicionalList.forEach((adicional) => adicionalByAdicionalId[adicional.adicionalId] = adicional);
+				this.setState({adicionalList: adicionalList, adicionalByAdicionalId: adicionalByAdicionalId});
+			})
+			.catch((err) => {
+				console.log(err);
+				setTimeout(this.getAdicionalListFromApi, 3000);
+			});
+	}
+
 	updateCep(cep) {
 		this.setState({cep: cep}, () => {
 			if (this.state.cep.replace(/\D/g, "").length == 8)
@@ -878,6 +940,7 @@ class CreateEditVendaModule extends React.Component {
 			valor: 0,
 			telefoneFixo: false,
 			valorTelefoneFixo: 0,
+			numeroTelefoneFixo: "",
 			tipoDeLinha: "NOVA",
 			ddd: "",
 			operadora: "",
@@ -1004,6 +1067,8 @@ class CreateEditVendaModule extends React.Component {
 
 	updateSistemaId = (e) => this.setState({sistemaId: e.target.value});
 
+	updateOrdem = (e) => this.setState({ordem: e.target.value});
+
 	updateOrigem = (e) => this.setState({origem: e.target.value});
 
 	updateSafra = (newValue) => this.setState({safra: newValue});
@@ -1065,7 +1130,7 @@ class CreateEditVendaModule extends React.Component {
 		if (keys.some(k => k.startsWith("produtoList")))
 			errors["PRODUTOS"] = "";
 
-		if (["os", "custcode", "sistemaId", "origem", "safra", "dataVenda", "dataAtivacao", "prints",
+		if (["os", "custcode", "sistemaId", "ordem", "origem", "safra", "dataVenda", "dataAtivacao", "prints",
 			"dataAgendamento", "dataInstalacao", "pdv", "reimputado", "vendaOriginal", "brscan", "suporte", "loginVendedor"].some(r => keys.includes(r)))
 			errors["DADOS_DO_CONTRATO"] = "";
 
@@ -1116,6 +1181,8 @@ class CreateEditVendaModule extends React.Component {
 		let produtoList = JSON.parse(JSON.stringify(this.state.vendaProdutoList));
 
 		produtoList.forEach(produto => {
+
+			produto.numeroTelefoneFixo = produto.numeroTelefoneFixo.replace(/\D/g, "");
 
 			produto.portabilidadeList.forEach(portabilidade => {
 				portabilidade.telefone = portabilidade.telefone.replace(/\D/g, "");
@@ -1187,6 +1254,7 @@ class CreateEditVendaModule extends React.Component {
 			os: this.state.os,
 			custcode: this.state.custcode,
 			sistemaId: this.state.sistemaId,
+			ordem: this.state.ordem,
 			origem: this.state.origem,
 			dataVenda: this.state.dataVenda !== null ? this.state.dataVenda.format("YYYY-MM-DDTHH:mm:ss") : null,
 			safra: this.state.safra !== null ? this.state.safra.format("YYYY-MM-DD") : null,
@@ -1403,6 +1471,20 @@ class CreateEditVendaModule extends React.Component {
 												disabled={this.state.calling}
 												error={"cpf" in this.state.errors}
 												helperText={this.state.errors?.cpf ?? ""}
+												InputProps={{
+													endAdornment: (
+														<InputAdornment position="end">
+															<Tooltip title="Copiar sem formatação">
+																<IconButton
+																	onClick={() => navigator.clipboard.writeText(this.state.cpf.replace(/\D/g, "")).then(() => this.openAlert("success", "CPF copiado!")).catch(() => this.openAlert("error", "Falha ao copiar CPF!"))}
+																	edge="end"
+																>
+																	<ContentCopyIcon/>
+																</IconButton>
+															</Tooltip>
+														</InputAdornment>
+													),
+												}}
 											/>
 										</Grid>
 										<Grid item xs={6}>
@@ -1529,6 +1611,20 @@ class CreateEditVendaModule extends React.Component {
 												disabled={this.state.calling}
 												error={"cnpj" in this.state.errors}
 												helperText={this.state.errors?.cnpj ?? ""}
+												InputProps={{
+													endAdornment: (
+														<InputAdornment position="end">
+															<Tooltip title="Copiar sem formatação">
+																<IconButton
+																	onClick={() => navigator.clipboard.writeText(this.state.cnpj.replace(/\D/g, "")).then(() => this.openAlert("success", "CNPJ copiado!")).catch(() => this.openAlert("error", "Falha ao copiar CNPJ!"))}
+																	edge="end"
+																>
+																	<ContentCopyIcon/>
+																</IconButton>
+															</Tooltip>
+														</InputAdornment>
+													),
+												}}
 											/>
 										</Grid>
 										<Grid item xs={6}>
@@ -1853,6 +1949,7 @@ class CreateEditVendaModule extends React.Component {
 														updatePortabilidade={this.updatePortabilidade}
 														deletePortabilidade={this.deletePortabilidade}
 														tipoProduto={this.state.tipoProduto}
+														adicionalList={this.state.adicionalList}
 													/>
 												)}
 											</Box>
@@ -1910,7 +2007,23 @@ class CreateEditVendaModule extends React.Component {
 											</Select>
 										</FormControl>
 									</Grid>
-									<Grid item xs={3}>
+									<Grid item xs={2}>
+										<TextField
+											id="ordem"
+											value={this.state.ordem}
+											onChange={this.updateOrdem}
+											fullWidth
+											label="Ordem"
+											variant="outlined"
+											disabled={this.state.calling}
+											error={"ordem" in this.state.errors}
+											helperText={this.state.errors?.ordem ?? ""}
+											inputProps={{
+												maxLength: 50,
+											}}
+										/>
+									</Grid>
+									<Grid item xs={2}>
 										<TextField
 											id="origem"
 											value={this.state.origem}
@@ -1960,20 +2073,18 @@ class CreateEditVendaModule extends React.Component {
 											}}
 										/>
 									</Grid>
-									<Grid item xs={3}>
-											<FormControl>
-												<FormLabel id="reimputado">Reimputado</FormLabel>
-												<RadioGroup
-													row
-													aria-labelledby="reimputado"
-													value={this.state.reimputado}
-													onChange={this.updateReimputado}
+									<Grid item xs={2}>
+										<FormControl fullWidth>
+											<InputLabel>Reimputado</InputLabel>
+											<Select
+												value={this.state.reimputado}
+												label="Reimputado"
+												onChange={this.updateReimputado}
 												>
-												<FormControlLabel value={true} control={<Radio />} label="Sim" />
-												<FormControlLabel value={false} control={<Radio />} label="Não" />
-												</RadioGroup>
-											</FormControl>
-										</Grid>
+												{Object.keys(VendaReimputadoEnum).map((reimputado) => <MenuItem key={reimputado} value={reimputado}>{VendaReimputadoEnum[reimputado]}</MenuItem>)}
+											</Select>
+										</FormControl>
+									</Grid>
 									{this.state.tipoProduto == "MOVEL" ? <React.Fragment>
 										<Grid item xs={6}>
 											<DateTimePicker
@@ -2576,7 +2687,7 @@ class CreateEditVendaModule extends React.Component {
 				</Paper>
 				{!this.props.inlineMode ? <Snackbar open={this.state.alertOpen} onClose={(e, reason) => (reason !== "clickaway") ? this.closeAlert() : ""} anchorOrigin={{vertical: "bottom", horizontal: "right"}}>
 					<div>{this.state.alert}</div>
-				</Snackbar> : <Collapse in={this.state.alertOpen}>
+				</Snackbar> : <Collapse in={this.state.alertOpen} sx={{marginTop: 3}}>
 						{this.state.alert}
 					</Collapse>}
 				<Dialog
