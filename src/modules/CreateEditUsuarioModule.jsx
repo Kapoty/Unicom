@@ -395,7 +395,7 @@ class CreateEditUsuarioModule extends React.Component {
 		console.log("CreateEditUsuarioModule was rendered at", new Date().toLocaleTimeString());
 		return (
 			<React.Fragment>
-				<Paper elevation={0} sx={{flexGrow: 1, padding: 5, minHeight: "100%", minWidth: "800px", boxSizing: "border-box", display: "flex", flexDirection: "column", aligmItems: "center", justifyContent: "start"}} className="modulePaper">
+				<Paper elevation={0} sx={{flexGrow: 1, padding: 2, minHeight: "100%", minWidth: "800px", boxSizing: "border-box", display: "flex", flexDirection: "column", aligmItems: "center", justifyContent: "start"}} className="modulePaper">
 					<Typography variant="h3" gutterBottom>
 					{this.state.createMode ? "Novo Usuário" : "Editar Usuário"}
 					</Typography>

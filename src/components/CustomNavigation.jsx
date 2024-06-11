@@ -21,6 +21,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import Tooltip from '@mui/material/Tooltip';
 import CircularProgress from '@mui/material/CircularProgress';
 import PeopleIcon from '@mui/icons-material/People';
+import Stack from '@mui/material/Stack';
 
 import IframeContextMenu from '../components/iframeContextMenu'
 
@@ -137,7 +138,7 @@ class CustomNavigation extends React.Component {
 										{this.state.vendaModuleOpen ? <ExpandLess /> : <ExpandMore />}
 									</ListItemButton>
 									<Collapse in={this.state.vendaModuleOpen}>
-										<List component="div" disablePadding>
+										<List component="div" disablePadding dense>
 											<ListItem disablePadding>
 												<ListItemButton onClick={() => {this.props.navigate(`vendas`)}} sx={{ pl: 3 }}
 													selected={this.props.location.pathname == `/vendas`}
@@ -182,7 +183,7 @@ class CustomNavigation extends React.Component {
 													{iframeCategory.open ? <ExpandLess /> : <ExpandMore />}
 												</ListItemButton>
 												<Collapse in={iframeCategory.open} timeout="auto" unmountOnExit>
-													<List disablePadding>
+													<List disablePadding dense>
 														{iframeCategory.iframeList.map((iframe) =>
 															!iframe.novaGuia ?
 																<ListItem
@@ -228,7 +229,7 @@ class CustomNavigation extends React.Component {
 										{this.state.minhaEquipeModuleOpen ? <ExpandLess /> : <ExpandMore />}
 									</ListItemButton>
 									<Collapse in={this.state.minhaEquipeModuleOpen}>
-										<List component="div" disablePadding>
+										<List component="div" disablePadding dense>
 											{this.props.minhaEquipeList !== null ?
 												this.props.minhaEquipeList.map((equipe) => <ListItem disablePadding key={equipe.equipeId}>
 													<ListItemButton onClick={() => {this.props.navigate(`minhas-equipes/${equipe.equipeId}`)}} sx={{ pl: 3 }}
@@ -253,7 +254,7 @@ class CustomNavigation extends React.Component {
 										{this.state.usuarioModuleOpen ? <ExpandLess /> : <ExpandMore />}
 									</ListItemButton>
 									<Collapse in={this.state.usuarioModuleOpen}>
-										<List component="div" disablePadding>
+										<List component="div" disablePadding dense>
 											<ListItem disablePadding>
 												<ListItemButton onClick={() => {this.props.navigate(`usuarios`)}} sx={{ pl: 3 }}
 													selected={this.props.location.pathname == `/usuarios`}
@@ -287,7 +288,7 @@ class CustomNavigation extends React.Component {
 										{this.state.equipeModuleOpen ? <ExpandLess /> : <ExpandMore />}
 									</ListItemButton>
 									<Collapse in={this.state.equipeModuleOpen}>
-										<List component="div" disablePadding>
+										<List component="div" disablePadding dense>
 											<ListItem disablePadding>
 												<ListItemButton onClick={() => {this.props.navigate(`equipes`)}} sx={{ pl: 3 }}
 													selected={this.props.location.pathname == `/equipes`}

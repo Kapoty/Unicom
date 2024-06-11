@@ -559,7 +559,7 @@ class CreateEditVendaModule extends React.Component {
 			/>},
 			{ field: 'usuarioId', headerName: 'Usuário', valueGetter: (value, row) => this.state.usuarioByUsuarioId?.[value]?.nome, minWidth: 100, flex: 1, renderCell: (params) => <UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[params.row.usuarioId]}/>},
 			{ field: 'data', headerName: 'Data', minWidth: 150, flex: 1, type: 'date', renderCell: (params) => params.value !== null ? dayjs(params.value).format('L LTS') : "" },
-			{ field: 'relato', headerName: 'Relato', minWidth: 400, flex: 1, renderCell: (params) => <pre>{params.value.replace(/(\\n)/g, "\n")}</pre> },
+			{ field: 'relato', headerName: 'Relato', minWidth: 400, flex: 1, renderCell: (params) => <pre style={{overflow: "auto"}}>{params.value.replace(/(\\n)/g, "\n")}</pre> },
 		];
 
 		this.getVendaFromApi = this.getVendaFromApi.bind(this);
@@ -1380,7 +1380,7 @@ class CreateEditVendaModule extends React.Component {
 
 		return (
 			<React.Fragment>
-				<Paper elevation={0} sx={{flexGrow: 1, padding: this.props.inlineMode ? 0 : 5, minHeight: "100%", minWidth: "1000px", boxSizing: "border-box", display: "flex", flexDirection: "column", justifyContent: "start"}} className="modulePaper">
+				<Paper elevation={0} sx={{flexGrow: 1, padding: this.props.inlineMode ? 0 : 2, minHeight: "100%", minWidth: "1000px", boxSizing: "border-box", display: "flex", flexDirection: "column", justifyContent: "start"}} className="modulePaper">
 					{!this.props.inlineMode && <React.Fragment>
 						<Typography variant="h3" gutterBottom>
 						{this.state.createMode ? "Nova Venda" : "Editar Venda"}
@@ -2025,6 +2025,7 @@ class CreateEditVendaModule extends React.Component {
 									</Grid>
 									<Grid item xs={2}>
 										<TextField
+											required
 											id="origem"
 											value={this.state.origem}
 											onChange={this.updateOrigem}
@@ -2086,7 +2087,27 @@ class CreateEditVendaModule extends React.Component {
 										</FormControl>
 									</Grid>
 									{this.state.tipoProduto == "MOVEL" ? <React.Fragment>
-										<Grid item xs={6}>
+										<Grid item xs={4}>
+											<Autocomplete
+												id="pdv"
+												freeSolo
+												disableClearable
+												options={(this.state.pontoDeVendaList ?? []).map(pontoDeVenda => pontoDeVenda.nome)}
+												value={this.state.pdv}
+												onInputChange={this.updatePdv}
+												renderInput={(params) => (
+													<TextField
+														{...params}
+														required
+														variant="outlined"
+														label="PDV"
+														error={"pdv" in this.state.errors}
+														helperText={this.state.errors?.pdv ?? ""}
+													/>
+												)}
+											/>
+										</Grid>
+										<Grid item xs={4}>
 											<DateTimePicker
 													label="Data da Ativação"
 													value={this.state.dataAtivacao}
@@ -2101,7 +2122,7 @@ class CreateEditVendaModule extends React.Component {
 													}}
 												/>
 										</Grid>
-										<Grid item xs={6}>
+										<Grid item xs={4}>
 											<FormControl>
 												<FormLabel id="prints">Prints</FormLabel>
 												<RadioGroup
@@ -2158,6 +2179,7 @@ class CreateEditVendaModule extends React.Component {
 												renderInput={(params) => (
 													<TextField
 														{...params}
+														required
 														variant="outlined"
 														label="PDV"
 														error={"pdv" in this.state.errors}

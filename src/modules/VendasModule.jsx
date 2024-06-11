@@ -27,6 +27,7 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
 import Select from '@mui/material/Select';
+import MenuList from '@mui/material/MenuList';
 import MenuItem from '@mui/material/MenuItem';
 import { DatePicker } from '@mui/x-date-pickers-pro';
 import Autocomplete from '@mui/material/Autocomplete';
@@ -42,6 +43,9 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import CloseIcon from '@mui/icons-material/Close';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
+import SaveIcon from '@mui/icons-material/Save';
+import AddIcon from '@mui/icons-material/Add';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 import { DateRangePicker } from '@mui/x-date-pickers-pro/DateRangePicker';
 
@@ -66,28 +70,22 @@ import api from "../services/api";
 
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 
-const VendaListDataGrid = memo(function VendaListDataGrid({ vendaRows, columns, vendaList, calling, columnVisibilityModel, onColumnVisibilityModelChange, projecaoList, setColumnVisibilityModel, columnGroupingModel, apiRef }) {
+const VendaListDataGrid = memo(function VendaListDataGrid({ vendaRows, columns, vendaList, calling, vendaVisaoList, columnGroupingModel, apiRef, dataGridMaximized, maximizeDataGrid, getVendaVisaoListFromApi, applyVendaVisao }) {
   console.log("VendaListDataGrid was rendered at", new Date().toLocaleTimeString());
 
   const theme = useTheme();
+
+  const getRowHeight = React.useCallback(({id, densityFactor}) => 150 * densityFactor, []);
 
   return (
     <CustomDataGridPremium
 		rows={vendaRows}
 		columns={columns}
-		initialState={{
-		    pagination: { paginationModel: { pageSize: 100 } },
-		    sorting: {
-		    	sortModel: [{ field: 'dataVenda', sort: 'desc' }],
-		    },
-		    pinnedColumns: { left: ['statusId'] },
-		    density: "standard"
-		  }}
+		initialState={vendaVisaoList[0].state}
 		pageSizeOptions={[10, 30, 50, 100, 1000]}
 		loading={calling}
 		sx={{
-			marginBottom: 3,
-			height: 1000,
+			marginBottom: 3
 		}}
 		pagination
 		headerFilters
@@ -98,55 +96,177 @@ const VendaListDataGrid = memo(function VendaListDataGrid({ vendaRows, columns, 
 		}}
 		slotProps={{
 			toolbar: {
-				projecaoList: projecaoList,
-				setColumnVisibilityModel: setColumnVisibilityModel
+				vendaVisaoList: vendaVisaoList,
+				apiRef: apiRef,
+				dataGridMaximized: dataGridMaximized,
+				maximizeDataGrid: maximizeDataGrid,
+				getVendaVisaoListFromApi: getVendaVisaoListFromApi,
+				applyVendaVisao: applyVendaVisao,
 			}
 		}}
-		disableColumnFilter
-		columnVisibilityModel={columnVisibilityModel}
-		onColumnVisibilityModelChange={onColumnVisibilityModelChange}
+		//disableColumnFilter
 		columnGroupingModel={columnGroupingModel}
 		apiRef={apiRef}
+		headerFilterHeight={70}
+		showCellVerticalBorder
+		cellSelection
 	/>
   );
 });
 
-const GridToolbarProjecao = memo(function GridToolbarProjecao({projecaoList, setColumnVisibilityModel}) {
+const GridToolbarVisao = memo(function GridToolbarVisao({vendaVisaoList, apiRef, getVendaVisaoListFromApi, applyVendaVisao}) {
 	const [anchorEl, setAnchorEl] = React.useState(null);
+	const [nome, setNome] = React.useState("");
+	const [addingVisao, setAddingVisao] = React.useState(false);
 	const open = Boolean(anchorEl);
+	const [calling, setCalling] = React.useState(false);
+	const [errors, setErrors] = React.useState({});
+	const [alertOpen, setAlertOpen] = React.useState(false);
+	const [alert, setAlert] = React.useState(null);
+
 	const handleClick = (event) => {
 		setAnchorEl(event.currentTarget);
 	};
+
 	const handleClose = () => {
 		setAnchorEl(null);
 	};
 
+	const deleteVendaVisao = (vendaVisaoId) => {
+		api.delete(`/venda-visao/${vendaVisaoId}`)
+			.then((response) => {
+				getVendaVisaoListFromApi();
+			})
+			.catch((err) => {
+				console.error(err);
+			})
+	}
+
+	const patchVendaVisao = (vendaVisaoId) => {
+		let data = {
+			state: JSON.stringify(apiRef.current.exportState())
+		}
+
+		api.patch(`/venda-visao/${vendaVisaoId}`, data)
+			.then((response) => {
+				getVendaVisaoListFromApi();
+			})
+			.catch((err) => {
+				console.error(err);
+			})
+	}
+
+	const postVendaVisao = () => {
+		setCalling(true);
+
+		let data = {
+			nome: nome,
+			state: JSON.stringify(apiRef.current.exportState())
+		}
+
+		api.post(`/venda-visao/`, data)
+			.then((response) => {
+				getVendaVisaoListFromApi();
+				setAddingVisao(false);
+				setCalling(false);
+				setErrors({});
+			})
+			.catch((err) => {
+				let errors = err?.response?.data?.errors ?? {};
+				openAlert("error", "Falha ao salvar visão!");
+				setCalling(false);
+				setErrors(errors);
+			})
+	}
+
+	const openAlert = (severity, message) => {
+		setAlert(<Alert severity={severity} onClose={closeAlert}>{message}</Alert>);
+		setAlertOpen(true);
+	}
+
+	const closeAlert = () => {
+		setAlertOpen(false);
+	}
+
 	return (
-		<Box>
+		<Stack direction="row" spacing={1}>
 			<Button
 				startIcon={<PreviewIcon/>}
 				onClick={handleClick}
 				size="small"
 			>
-				Projeção
+				Visão
 			</Button>
 			<Menu
 				anchorEl={anchorEl}
 				open={open}
 				onClose={handleClose}
 				>
-				{projecaoList.map(projecao => <MenuItem key={projecao.value} onClick={() => {setColumnVisibilityModel(projecao.columnVisibilityModel); handleClose()}}>{projecao.nome}</MenuItem>)}
-				
+				{vendaVisaoList.map(vendaVisao =>
+					<MenuItem
+						key={vendaVisao.vendaVisaoId}
+						onClick={() => {applyVendaVisao(vendaVisao); handleClose()}}
+						sx={{gap: 1}}
+						selected={Boolean(vendaVisao.atual)}
+					>
+						{vendaVisao.nome}
+						{vendaVisao.vendaVisaoId >= 0 && <React.Fragment>
+							<IconButton size="small" edge="end" onClick={(e) => {e.stopPropagation(); patchVendaVisao(vendaVisao.vendaVisaoId)}}>
+					        	<SaveIcon/>
+				      		</IconButton>
+				      		<IconButton size="small" edge="end" onClick={(e) => {e.stopPropagation(); deleteVendaVisao(vendaVisao.vendaVisaoId)}}>
+					        	<DeleteIcon/>
+				      		</IconButton>
+				      	</React.Fragment>}
+					</MenuItem>
+				)}
 			</Menu>
-		</Box>
+			<Button
+				startIcon={<AddIcon/>}
+				onClick={() => {setAddingVisao(true); setNome(""); setErrors({});}}
+				size="small"
+			>
+				Salvar Visão
+			</Button>
+			<Dialog onClose={() => setAddingVisao(false)} open={addingVisao}>
+				<DialogTitle>Salvar Visão</DialogTitle>
+				<DialogContent>
+					<TextField
+						autoFocus
+						value={nome}
+						onChange={(e) => setNome(e.target.value)}
+						size="small"
+						label="Nome"
+						variant="standard"
+						fullWidth
+						error={"nome" in errors}
+						helperText={errors?.nome ?? ""}
+					/>
+					<Collapse in={alertOpen} sx={{marginTop: 3}}>
+						{alert}
+					</Collapse>
+				</DialogContent>
+				<DialogActions>
+					<Button type="button" onClick={() => setAddingVisao(false)}>
+						Cancelar
+					</Button>
+					<Button onClick={postVendaVisao}>
+						Salvar
+					</Button>
+				</DialogActions>
+			</Dialog>
+		</Stack>
 	);
 	}
 )
 
-const CustomToolbar = memo(function CustomToolbar({projecaoList, setColumnVisibilityModel}) {
+const CustomToolbar = memo(function CustomToolbar({vendaVisaoList, apiRef, dataGridMaximized, maximizeDataGrid, getVendaVisaoListFromApi, applyVendaVisao}) {
 	return (
 		<GridToolbarContainer>
-			<GridToolbarProjecao projecaoList={projecaoList} setColumnVisibilityModel={setColumnVisibilityModel}/>
+			<IconButton color="primary" onClick={maximizeDataGrid}>
+	        	<Icon>{dataGridMaximized ? "fullscreen_exit" : "fullscreen"}</Icon>
+      		</IconButton>
+			<GridToolbarVisao vendaVisaoList={vendaVisaoList} apiRef={apiRef} getVendaVisaoListFromApi={getVendaVisaoListFromApi} applyVendaVisao={applyVendaVisao}/>
 			<GridToolbarColumnsButton />
 			<GridToolbarDensitySelector/>
 			<GridToolbarExport />
@@ -174,9 +294,11 @@ class VendasModule extends React.Component {
 			vendaRows: [],
 			vendaListDataGridApiRef: this.props.vendaListDataGridApiRef,
 
-			// projecao
+			dataGridMaximized: false,
 
-			columnVisibilityModel: {},
+			// visao
+
+			vendaVisaoList: [],
 
 			// filtros
 
@@ -215,7 +337,7 @@ class VendasModule extends React.Component {
 		this.numeroFaturas = 14;
 
 		this.columns = [
-			{ field: 'statusId', headerName: 'Status', valueGetter: (value, row) => this.state.vendaStatusByVendaStatusId?.[value]?.nome, minWidth: 275, hideable: false, renderCell: (params) =>
+			{ field: 'statusId', headerName: 'Status', valueGetter: (value, row) => this.state.vendaStatusByVendaStatusId?.[value]?.nome, width: 275, hideable: false, renderCell: (params) =>
 				<Stack direction="row" justifyContent="space-around" alignItems="center" spacing={1} height="100%">
 					<VendaStatusChip
 						sx={{flexGrow: 1, overflow: "hidden"}}
@@ -227,236 +349,165 @@ class VendasModule extends React.Component {
 					</IconButton>
 				</Stack>
 			},
-			{ field: 'dataStatus', headerName: 'Data do Status', minWidth: 200, flex: 1, type: 'date', renderCell: (params) => params.value !== null ? dayjs(params.value).format('L LTS') : "" },
-			{ field: 'cpf', headerName: 'CPF/CNPJ', minWidth: 200, flex: 1 },
-			{ field: 'nome', headerName: 'Nome/Razão Social', minWidth: 200, flex: 1 },
-			{ field: 'dataCadastro', headerName: 'Data do Cadastro', minWidth: 200, flex: 1, type: 'date', renderCell: (params) => params.value !== null ? dayjs(params.value).format('L LTS') : "" },
-			{ field: 'tipoProduto', headerName: 'Tipo', minWidth: 100, flex: 1 },
-			{ field: 'pdv', headerName: 'PDV', minWidth: 100, flex: 1 },
-			{ field: 'safra', headerName: 'Safra', minWidth: 100, flex: 1, valueGetter: (value, row) => value !== null ? dayjs(value).format('MMMM YYYY') : "" },
-			{ field: 'dataVenda', headerName: 'Data da Venda', minWidth: 200, flex: 1, type: 'date', renderCell: (params) => params.value !== null ? dayjs(params.value).format('L LTS') : "" },
-			{ field: 'loginVendedor', headerName: 'Login Vendedor', minWidth: 200, flex: 1 },
-			{ field: 'cadastradorId', headerName: 'Cadastrador', valueGetter: (value, row) => this.state.usuarioByUsuarioId?.[value]?.nome, minWidth: 200, flex: 1, renderCell: (params) => <UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[params.row.cadastradorId]}/>},
-			{ field: 'sistemaId', headerName: 'Sistema', valueGetter: (value, row) => this.state.sistemaBySistemaId?.[value]?.nome, minWidth: 150, flex: 1 },
-			{ field: 'auditorId', headerName: 'Auditor', valueGetter: (value, row) => this.state.usuarioByUsuarioId?.[value]?.nome, minWidth: 200, flex: 1, renderCell: (params) => <UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[params.row.auditorId]}/>},
-			{ field: 'os', headerName: 'OS', minWidth: 100, flex: 1 },
-			{ field: 'custcode', headerName: 'Cust-Code', minWidth: 100, flex: 1 },
-			{ field: 'ordem', headerName: 'Ordem', minWidth: 100, flex: 1 },
-			{ field: 'origem', headerName: 'Mailing/Origem', minWidth: 200, flex: 1 },
-			{ field: 'vendedorId', headerName: 'Vendedor', valueGetter: (value, row) => this.state.usuarioByUsuarioId?.[value]?.nome, minWidth: 200, flex: 1, renderCell: (params) => <UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[params.row.vendedorId]}/>},
-			{ field: 'supervisorId', headerName: 'Supervisor', valueGetter: (value, row) => this.state.usuarioByUsuarioId?.[value]?.nome, minWidth: 200, flex: 1, renderCell: (params) => <UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[params.row.supervisorId]}/>},
-			{ field: 'vendedorExterno', headerName: 'Vendedor Externo', minWidth: 200, flex: 1 },
-			{ field: 'supervisorExterno', headerName: 'Supervisor Externo', minWidth: 200, flex: 1 },
-			{ field: 'auditorExterno', headerName: 'Auditor Externo', minWidth: 200, flex: 1 },
-			{ field: 'cadastradorExterno', headerName: 'Cadastrador Externo', minWidth: 200, flex: 1 },
-			{ field: 'totalDeProdutos', headerName: 'N° de Produtos', minWidth: 100, flex: 1 },
-			{ field: 'produto', headerName: 'Produto', minWidth: 200, flex: 1 },
-			{ field: 'valor', headerName: 'Valor', minWidth: 100, flex: 1 },
-			{ field: 'quantidade', headerName: 'Quantidade', minWidth: 100, flex: 1 },
-			{ field: 'telefoneFixo', headerName: 'Telefone Fixo', minWidth: 200, flex: 1 },
-			{ field: 'valorTelefoneFixo', headerName: 'Valor Telefone Fixo', minWidth: 200, flex: 1 },
-			{ field: 'numeroTelefoneFixo', headerName: 'Número Telefone Fixo', minWidth: 200, flex: 1 },
-			{ field: 'tipoDeLinha', headerName: 'Tipo de Linha', minWidth: 200, flex: 1 },
-			{ field: 'ddd', headerName: 'DDD', minWidth: 100, flex: 1 },
-			{ field: 'operadora', headerName: 'Operadora', minWidth: 150, flex: 1 },
+			{ field: 'dataStatus', headerName: 'Data do Status', width: 200, type: 'date', renderCell: (params) => params.value !== null ? dayjs(params.value).format('L LTS') : "" },
+			{ field: 'cpf', headerName: 'CPF/CNPJ', width: 200 },
+			{ field: 'nome', headerName: 'Nome/Razão Social', width: 200 },
+			{ field: 'dataCadastro', headerName: 'Data do Cadastro', width: 200, type: 'date', renderCell: (params) => params.value !== null ? dayjs(params.value).format('L LTS') : "" },
+			{ field: 'tipoProduto', headerName: 'Tipo', width: 100 },
+			{ field: 'pdv', headerName: 'PDV', width: 100 },
+			{ field: 'safra', headerName: 'Safra', width: 100, valueGetter: (value, row) => value !== null ? dayjs(value).format('MMMM YYYY') : "" },
+			{ field: 'dataVenda', headerName: 'Data da Venda', width: 200, type: 'date', renderCell: (params) => params.value !== null ? dayjs(params.value).format('L LTS') : "" },
+			{ field: 'loginVendedor', headerName: 'Login Vendedor', width: 200 },
+			{ field: 'cadastradorId', headerName: 'Cadastrador', valueGetter: (value, row) => this.state.usuarioByUsuarioId?.[value]?.nome, width: 200, renderCell: (params) => <UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[params.row.cadastradorId]}/>},
+			{ field: 'sistemaId', headerName: 'Sistema', valueGetter: (value, row) => this.state.sistemaBySistemaId?.[value]?.nome, width: 150 },
+			{ field: 'auditorId', headerName: 'Auditor', valueGetter: (value, row) => this.state.usuarioByUsuarioId?.[value]?.nome, width: 200, renderCell: (params) => <UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[params.row.auditorId]}/>},
+			{ field: 'os', headerName: 'OS', width: 100 },
+			{ field: 'custcode', headerName: 'Cust-Code', width: 100 },
+			{ field: 'ordem', headerName: 'Ordem', width: 100 },
+			{ field: 'origem', headerName: 'Mailing/Origem', width: 200 },
+			{ field: 'vendedorId', headerName: 'Vendedor', valueGetter: (value, row) => this.state.usuarioByUsuarioId?.[value]?.nome, width: 200, renderCell: (params) => <UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[params.row.vendedorId]}/>},
+			{ field: 'supervisorId', headerName: 'Supervisor', valueGetter: (value, row) => this.state.usuarioByUsuarioId?.[value]?.nome, width: 200, renderCell: (params) => <UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[params.row.supervisorId]}/>},
+			{ field: 'vendedorExterno', headerName: 'Vendedor Externo', width: 200 },
+			{ field: 'supervisorExterno', headerName: 'Supervisor Externo', width: 200 },
+			{ field: 'auditorExterno', headerName: 'Auditor Externo', width: 200 },
+			{ field: 'cadastradorExterno', headerName: 'Cadastrador Externo', width: 200 },
+			{ field: 'totalDeProdutos', headerName: 'N° de Produtos', width: 100 },
+			{ field: 'produto', headerName: 'Produto', width: 200 },
+			{ field: 'valor', headerName: 'Valor', width: 100 },
+			{ field: 'quantidade', headerName: 'Quantidade', width: 100 },
+			{ field: 'telefoneFixo', headerName: 'Telefone Fixo', width: 200 },
+			{ field: 'valorTelefoneFixo', headerName: 'Valor Telefone Fixo', width: 200 },
+			{ field: 'numeroTelefoneFixo', headerName: 'Número Telefone Fixo', width: 200 },
+			{ field: 'tipoDeLinha', headerName: 'Tipo de Linha', width: 200 },
+			{ field: 'ddd', headerName: 'DDD', width: 100 },
+			{ field: 'operadora', headerName: 'Operadora', width: 150 },
 
-			{ field: 'uf', headerName: 'UF', minWidth: 100, flex: 1 },
-			{ field: 'cidade', headerName: 'Cidade', minWidth: 200, flex: 1 },
-			{ field: 'bairro', headerName: 'Bairro', minWidth: 200, flex: 1 },
+			{ field: 'uf', headerName: 'UF', width: 100 },
+			{ field: 'cidade', headerName: 'Cidade', width: 200 },
+			{ field: 'bairro', headerName: 'Bairro', width: 200 },
 
-			{ field: 'porte', headerName: 'Porte', minWidth: 200, flex: 1 },
-			{ field: 'nomeContato', headerName: 'Nome Contato', minWidth: 200, flex: 1 },
+			{ field: 'porte', headerName: 'Porte', width: 200 },
+			{ field: 'nomeContato', headerName: 'Nome Contato', width: 200 },
 
-			{ field: 'contato1', headerName: 'Contato 1', minWidth: 200, flex: 1 },
-			{ field: 'contato2', headerName: 'Contato 2', minWidth: 200, flex: 1 },
-			{ field: 'contato3', headerName: 'Contato 3', minWidth: 200, flex: 1 },
-			{ field: 'email', headerName: 'Email', minWidth: 200, flex: 1 },
-			{ field: 'observacao', headerName: 'Observação', minWidth: 200, flex: 1 },
+			{ field: 'contato1', headerName: 'Contato 1', width: 200 },
+			{ field: 'contato2', headerName: 'Contato 2', width: 200 },
+			{ field: 'contato3', headerName: 'Contato 3', width: 200 },
+			{ field: 'email', headerName: 'Email', width: 200 },
+			{ field: 'observacao', headerName: 'Observação', width: 200 },
 
-			{ field: 'formaDePagamento', headerName: 'Forma de Pagamento', minWidth: 200, flex: 1 },
-			{ field: 'vencimento', headerName: 'Vencimento', minWidth: 100, flex: 1 },
+			{ field: 'formaDePagamento', headerName: 'Forma de Pagamento', width: 200 },
+			{ field: 'vencimento', headerName: 'Vencimento', width: 100 },
 
-			{ field: 'dataAgendamento', headerName: 'Data de Agendamento', minWidth: 200, flex: 1, type: 'date', renderCell: (params) => params.value !== null ? dayjs(params.value).format('L LTS') : "" },
-			{ field: 'dataInstalacao', headerName: 'Data de Instalação', minWidth: 200, flex: 1, type: 'date', renderCell: (params) => params.value !== null ? dayjs(params.value).format('L LTS') : "" },
-			{ field: 'dataAtivacao', headerName: 'Data da Ativação', minWidth: 200, flex: 1, type: 'date', renderCell: (params) => params.value !== null ? dayjs(params.value).format('L LTS') : "" },
+			{ field: 'dataAgendamento', headerName: 'Data de Agendamento', width: 200, type: 'date', renderCell: (params) => params.value !== null ? dayjs(params.value).format('L LTS') : "" },
+			{ field: 'dataInstalacao', headerName: 'Data de Instalação', width: 200, type: 'date', renderCell: (params) => params.value !== null ? dayjs(params.value).format('L LTS') : "" },
+			{ field: 'dataAtivacao', headerName: 'Data da Ativação', width: 200, type: 'date', renderCell: (params) => params.value !== null ? dayjs(params.value).format('L LTS') : "" },
 
-			{ field: 'vendaOriginal', headerName: 'Venda Original', minWidth: 200, flex: 1 },
-			{ field: 'brscan', headerName: 'BrScan', minWidth: 200, flex: 1 },
-			{ field: 'suporte', headerName: 'Suporte', minWidth: 200, flex: 1 },
-			{ field: 'prints', headerName: 'Prints', minWidth: 100, flex: 1 },
+			{ field: 'vendaOriginal', headerName: 'Venda Original', width: 200 },
+			{ field: 'brscan', headerName: 'BrScan', width: 200 },
+			{ field: 'suporte', headerName: 'Suporte', width: 200 },
+			{ field: 'prints', headerName: 'Prints', width: 100 },
 
-			{ field: 'situacao', headerName: 'Situação', minWidth: 200, flex: 1 },
+			{ field: 'situacao', headerName: 'Situação', width: 200 },
 		];
 
 		for (let i=1; i<=this.numeroFaturas; i++) {
-			this.columns.push({ field: `m${i}Mes`, headerName: `M${i} Mês`, minWidth: 150, flex: 1, valueGetter: (value, row) => value !== null ? dayjs(value).format('MMMM YYYY') : "" });
-			this.columns.push({ field: `m${i}Status`, headerName: `M${i} Status`, minWidth: 100, flex: 1});
-			this.columns.push({ field: `m${i}Valor`, headerName: `M${i} Valor`, minWidth: 100, flex: 1});
+			this.columns.push({ field: `m${i}Mes`, headerName: `M${i} Mês`, width: 150, valueGetter: (value, row) => value !== null ? dayjs(value).format('MMMM YYYY') : "" });
+			this.columns.push({ field: `m${i}Status`, headerName: `M${i} Status`, width: 100});
+			this.columns.push({ field: `m${i}Valor`, headerName: `M${i} Valor`, width: 100});
 		}
 
 		this.allHiddenColumnVisibilityModel = {};
 		Object.keys(this.columns).forEach((column) => this.allHiddenColumnVisibilityModel[this.columns[column].field] = false);
 
-		this.projecaoList = [
-			{nome: "Resumo", value: "RESUMO", columnVisibilityModel: {
-				...this.allHiddenColumnVisibilityModel,
-				statusId: true,
-				dataStatus: true,
-				tipoProduto: true,
-				pdv: true,
-				safra: true,
-				dataVenda: true,
-				os: true,
-				ordem: true,
-				vendedorId: true,
-				produto: true,
-				valor: true,
-				quantidade: true,
-				uf: true,
-				cpf: true,
-				nome: true,
-				contato1: true,
-				observacao: true,
-			}},
-			{nome: "Fibra - Vendas", value: "FIBRA_VENDAS", columnVisibilityModel: {
-				...this.allHiddenColumnVisibilityModel,
-				statusId: true,
-				dataStatus: true,
-				tipoProduto: true,
-				pdv: true,
-				safra: true,
-				dataVenda: true,
-				loginVendedor: true,
-				cadastradorId: true,
-				sistemaId: true,
-				auditorId: true,
-				os: true,
-				ordem: true,
-				origem: true,
-				vendedorId: true,
-				supervisorId: true,
-				produto: true,
-				valor: true,
-				quantidade: true,
-				telefoneFixo: true,
-				valorTelefoneFixo: true,
-				numeroTelefoneFixo: true,
-				uf: true,
-				cidade: true,
-				bairro: true,
-				cpf: true,
-				nome: true,
-				contato1: true,
-				contato2: true,
-				contato3: true,
-				email: true,
-				observacao: true,
-				formaDePagamento: true,
-				dataAgendamento: true,
-				dataInstalacao: true,
-				vendaOriginal: true,
-				brscan: true,
-				suporte: true,
-			}},
-			{nome: "Móvel - Vendas", value: "MOVEL_VENDAS", columnVisibilityModel: {
-				...this.allHiddenColumnVisibilityModel,
-				statusId: true,
-				dataStatus: true,
-				tipoProduto: true,
-				pdv: true,
-				safra: true,
-				dataVenda: true,
-				loginVendedor: true,
-				cadastradorId: true,
-				sistemaId: true,
-				auditorId: true,
-				os: true,
-				ordem: true,
-				origem: true,
-				vendedorId: true,
-				supervisorId: true,
-				totalDeProdutos: true,
-				produto: true,
-				valor: true,
-				quantidade: true,
-				tipoDeLinha: true,
-				ddd: true,
-				operadora: true,
-				uf: true,
-				cidade: true,
-				bairro: true,
-				porte: true,
-				cpf: true,
-				nome: true,
-				contato1: true,
-				contato2: true,
-				contato3: true,
-				email: true,
-				observacao: true,
-				dataAtivacao: true,
-				prints: true,
-			}},
-			{nome: "Fibra - Qualidade", value: "FIBRA_QUALIDADE", columnVisibilityModel: {
-				...this.allHiddenColumnVisibilityModel,
-				statusId: true,
-				dataStatus: true,
-				tipoProduto: true,
-				pdv: true,
-				safra: true,
-				os: true,
-				ordem: true,
-				custcode: true,
-				dataInstalacao: true,
-				contato1: true,
-				contato2: true,
-				contato3: true,
-				email: true,
-				produto: true,
-				valor: true,
-				cpf: true,
-				nome: true,
-				formaDePagamento: true,
-				vencimento: true,
-				situacao: true,
-				observacao: true,
-			}},
-			{nome: "Móvel - Qualidade", value: "MOVEL_QUALIDADE", columnVisibilityModel: {
-				...this.allHiddenColumnVisibilityModel,
-				statusId: true,
-				dataStatus: true,
-				tipoProduto: true,
-				pdv: true,
-				safra: true,
-				os: true,
-				ordem: true,
-				dataAtivacao: true,
-				contato1: true,
-				contato2: true,
-				contato3: true,
-				email: true,
-				produto: true,
-				valor: true,
-				quantidade: true,
-				tipoDeLinha: true,
-				cpf: true,
-				nome: true,
-				nomeContato: true,
-				formaDePagamento: true,
-				vencimento: true,
-				situacao: true,
-				observacao: true,
-			}},
+		this.defaultColumnDimensions = {};
+		this.columns.forEach((column) => this.defaultColumnDimensions[column.field] = {width: column.width});
+		console.log(this.defaultColumnDimensions);
+
+		this.fixedVendaVisaoList = [
+			{
+				vendaVisaoId: -1,
+				nome: "Padrão",
+				state: {
+					columns: {
+						columnVisibilityModel: {
+							...this.allHiddenColumnVisibilityModel,
+							statusId: true,
+							dataStatus: true,
+							tipoProduto: true,
+							pdv: true,
+							safra: true,
+							dataVenda: true,
+							dataAgendamento: true,
+							os: true,
+							ordem: true,
+							loginVendedor: true,
+							dataInstalacao: true,
+							vendedorId: true,
+							supervisorId: true,
+							produto: true,
+							valor: true,
+							quantidade: true,
+							uf: true,
+							cpf: true,
+							nome: true,
+							contato1: true,
+							observacao: true,
+						},
+						orderedFields: [
+								"statusId",
+								"dataStatus",
+								"tipoProduto",
+								"pdv",
+								"safra",
+								"os",
+								"ordem",
+								"dataVenda",
+								"dataAgendamento",
+								"dataInstalacao",
+								"loginVendedor",
+								"vendedorId",
+								"supervisorId",
+								"produto",
+								"valor",
+								"quantidade",
+								"cpf",
+								"nome",
+								"contato1",
+								"uf",
+								"observacao"
+							],
+						dimensions: {
+							...this.defaultColumnDimensions
+						}
+					},
+					pagination: { paginationModel: { pageSize: 100 } },
+					sorting: {
+						sortModel: [{ field: 'dataVenda', sort: 'desc' }],
+					},
+					pinnedColumns: { left: ['statusId'] },
+					density: "compact",
+					filter: {
+						filterModel: {
+							items: [],
+							logicOperator: "and",
+							quickFilterValues: [],
+							quickFilterLogicOperator: "and"
+						}
+					},
+				},
+				atual: true,
+			}
 		];
 
-		for (let j=3; j<=4; j++) {
-			for (let i=1; i<=this.numeroFaturas; i++) {
-				this.projecaoList[j].columnVisibilityModel[`m${i}Mes`] = true;
-				this.projecaoList[j].columnVisibilityModel[`m${i}Status`] = true;
-				this.projecaoList[j].columnVisibilityModel[`m${i}Valor`] = true;
-			}
-		}
+		this.state.vendaVisaoList = [...this.fixedVendaVisaoList];
 
-		this.state.columnVisibilityModel = this.projecaoList[0].columnVisibilityModel;
+		/*for (let j=3; j<=4; j++) {
+			for (let i=1; i<=this.numeroFaturas; i++) {
+				this.fixedVendaVisaoList[j].state.columns.columnVisibilityModel[`m${i}Mes`] = true;
+				this.fixedVendaVisaoList[j].state.columns.columnVisibilityModel[`m${i}Status`] = true;
+				this.fixedVendaVisaoList[j].state.columns.columnVisibilityModel[`m${i}Valor`] = true;
+			}
+		}*/
 
 		this.getVendaListFromApi = this.getVendaListFromApi.bind(this);
 		this.getVendaFromApi = this.getVendaFromApi.bind(this);
@@ -465,6 +516,10 @@ class VendasModule extends React.Component {
 		this.getFiltroVendaFromApi = this.getFiltroVendaFromApi.bind(this);
 		this.getSistemaListFromApi = this.getSistemaListFromApi.bind(this);
 		this.getPontoDeVendaListFromApi = this.getPontoDeVendaListFromApi.bind(this);
+		this.getVendaVisaoListFromApi =  this.getVendaVisaoListFromApi.bind(this);
+		this.updateVendaVisaoAtual = this.updateVendaVisaoAtual.bind(this);
+
+		this.applyVendaVisao = this.applyVendaVisao.bind(this);
 
 		this.calculateRows = this.calculateRows.bind(this);
 		this.calculateRow = this.calculateRow.bind(this);
@@ -473,7 +528,7 @@ class VendasModule extends React.Component {
 
 		this.resetFilters = this.resetFilters.bind(this);
 
-		this.onColumnVisibilityModelChange = this.onColumnVisibilityModelChange.bind(this);
+		this.maximizeDataGrid = this.maximizeDataGrid.bind(this);
 
 		this.openAlert = this.openAlert.bind(this);
 		this.closeAlert = this.closeAlert.bind(this);
@@ -485,6 +540,7 @@ class VendasModule extends React.Component {
 		this.getUsuarioListFromApi();
 		this.getSistemaListFromApi();
 		this.getPontoDeVendaListFromApi();
+		this.getVendaVisaoListFromApi();
 	}
 
 	/*shouldComponentUpdate(newProps, newState) {
@@ -638,6 +694,63 @@ class VendasModule extends React.Component {
 			});
 	}
 
+	getVendaVisaoListFromApi() {
+		api.get("/usuario/me/venda-visao")
+			.then((response) => {
+				let vendaVisaoList = response.data;
+				vendaVisaoList.forEach((vendaVisao) => {
+					try {
+						vendaVisao.state = JSON.parse(vendaVisao.state);
+					} catch (e) {
+						vendaVisao.state = {};
+					}
+				});
+				this.setState({vendaVisaoList: [...this.fixedVendaVisaoList, ...vendaVisaoList]}, () => {
+					let vendaVisaoAtual = 0;
+					let i;
+					for (i=this.fixedVendaVisaoList.length; i<this.state.vendaVisaoList.length; i++) {
+						if (this.state.vendaVisaoList[i].atual) {
+							vendaVisaoAtual = i;
+							break;
+						}
+					}
+					this.applyVendaVisao(this.state.vendaVisaoList[vendaVisaoAtual]);
+				});
+			})
+			.catch((err) => {
+				console.log(err);
+				setTimeout(this.getVendaVisaoListFromApi, 3000);
+			});
+	}
+
+	applyVendaVisao(vendaVisao) {
+		let vendaVisaoList = this.state.vendaVisaoList;
+		vendaVisaoList.forEach(_vendaVisao => _vendaVisao.vendaVisaoId == vendaVisao.vendaVisaoId ? _vendaVisao.atual = true : _vendaVisao.atual = false);
+		this.setState({vendaVisaoList: [...vendaVisaoList]});
+
+		let {columns, filter, sorting, density, pinnedColumns} = vendaVisao.state;
+
+		this.state.vendaListDataGridApiRef.current.restoreState({
+			columns: columns,
+			//filter: filter,
+			sorting: sorting,
+			density: density,
+			pinnedColumns: pinnedColumns,
+		});
+
+		this.updateVendaVisaoAtual(vendaVisao.vendaVisaoId);
+	}
+
+	updateVendaVisaoAtual(vendaVisaoId) {
+		api.post("/venda-visao/" + vendaVisaoId + "/atual")
+			.then((response) => {
+				
+			})
+			.catch((err) => {
+				console.log(err);
+			});
+	}
+
 	calculateRows() {
 		let vendaRows = this.state.vendaList.map((venda) => this.calculateRow(venda));
 		this.setState({vendaRows: vendaRows});
@@ -742,12 +855,12 @@ class VendasModule extends React.Component {
 		this.setState({editingVendaId: -1});
 	}
 
-	onColumnVisibilityModelChange(newModel) {
-		this.setState({columnVisibilityModel: newModel});
+	maximizeDataGrid() {
+		this.setState({dataGridMaximized: !this.state.dataGridMaximized})
 	}
 
 	openAlert(severity, message) {
-		this.setState({alert: <Alert severity={severity} onClose={this.closeAlert}>{message}</Alert>, alertOpen: true});
+		this.setState({alert: <Alert severity={severity} onClose={this.closeAlert} variant="filled">{message}</Alert>, alertOpen: true});
 	}
 
 	closeAlert() {
@@ -758,216 +871,219 @@ class VendasModule extends React.Component {
 		console.log("VendasModule was rendered at", new Date().toLocaleTimeString());
 		return (
 			<React.Fragment>
-				<Paper elevation={0} sx={{flexGrow: 1, padding: 5, minHeight: "100%", minWidth: "1000px", boxSizing: "border-box", display: "flex"/*this.props.location.pathname == `/vendas` ? "flex" : "none"*/, flexDirection: "column", aligmItems: "center", justifyContent: "start", gap: 3}} className="modulePaper">
-					<Typography variant="h3">
-						Vendas
-					</Typography>
-					<ButtonGroup>
-							<Button variant="contained" size="large" startIcon={<AddCardIcon />} onClick={() => this.props.navigate("/vendas/novo")}>Nova Venda</Button>
-					</ButtonGroup>
-					<Divider/>
-					<Grid container spacing={3} sx={{maxWidth: 1500}}>
-						<Grid item xs={3}>
-							<FormControl fullWidth size="small">
-								<InputLabel>Tipo do Produto</InputLabel>
-								<Select
-									id="tipo-prduto"
-									value={this.state.tipoProduto ?? ""}
-									label="Tipo do Produto"
-									onChange={(e) => this.setState({tipoProduto: e.target.value !== "" ? e.target.value : null})}
-									>
-									<MenuItem key={"nenhum"} value={""}>Ambos</MenuItem>
-									{Object.keys(VendaTipoProdutoEnum).map((tipoProduto) => <MenuItem key={tipoProduto} value={tipoProduto}>{VendaTipoProdutoEnum[tipoProduto]}</MenuItem>)}
-								</Select>
-							</FormControl>
-						</Grid>
-						<Grid item xs={3}>
-							<Autocomplete
-								id="pdv"
-								freeSolo
-								disableClearable
-								options={(this.state.pontoDeVendaList ?? []).map(pontoDeVenda => pontoDeVenda.nome)}
-								value={this.state.pdv}
-								onInputChange={(event, value) => this.setState({pdv: value})}
-								renderInput={(params) => (
-									<TextField
-										{...params}
-										variant="outlined"
-										label="PDV"
-									/>
-								)}
-								size="small"
-							/>
-						</Grid>
-						<Grid item xs={3}>
-							<DatePicker
-								label="Safra"
-								views={['month', 'year']}
-								value={this.state.safra}
-								onChange={(newValue) => this.setState({safra: newValue})}
-								slotProps={{
-									field: { clearable: true },
-									textField: {
-										fullWidth: true,
-										error: "safra" in this.state.errors,
-										helperText: this.state.errors?.safra ?? "",
-										size: "small"
-									},
-								}}
-							/>
-						</Grid>
-						<Grid item xs={3}>
-							<Button fullWidth variant="outlined" size="large" onClick={() => this.resetFilters()}>Resetar Filtros</Button>
-						</Grid>
-						<Grid item xs={3}>
-							<FormControl fullWidth size="small">
-								<InputLabel>Tipo de Data</InputLabel>
-								<Select
-									id="tipo-de-data"
-									value={this.state.tipoData ?? ""}
-									label="Grupo de Status"
-									onChange={(e) => this.setState({tipoData: e.target.value !== "" ? e.target.value : null})}
-									>
-									<MenuItem key={"nenhum"} value={""}>Nenhum</MenuItem>
-									{Object.keys(VendaTipoDataEnum).map((tipoData) => <MenuItem key={tipoData} value={tipoData}>{VendaTipoDataEnum[tipoData]}</MenuItem>)}
-								</Select>
-							</FormControl>
-						</Grid>
-						<Grid item xs={4}>
-							{this.state.tipoData !== null ?
-								<Stack spacing={1}>
-									<DateRangePicker
-										localeText={{ start: 'Data Inicial', end: 'Data Final' }}
-										value={[this.state.dataInicio, this.state.dataFim]}
-										onChange={(newValue) => this.setState({dataInicio: newValue[0], dataFim: newValue[1]})}
-										calendars={1}
-										slotProps={{
-											field: { clearable: true },
-											textField: {
-												fullWidth: true,
-												error: "dataInicio" in this.state.errors || "dataValid" in this.state.errors || "dataRangeValid" in this.state.errors,
-												helperText: this.state.errors?.dataInicio ?? this.state.errors?.dataValid ?? this.state.errors?.dataRangeValid ?? "",
-												size: "small"
-											},
-										}}
-									/>
-									<ButtonGroup variant="text" size="small">
-										<Button onClick={() => this.setState({dataInicio: dayjs(), dataFim: dayjs()})}>Hoje</Button>
-										<Button onClick={() => this.setState({dataInicio: dayjs().day(0), dataFim: dayjs()})}>Esta semana</Button>
-										<Button onClick={() => this.setState({dataInicio: dayjs().date(1), dataFim: dayjs()})}>Este mês</Button>
-										<Button onClick={() => this.setState({dataInicio: dayjs().subtract(3, 'month'), dataFim: dayjs()})}>Últimos 3 meses</Button>
-									</ButtonGroup>
-								</Stack>
-							: ""}
-						</Grid>
-						<Grid item xs={5}>
-							<Stack spacing={1}>
+				<Paper elevation={0} sx={{flexGrow: 1, padding: 2, minHeight: "100%", minWidth: "1000px", boxSizing: "border-box", display: "flex"/*this.props.location.pathname == `/vendas` ? "flex" : "none"*/, flexDirection: "column", aligmItems: "center", justifyContent: "start", gap: 3}} className="modulePaper">
+					<Box display={!this.state.dataGridMaximized ? "flex" : "none"} gap={3} flexDirection="column">
+						<Typography variant="h3">
+							Vendas
+						</Typography>
+						<ButtonGroup>
+								<Button variant="contained" size="large" startIcon={<AddCardIcon />} onClick={() => this.props.navigate("/vendas/novo")}>Nova Venda</Button>
+						</ButtonGroup>
+						<Divider/>
+						<Grid container spacing={3} sx={{maxWidth: 1500}}>
+							<Grid item xs={3}>
+								<FormControl fullWidth size="small">
+									<InputLabel>Tipo do Produto</InputLabel>
+									<Select
+										id="tipo-prduto"
+										value={this.state.tipoProduto ?? ""}
+										label="Tipo do Produto"
+										onChange={(e) => this.setState({tipoProduto: e.target.value !== "" ? e.target.value : null})}
+										>
+										<MenuItem key={"nenhum"} value={""}>Ambos</MenuItem>
+										{Object.keys(VendaTipoProdutoEnum).map((tipoProduto) => <MenuItem key={tipoProduto} value={tipoProduto}>{VendaTipoProdutoEnum[tipoProduto]}</MenuItem>)}
+									</Select>
+								</FormControl>
+							</Grid>
+							<Grid item xs={3}>
 								<Autocomplete
-									multiple
-									limitTags={3}
-									disableListWrap
-									id="venda-status"
-									loading={this.state.vendaStatusList == null}
-									options={(this.state.vendaStatusList ?? []).map((vendaStatus) => vendaStatus.vendaStatusId).sort((a, b) => this.state.vendaStatusByVendaStatusId[a].ordem - this.state.vendaStatusByVendaStatusId[b].ordem)}
-									groupBy={(option) => VendaStatusCategoriaEnum?.[this.state.vendaStatusByVendaStatusId?.[option]?.categoria] ?? "Sem Categoria"}
-									getOptionLabel={(option) => this.state.vendaStatusByVendaStatusId[option].nome}
-									value={this.state.statusIdList}
-									onChange={(event, value) => this.setState({statusIdList: value})}
+									id="pdv"
+									freeSolo
+									disableClearable
+									options={(this.state.pontoDeVendaList ?? []).map(pontoDeVenda => pontoDeVenda.nome)}
+									value={this.state.pdv}
+									onInputChange={(event, value) => this.setState({pdv: value})}
 									renderInput={(params) => (
 										<TextField
-											error={"papelId" in this.state.errors}
-											helperText={this.state.errors?.papelId}
-												{...params}
+											{...params}
 											variant="outlined"
-											label="Status"
+											label="PDV"
 										/>
 									)}
-									renderOption={(props, option) => <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props}>
-										<Stack direction="row" spacing={1} alignItems="center">
-											<Icon>{this.state.vendaStatusByVendaStatusId[option].icon}</Icon>
-											<div>{this.state.vendaStatusByVendaStatusId[option].nome}</div>
-										</Stack>
-									</Box>}
-									renderTags={(value, getTagProps) =>
-										value.map((option, index) => (
-										<VendaStatusChip
-											vendaStatus={this.state.vendaStatusByVendaStatusId[option]}
-											{...getTagProps({ index })}
-										/>
-										))
-									}
 									size="small"
 								/>
-								<ButtonGroup variant="text" size="small">
-									<Button onClick={() => this.setState({statusIdList: []})}>Nenhum</Button>
-									<Button onClick={() => this.setState({statusIdList: (this.state.vendaStatusList ?? []).map((vendaStatus) => vendaStatus.vendaStatusId)})}>Todos</Button>
-								</ButtonGroup>
-							</Stack>
+							</Grid>
+							<Grid item xs={3}>
+								<DatePicker
+									label="Safra"
+									views={['month', 'year']}
+									value={this.state.safra}
+									onChange={(newValue) => this.setState({safra: newValue})}
+									slotProps={{
+										field: { clearable: true },
+										textField: {
+											fullWidth: true,
+											error: "safra" in this.state.errors,
+											helperText: this.state.errors?.safra ?? "",
+											size: "small"
+										},
+									}}
+								/>
+							</Grid>
+							<Grid item xs={3}>
+								<Button fullWidth variant="outlined" size="large" onClick={() => this.resetFilters()}>Resetar Filtros</Button>
+							</Grid>
+							<Grid item xs={3}>
+								<FormControl fullWidth size="small">
+									<InputLabel>Tipo de Data</InputLabel>
+									<Select
+										id="tipo-de-data"
+										value={this.state.tipoData ?? ""}
+										label="Grupo de Status"
+										onChange={(e) => this.setState({tipoData: e.target.value !== "" ? e.target.value : null})}
+										>
+										<MenuItem key={"nenhum"} value={""}>Nenhum</MenuItem>
+										{Object.keys(VendaTipoDataEnum).map((tipoData) => <MenuItem key={tipoData} value={tipoData}>{VendaTipoDataEnum[tipoData]}</MenuItem>)}
+									</Select>
+								</FormControl>
+							</Grid>
+							<Grid item xs={4}>
+								{this.state.tipoData !== null ?
+									<Stack spacing={1}>
+										<DateRangePicker
+											localeText={{ start: 'Data Inicial', end: 'Data Final' }}
+											value={[this.state.dataInicio, this.state.dataFim]}
+											onChange={(newValue) => this.setState({dataInicio: newValue[0], dataFim: newValue[1]})}
+											calendars={1}
+											slotProps={{
+												field: { clearable: true },
+												textField: {
+													fullWidth: true,
+													error: "dataInicio" in this.state.errors || "dataValid" in this.state.errors || "dataRangeValid" in this.state.errors,
+													helperText: this.state.errors?.dataInicio ?? this.state.errors?.dataValid ?? this.state.errors?.dataRangeValid ?? "",
+													size: "small"
+												},
+											}}
+										/>
+										<ButtonGroup variant="text" size="small">
+											<Button onClick={() => this.setState({dataInicio: dayjs(), dataFim: dayjs()})}>Hoje</Button>
+											<Button onClick={() => this.setState({dataInicio: dayjs().day(0), dataFim: dayjs()})}>Esta semana</Button>
+											<Button onClick={() => this.setState({dataInicio: dayjs().date(1), dataFim: dayjs()})}>Este mês</Button>
+											<Button onClick={() => this.setState({dataInicio: dayjs().subtract(3, 'month'), dataFim: dayjs()})}>Últimos 3 meses</Button>
+										</ButtonGroup>
+									</Stack>
+								: ""}
+							</Grid>
+							<Grid item xs={5}>
+								<Stack spacing={1}>
+									<Autocomplete
+										multiple
+										limitTags={3}
+										disableListWrap
+										id="venda-status"
+										loading={this.state.vendaStatusList == null}
+										options={(this.state.vendaStatusList ?? []).map((vendaStatus) => vendaStatus.vendaStatusId).sort((a, b) => this.state.vendaStatusByVendaStatusId[a].ordem - this.state.vendaStatusByVendaStatusId[b].ordem)}
+										groupBy={(option) => VendaStatusCategoriaEnum?.[this.state.vendaStatusByVendaStatusId?.[option]?.categoria] ?? "Sem Categoria"}
+										getOptionLabel={(option) => this.state.vendaStatusByVendaStatusId[option].nome}
+										value={this.state.statusIdList}
+										onChange={(event, value) => this.setState({statusIdList: value})}
+										renderInput={(params) => (
+											<TextField
+												error={"papelId" in this.state.errors}
+												helperText={this.state.errors?.papelId}
+													{...params}
+												variant="outlined"
+												label="Status"
+											/>
+										)}
+										renderOption={(props, option) => <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props}>
+											<Stack direction="row" spacing={1} alignItems="center">
+												<Icon>{this.state.vendaStatusByVendaStatusId[option].icon}</Icon>
+												<div>{this.state.vendaStatusByVendaStatusId[option].nome}</div>
+											</Stack>
+										</Box>}
+										renderTags={(value, getTagProps) =>
+											value.map((option, index) => (
+											<VendaStatusChip
+												vendaStatus={this.state.vendaStatusByVendaStatusId[option]}
+												{...getTagProps({ index })}
+											/>
+											))
+										}
+										size="small"
+									/>
+									<ButtonGroup variant="text" size="small">
+										<Button onClick={() => this.setState({statusIdList: []})}>Nenhum</Button>
+										<Button onClick={() => this.setState({statusIdList: (this.state.vendaStatusList ?? []).map((vendaStatus) => vendaStatus.vendaStatusId)})}>Todos</Button>
+									</ButtonGroup>
+								</Stack>
+							</Grid>
+							<Grid item xs={3}>
+								<TextField
+									id="os"
+									value={this.state.os}
+									onChange={(e) => this.setState({os: e.target.value})}
+									fullWidth
+									label="OS"
+									variant="outlined"
+									disabled={this.state.calling}
+									inputProps={{
+										maxLength: 50,
+									}}
+									size="small"
+								/>
+							</Grid>
+							<Grid item xs={3}>
+								<TextField
+									id="cpf"
+									value={this.state.cpf}
+									onChange={(e) => this.setState({cpf: e.target.value})}
+									fullWidth
+									label="CPF/CNPJ"
+									variant="outlined"
+									disabled={this.state.calling}
+									inputProps={{
+										maxLength: 14,
+									}}
+									size="small"
+								/>
+							</Grid>
+							<Grid item xs={3}>
+								<TextField
+									id="nome"
+									value={this.state.nome}
+									onChange={(e) => this.setState({nome: e.target.value})}
+									fullWidth
+									label="Nome/Razão Social"
+									variant="outlined"
+									disabled={this.state.calling}
+									inputProps={{
+										maxLength: 200,
+									}}
+									size="small"
+								/>
+							</Grid>
+							<Grid item xs={3} sx={{display: "flex", alignItems: "start"}}>
+								<LoadingButton fullWidth component="label" variant="contained" startIcon={<RefreshIcon />} loadingPosition="start" loading={this.state.calling} disabled={this.state.calling || this.state.vendaStatusList == null} onClick={this.getVendaListFromApi}>
+									Atualizar
+								</LoadingButton>
+							</Grid>
 						</Grid>
-						<Grid item xs={3}>
-							<TextField
-								id="os"
-								value={this.state.os}
-								onChange={(e) => this.setState({os: e.target.value})}
-								fullWidth
-								label="OS"
-								variant="outlined"
-								disabled={this.state.calling}
-								inputProps={{
-									maxLength: 50,
-								}}
-								size="small"
-							/>
-						</Grid>
-						<Grid item xs={3}>
-							<TextField
-								id="cpf"
-								value={this.state.cpf}
-								onChange={(e) => this.setState({cpf: e.target.value})}
-								fullWidth
-								label="CPF/CNPJ"
-								variant="outlined"
-								disabled={this.state.calling}
-								inputProps={{
-									maxLength: 14,
-								}}
-								size="small"
-							/>
-						</Grid>
-						<Grid item xs={3}>
-							<TextField
-								id="nome"
-								value={this.state.nome}
-								onChange={(e) => this.setState({nome: e.target.value})}
-								fullWidth
-								label="Nome/Razão Social"
-								variant="outlined"
-								disabled={this.state.calling}
-								inputProps={{
-									maxLength: 200,
-								}}
-								size="small"
-							/>
-						</Grid>
-						<Grid item xs={3} sx={{display: "flex", alignItems: "start"}}>
-							<LoadingButton fullWidth component="label" variant="contained" startIcon={<RefreshIcon />} loadingPosition="start" loading={this.state.calling} disabled={this.state.calling || this.state.vendaStatusList == null} onClick={this.getVendaListFromApi}>
-								Atualizar
-							</LoadingButton>
-						</Grid>
-					</Grid>
-					<Divider/>
-					<Box sx={{ flexGrow: 1 }}>
+						<Divider/>
+					</Box>
+					<Box sx={{ flexGrow: 1, height: "1px", minHeight: "400px" }}>
 						<VendaListDataGrid
 							vendaRows={this.state.vendaRows}
 							columns={this.columns}
 							vendaList={this.state.vendaList}
 							calling={this.state.calling}
-							columnVisibilityModel={this.state.columnVisibilityModel}
-							onColumnVisibilityModelChange={this.onColumnVisibilityModelChange}
-							projecaoList={this.projecaoList}
-							setColumnVisibilityModel={this.onColumnVisibilityModelChange}
+							vendaVisaoList={this.state.vendaVisaoList}
 							columnGroupingModel={this.columnGroupingModel}
 							apiRef={this.state.vendaListDataGridApiRef}
+							dataGridMaximized={this.state.dataGridMaximized}
+							maximizeDataGrid={this.maximizeDataGrid}
+							getVendaVisaoListFromApi={this.getVendaVisaoListFromApi}
+							applyVendaVisao={this.applyVendaVisao}
 						/>
 					</Box>
 					<Snackbar open={this.state.alertOpen} onClose={(e, reason) => (reason !== "clickaway") ? this.closeAlert() : ""} anchorOrigin={{vertical: "bottom", horizontal: "right"}} autoHideDuration={2000}>
