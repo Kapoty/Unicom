@@ -30,8 +30,15 @@ import Modal from '@mui/material/Modal';
 import WarningIcon from '@mui/icons-material/Warning';
 import Paper from '@mui/material/Paper';
 import CircleIcon from '@mui/icons-material/Circle';
+import CircleOutlinedIcon from '@mui/icons-material/CircleOutlined';
 import LinearProgress from '@mui/material/LinearProgress';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import SecurityIcon from '@mui/icons-material/Security';
+import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
+import Tooltip from "@mui/material/Tooltip";
+import HourglassFullIcon from '@mui/icons-material/HourglassFull';
+import HourglassBottomIcon from '@mui/icons-material/HourglassBottom';
+import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
 
 import { grey, green, yellow, blue, red } from '@mui/material/colors';
 
@@ -55,6 +62,10 @@ export default class JornadaChip extends React.Component {
 			error: null,
 			lastSuccessRefreshTime: null,
 
+			chipColor: "auto",
+			chipLabelText: "",
+			chipLabelIcon: null,
+
 			popoverOpen: false,
 
 			alertAusente: false,
@@ -75,8 +86,7 @@ export default class JornadaChip extends React.Component {
 
 		this.notifyAlertAusente = true;
 		this.notifyAusente = true;
-		this.notifyLogado = false;
-		this.notifyDeslogado = false;
+		this.notifyDuracaoAcabou = true;
 
 		this.alertAusenteSeconds = 300;
 
@@ -98,8 +108,11 @@ export default class JornadaChip extends React.Component {
 		this.handleAlterarStatus = this.handleAlterarStatus.bind(this);
 		this.openPopover = this.openPopover.bind(this);
 
+		this.calculateChip = this.calculateChip.bind(this);
+
 		this.handleNotifyAlertAusente = this.handleNotifyAlertAusente.bind(this);
 		this.handleNotifyAusente = this.handleNotifyAusente.bind(this);
+		this.handleNotifyDuracaoAcabou = this.handleNotifyDuracaoAcabou.bind(this);
 
 		this.startRefreshTimeout = this.startRefreshTimeout.bind(this);
 		this.stopRefreshTimeout = this.stopRefreshTimeout.bind(this);
@@ -128,6 +141,7 @@ export default class JornadaChip extends React.Component {
 		api.get(`/registro-jornada/${this.usuarioId}/hoje?completo=${this.state.popoverOpen ? "true" : "false"}`, {redirect403: false})
 			.then((response) => {
 				let registroJornada = response.data;
+
 				if (registroJornada.statusOptionList !== null && registroJornada.statusAtual !== null && registroJornada.completo) {
 					registroJornada.statusOptionList = registroJornada.statusOptionList.filter((status) => {
 						if (status.jornadaStatusId == registroJornada.statusRegularId)
@@ -144,6 +158,7 @@ export default class JornadaChip extends React.Component {
 							b.usuarioPodeAtivar - a.usuarioPodeAtivar;
 					});
 				}
+
 				this.setState({
 					registroJornada: registroJornada,
 					error: null,
@@ -152,16 +167,17 @@ export default class JornadaChip extends React.Component {
 					lastSuccessRefreshTime: dayjs().format("HH:mm:ss"),
 					alertAusente: this.props.me && registroJornada.secondsToAusente !== -1 ? registroJornada.secondsToAusente <= this.alertAusenteSeconds : false,
 				}, () => {
+					this.calculateChip();
 					if (this.state.isAuth && this.props.me) {
 						this.handleNotifyAlertAusente();
 						this.handleNotifyAusente();
+						this.handleNotifyDuracaoAcabou();
 					}
 				});
-				this.startRefreshTimeout();
 			})
 			.catch((err) => {
 				if ("response" in err && err.response.status == 403) {
-					this.setState({registroJornada: null, calling: false, error: "Não permitido!", refreshing: false});
+					this.setState({registroJornada: null, calling: false, error: "Não permitido!", refreshing: false}, () => this.calculateChip());
 					return;
 				}
 				let error = null;
@@ -178,7 +194,10 @@ export default class JornadaChip extends React.Component {
 				} else {
 					error = "O servidor não respondeu a solicitação!"
 				}
-				this.setState({registroJornada: null, calling: false, error: error, refreshing: false});
+				this.setState({registroJornada: null, calling: false, error: error, refreshing: false}, () => this.calculateChip());
+			})
+			.finally(() => {
+				this.startRefreshTimeout()
 			});
 	}
 
@@ -382,6 +401,31 @@ export default class JornadaChip extends React.Component {
 		}
 	}
 
+	handleNotifyDuracaoAcabou() {
+		if (this.state.registroJornada.statusAtual !== null && this.state.registroJornada.statusAtual.maxDuracao !== null && this.state.registroJornada.statusAtual.duracao <= this.state.registroJornada.statusAtual.maxDuracao) {
+				this.notifyDuracaoAcabou = true;
+			}
+		if (this.notifyDuracaoAcabou && this.state.registroJornada.statusAtual !== null && this.state.registroJornada.statusAtual.maxDuracao !== null && this.state.registroJornada.statusAtual.duracao > this.state.registroJornada.statusAtual.maxDuracao) {
+			this.notifyDuracaoAcabou = false;
+			let title = 'O tempo do status esgotou!';
+			let options = {
+				body: "Verifique seu status!",
+				icon: "/assets/image/pwa_icon_256.png",
+				requireInteraction: true,
+				actions: [
+					{
+						action: "im-here",
+						title: "Verificar no App"
+					}
+				]
+			};
+
+			navigator.serviceWorker.ready.then(function(registration) {
+				registration.showNotification(title, options);
+			});
+		}
+	}
+
 	openAlert(severity, message) {
 		this.setState({alert: <Alert severity={severity} onClose={this.closeAlert}>{message}</Alert>, alertOpen: true});
 	}
@@ -390,31 +434,55 @@ export default class JornadaChip extends React.Component {
 		this.setState({alertOpen: false});
 	}
 
-	render() {
-
+	calculateChip() {
 		let chipColor = "auto";
-		let chipLabel;
+		let chipLabelText = "";
+		let chipLabelIcon = null;
 
 		if (this.state.error !== null) {
-			chipColor = "error"
-			chipLabel = <Stack gap={1} direction="row" justifyContent="center" alignItems="center">--:--<ErrorIcon color="error"/></Stack>
-		}
-		else if (this.state.registroJornada == null) {
+			chipColor = "error.main"
+			chipLabelText = "--:--"
+			chipLabelIcon = <ErrorIcon color="inherit"/>
+		} else if (this.state.registroJornada == null) {
 			chipColor = "auto"
-			chipLabel = <Stack gap={1} direction="row" justifyContent="center" alignItems="center">--:--<CircularProgress size={20} color="inherit"/></Stack>
-		}
-		else if (this.state.registroJornada.statusAtual == null) {
+			chipLabelText = "--:--"
+			chipLabelIcon = <CircularProgress size={20} color="inherit"/>
+		} else if (this.state.registroJornada.statusAtual == null) {
 			chipColor = "auto"
-			chipLabel = "Deslogado";
-		}
-		else {
+			chipLabelText = "Deslogado";
+			chipLabelIcon = <CircleOutlinedIcon size={20} color="inherit"/>
+		} else {
 			chipColor = "#" + this.state.registroJornada.statusAtual.cor;
-			let duracao = dayjs.duration(this.state.registroJornada.statusAtual.duracao, 'seconds').format('HH[h]mm[m]');
-			if (this.state.registroJornada.statusAtual.maxDuracao !== null)
-				duracao = dayjs.duration(this.state.registroJornada.statusAtual.maxDuracao - this.state.registroJornada.statusAtual.duracao, 'seconds').format('HH[h]mm[m]');
-			chipLabel = <Stack gap={1} direction="row" justifyContent="center" alignItems="center">{duracao}<CircleIcon size={20} color="inherit"/></Stack>
-		}
+
+			if (this.state.registroJornada.statusAtual.maxDuracao == null) {
+				chipLabelText = dayjs.duration(this.state.registroJornada.statusAtual.duracao, 'seconds').format('HH[h]mm[m]');
+				chipLabelIcon = <CircleIcon size={20} color="inherit"/>
+			} else {
+				chipLabelText = dayjs.duration(this.state.registroJornada.statusAtual.maxDuracao - this.state.registroJornada.statusAtual.duracao, 'seconds').format('HH[h]mm[m]');
+
+				let timeLeftRatio =  1 - this.state.registroJornada.statusAtual.duracao / this.state.registroJornada.statusAtual.maxDuracao;
+
+				if (timeLeftRatio > 0.5)
+					chipLabelIcon = <HourglassFullIcon color="inherit"/>
+				else if (timeLeftRatio > 0)
+					chipLabelIcon = <HourglassBottomIcon color="inherit"/>
+				else {
+					chipColor = "error.main"
+					chipLabelIcon = <HourglassEmptyIcon color="inherit"/>
+				}
+					
+			}
 		
+		}
+
+		this.setState({
+			chipColor: chipColor,
+			chipLabelText: chipLabelText,
+			chipLabelIcon: chipLabelIcon,
+		});
+	}
+
+	render() {
 	
 		return (
 			<React.Fragment>
@@ -422,10 +490,17 @@ export default class JornadaChip extends React.Component {
 		      		clickable
 		      		variant="outlined"
 		      		sx={{
-		      			borderColor: chipColor,
-		      			color: chipColor
+		      			borderColor: this.state.chipColor,
+		      			color: this.state.chipColor
 		      		}}
-		      		label={chipLabel}
+		      		label={
+		      			<Stack gap={1} direction="row" justifyContent="center" alignItems="center">
+		      				<React.Fragment>
+		      					{this.state.chipLabelText}
+		      					{this.state.chipLabelIcon}
+		      				</React.Fragment>
+		      			</Stack>
+		      		}
 		      		ref={this.chipRef}
 		      		onClick={this.openPopover}
 		      	/>
@@ -519,19 +594,13 @@ export default class JornadaChip extends React.Component {
 									{status.nome}: {dayjs.duration(status.duracao, 'seconds').format('HH[h]mm[m]')} {status.maxDuracao !== null && status.maxUso !== null && status.duracao > status.maxDuracao * status.maxUso ? ` (-${dayjs.duration(status.duracao - status.maxDuracao * status.maxUso, 'seconds').minutes()}m)` : ""}
 								</Typography>) : ""}
 						</React.Fragment> : ""}
-						{this.props.usuario !== null && this.props.usuario.permissaoList.includes("AUTORIZAR_DISPOSITIVO") ?
-						<LoadingButton
-						 	variant="contained"
-						 	loading={this.state.authenticating}
-						 	startIcon={this.state.isAuth ? <LockIcon /> : <LockOpenIcon/>}
-						 	loadingPosition="start"
-						 	color={this.state.isAuth ? "error" : "success"}
-						 	disabled={this.state.authenticating}
-						 	onClick={this.handleAuthenticate}
-						 	sx={{marginTop: 3}}
-						>
-							{this.state.isAuth ? "Desautorizar Dispositivo" : "Autorizar Dispositivo"}
-						 </LoadingButton> : ""}
+						<Divider>
+							{this.state.isAuth ? 
+								<Chip icon={<VerifiedUserIcon/>} label="Dispositivo Autorizado" size="small" color="success" disabled={this.state.authenticating} onClick={this.props.usuario?.permissaoList?.includes("AUTORIZAR_DISPOSITIVO") ? this.handleAuthenticate : null} />
+								:
+								<Chip icon={<SecurityIcon/>} label="Dispositivo Não Autorizado" size="small" color="error" disabled={this.state.authenticating} onClick={this.props.usuario?.permissaoList?.includes("AUTORIZAR_DISPOSITIVO") ? this.handleAuthenticate : null} />
+							}
+						</Divider>
 						<Collapse in={this.state.alertOpen}>
 							{this.state.alert}
 						</Collapse>

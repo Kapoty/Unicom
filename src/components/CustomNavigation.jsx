@@ -23,9 +23,89 @@ import CircularProgress from '@mui/material/CircularProgress';
 import PeopleIcon from '@mui/icons-material/People';
 import Stack from '@mui/material/Stack';
 
-import IframeContextMenu from '../components/iframeContextMenu'
+import api from "../services/api";
+
+import IframeContextMenu from '../components/iframeContextMenu';
+import UploadImage from '../components/UploadImage';
 
 import { useNavigate, useLocation } from "react-router-dom";
+
+const StyledList = (props) => {
+
+	return <List
+				component="div"
+				disablePadding
+			>
+				{props.children.map((e, i) => e ? React.cloneElement(e, {depth: props?.depth ?? 0, key: i}) : null)}
+			</List>
+}
+
+const StyledListItem = (props) => {
+
+	return <React.Fragment>
+				<ListItem
+					disablePadding
+					onContextMenu={props.onContextMenu}
+					secondaryAction={props.secondaryAction}
+					sx={{
+						"& .MuiListItemSecondaryAction-root": {
+							pr: "4px"
+						}
+					}}
+				>
+					<ListItemButton
+						onClick={props.onClick}
+						selected={props.selected}
+						sx={{
+							pl: (theme) => parseInt(theme.spacing(2).replace("px", "")) + 32 * props.depth + "px",
+							position: "relative",
+							"&::before": (props.depth > 0 && !props.category) ? {
+								display: "block",
+								content: "''",
+								width: "1px",
+								height: "100%",
+								backgroundColor: props.selected ? "primary.main" : "divider",
+								position: "absolute",
+								left: (theme) => parseInt(theme.spacing(2).replace("px", "")) + 32 * props.depth - 21 + "px",
+							} : {},
+						}}
+					>
+						{props.category && (props.categoryOpen ?
+							<ExpandMore
+								sx={{
+									pr: 1,
+									color: "primary.main",
+									transform: "rotate(0deg)",
+									transformOrigin: "12px 12px",
+									transition: "transform 0.25s",
+								}}
+							/>
+							:
+							<ExpandMore
+								sx={{
+									pr: 1,
+									color: "divider",
+									transform: "rotate(-90deg)",
+									transformOrigin: "12px 12px",
+									transition: "transform 0.25s",
+								}}
+							/>
+						)}
+						<ListItemIcon sx={{minWidth: 24, pr: 1}}>
+							{props.iconFilename ? <UploadImage filename={props.iconFilename} style={{width: 24, height: 24}}/> : <Icon color="primary">{props.icon}</Icon>}
+						</ListItemIcon>
+						<ListItemText primary={props.primary} sx={{wordBreak: "break-all", pr: 1}}/>
+						{props.secondaryIcon && <Icon color="primary">{props.secondaryIcon}</Icon>}
+					</ListItemButton>
+				</ListItem>
+				{props.category && <Collapse in={props.categoryOpen}>
+						<StyledList depth={props.depth + 1}>
+							{props.children}
+						</StyledList>
+					</Collapse>}
+			</React.Fragment>
+
+}
 
 class CustomNavigation extends React.Component {
 
@@ -83,6 +163,177 @@ class CustomNavigation extends React.Component {
 	}
 
 	render() {
+		return <React.Fragment>
+			<Drawer
+				variant="persistent"
+				anchor="left"
+				open={this.props.menuOpen}
+				sx={{
+					width: this.props.menuOpen ? "350px" : "0px"
+				}}
+				PaperProps={{
+					sx: {
+						position: "relative",
+					},
+				}}
+			>
+				<Box sx={{ minWidth: 325}}>
+					<StyledList>
+
+						<StyledListItem
+							onClick={() => {this.props.navigate(`/`)}}
+							selected={this.props.location.pathname == "/"}
+							icon="home"
+							primary="Início"
+						/>
+
+						{this.props.usuario?.permissaoList?.includes("CADASTRAR_VENDAS") &&
+							<StyledListItem
+								onClick={() => this.setState({vendaModuleOpen: !this.state.vendaModuleOpen})}
+								icon="credit_card"
+								primary="Vendas"
+								category
+								categoryOpen={this.state.vendaModuleOpen}
+							>
+								<StyledListItem
+									onClick={(() => {this.props.navigate(`vendas`)})}
+									icon="credit_card"
+									primary="Vendas"
+									selected={this.props.location.pathname == `/vendas`}
+								/>
+								<StyledListItem
+									onClick={(() => {this.props.navigate(`vendas/novo`)})}
+									icon="add_card"
+									primary="Nova Venda"
+									selected={/^\/vendas\/(\d|(novo))+$/.test(this.props.location.pathname)}
+								/>
+							</StyledListItem>
+						}
+
+						{this.props.usuario.permissaoList.includes("VER_MODULO_IFRAME") &&
+							<StyledListItem
+								onClick={() => this.setState({iframeListOpen: !this.state.iframeListOpen})}
+								icon="leaderboard"
+								primary="Relatórios"
+								category
+								categoryOpen={this.state.iframeListOpen}
+							>
+								{(this.props.iframeCategoryList ?? []).map((iframeCategory) =>
+									<StyledListItem key={iframeCategory.iframeCategoryId}
+										onClick={() => this.props.toggleIframeCategory(iframeCategory)}
+										icon={iframeCategory.icon}
+										iconFilename={iframeCategory.iconFilename}
+										primary={iframeCategory.titulo}
+										category
+										categoryOpen={iframeCategory.open}
+										key={iframeCategory.iframeCategoryId}
+									>
+										{iframeCategory.iframeList.map((iframe) =>
+											!iframe.novaGuia ?
+												<StyledListItem
+													key={iframe.iframeId}
+													onClick={() => {this.props.navigate(`i/${iframeCategory.uri}/${iframe.uri}`)}}
+													onContextMenu={(event) => {this.handleIframeContextMenu(iframe, event)}}
+													secondaryAction={
+														iframe.open && <Tooltip title="Fechar">
+																			<IconButton edge="end" aria-label="fechar" onClick={() => this.props.closeIframe(iframe, this.props.location.pathname == `/i/${iframeCategory.uri}/${iframe.uri}`)}>
+																				<CloseIcon color="primary"/>
+																			</IconButton>
+																		</Tooltip>
+													}
+													icon={iframe.icon}
+													iconFilename={iframe.iconFilename}
+													primary={iframe.titulo}
+													selected={this.props.location.pathname == `/i/${iframeCategory.uri}/${iframe.uri}`}
+												/> :
+												<StyledListItem
+													key={iframe.iframeId}
+													onClick={() => window.open(iframe.iframe, "_blank")}
+													secondaryIcon="open_in_new"
+													icon={iframe.icon}
+													iconFilename={iframe.iconFilename}
+													primary={iframe.titulo}
+												/>
+										)}
+									</StyledListItem>
+								)}
+							</StyledListItem>
+						}
+
+						{this.props.usuario?.permissaoList?.includes("VER_MODULO_MINHA_EQUIPE") &&
+							<StyledListItem
+								onClick={() => this.setState({minhaEquipeModuleOpen: !this.state.minhaEquipeModuleOpen})}
+								icon="groups"
+								primary="Minhas Equipes"
+								category
+								categoryOpen={this.state.minhaEquipeModuleOpen}
+							>
+								{(this.props.minhaEquipeList ?? []).map((equipe) =>
+									<StyledListItem
+										key={equipe.equipeId}
+										onClick={() => {this.props.navigate(`minhas-equipes/${equipe.equipeId}`)}}
+										icon="groups"
+										primary={equipe.nome}
+										selected={this.props.location.pathname == `/minhas-equipes/${equipe.equipeId}`}
+									/>
+								)}
+							</StyledListItem>
+						}
+
+						{this.props.usuario?.permissaoList?.includes("CADASTRAR_USUARIOS") &&
+							<StyledListItem
+								onClick={() => this.setState({usuarioModuleOpen: !this.state.usuarioModuleOpen})}
+								icon="person"
+								primary="Usuários"
+								category
+								categoryOpen={this.state.usuarioModuleOpen}
+							>
+								<StyledListItem
+									onClick={() => {this.props.navigate(`usuarios`)}}
+									icon="person"
+									primary="Usuários"
+									selected={this.props.location.pathname == `/usuarios`}
+								/>
+								<StyledListItem
+									onClick={() => {this.props.navigate(`usuarios/novo`)}}
+									icon="person_add"
+									primary="Novo Usuário"
+									selected={/^\/usuarios\/(\d|(novo))+$/.test(this.props.location.pathname)}
+								/>
+							</StyledListItem>
+						}
+
+						{this.props.usuario?.permissaoList?.includes("CADASTRAR_EQUIPES") &&
+							<StyledListItem
+								onClick={() => this.setState({equipeModuleOpen: !this.state.equipeModuleOpen})}
+								icon="groups"
+								primary="Equipes"
+								category
+								categoryOpen={this.state.equipeModuleOpen}
+							>
+								<StyledListItem
+									onClick={() => {this.props.navigate(`equipes`)}}
+									icon="groups"
+									primary="Equipes"
+									selected={this.props.location.pathname == `/equipes`}
+								/>
+								<StyledListItem
+									onClick={() => {this.props.navigate(`equipes/novo`)}}
+									icon="group_add"
+									primary="Nova Equipe"
+									selected={/^\/equipes\/(\d|(novo))+$/.test(this.props.location.pathname)}
+								/>
+							</StyledListItem>
+						}
+
+					</StyledList>
+				</Box>
+			</Drawer>
+			<IframeContextMenu open={this.state.iframeContextMenuOpen} iframe={this.state.iframeContextMenuIframe} x={this.state.iframeContextMenuX} y={this.state.iframeContextMenuY} closeIframeContextMenu={this.closeIframeContextMenu}/>
+		</React.Fragment>
+	}
+
+	/*render() {
 		return (
 			<React.Fragment>
 				<Drawer
@@ -116,7 +367,7 @@ class CustomNavigation extends React.Component {
 				      role="presentation"
 				    >
 				     <List>
-					      {/*<ListItem disablePadding>
+					      {false && <ListItem disablePadding>
 								<ListItemButton onClick={() => {this.props.navigate(`/`)}}
 									selected={this.props.location.pathname == "/"}
 									>
@@ -125,7 +376,7 @@ class CustomNavigation extends React.Component {
 									</ListItemIcon>
 									<ListItemText primary={"Início"}/>
 								</ListItemButton>
-							</ListItem>*/}
+							</ListItem>}
 						{this.props.usuario !== null ?
 							<React.Fragment>
 								{this.props.usuario.permissaoList.includes("CADASTRAR_VENDAS") ?
@@ -138,7 +389,7 @@ class CustomNavigation extends React.Component {
 										{this.state.vendaModuleOpen ? <ExpandLess /> : <ExpandMore />}
 									</ListItemButton>
 									<Collapse in={this.state.vendaModuleOpen}>
-										<List component="div" disablePadding dense>
+										<List component="div" disablePadding>
 											<ListItem disablePadding>
 												<ListItemButton onClick={() => {this.props.navigate(`vendas`)}} sx={{ pl: 3 }}
 													selected={this.props.location.pathname == `/vendas`}
@@ -183,7 +434,7 @@ class CustomNavigation extends React.Component {
 													{iframeCategory.open ? <ExpandLess /> : <ExpandMore />}
 												</ListItemButton>
 												<Collapse in={iframeCategory.open} timeout="auto" unmountOnExit>
-													<List disablePadding dense>
+													<List disablePadding>
 														{iframeCategory.iframeList.map((iframe) =>
 															!iframe.novaGuia ?
 																<ListItem
@@ -229,7 +480,7 @@ class CustomNavigation extends React.Component {
 										{this.state.minhaEquipeModuleOpen ? <ExpandLess /> : <ExpandMore />}
 									</ListItemButton>
 									<Collapse in={this.state.minhaEquipeModuleOpen}>
-										<List component="div" disablePadding dense>
+										<List component="div" disablePadding>
 											{this.props.minhaEquipeList !== null ?
 												this.props.minhaEquipeList.map((equipe) => <ListItem disablePadding key={equipe.equipeId}>
 													<ListItemButton onClick={() => {this.props.navigate(`minhas-equipes/${equipe.equipeId}`)}} sx={{ pl: 3 }}
@@ -254,7 +505,7 @@ class CustomNavigation extends React.Component {
 										{this.state.usuarioModuleOpen ? <ExpandLess /> : <ExpandMore />}
 									</ListItemButton>
 									<Collapse in={this.state.usuarioModuleOpen}>
-										<List component="div" disablePadding dense>
+										<List component="div" disablePadding>
 											<ListItem disablePadding>
 												<ListItemButton onClick={() => {this.props.navigate(`usuarios`)}} sx={{ pl: 3 }}
 													selected={this.props.location.pathname == `/usuarios`}
@@ -288,7 +539,7 @@ class CustomNavigation extends React.Component {
 										{this.state.equipeModuleOpen ? <ExpandLess /> : <ExpandMore />}
 									</ListItemButton>
 									<Collapse in={this.state.equipeModuleOpen}>
-										<List component="div" disablePadding dense>
+										<List component="div" disablePadding>
 											<ListItem disablePadding>
 												<ListItemButton onClick={() => {this.props.navigate(`equipes`)}} sx={{ pl: 3 }}
 													selected={this.props.location.pathname == `/equipes`}
@@ -331,7 +582,7 @@ class CustomNavigation extends React.Component {
 		          <IframeContextMenu open={this.state.iframeContextMenuOpen} iframe={this.state.iframeContextMenuIframe} x={this.state.iframeContextMenuX} y={this.state.iframeContextMenuY} closeIframeContextMenu={this.closeIframeContextMenu}/>
 	          </React.Fragment>
 			);
-	}
+	}*/
 
 }
 

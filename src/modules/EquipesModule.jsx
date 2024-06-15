@@ -23,7 +23,7 @@ import Alert from '@mui/material/Alert';
 import Collapse from '@mui/material/Collapse';
 import Avatar from '@mui/material/Avatar';
 
-import UsuarioDisplayStack from "../components/UsuarioDisplayStack";
+import UsuarioDisplayChip from "../components/UsuarioDisplayChip";
 import CustomDataGridPremium from "../components/CustomDataGridPremium";
 
 import api from "../services/api";
@@ -47,8 +47,8 @@ class EquipesModule extends React.Component {
 
 		this.columns = [
 			{ field: 'nome', headerName: 'Nome', minWidth: 100, flex: 1 },
-			{ field: 'supervisor', headerName: 'Supervisor', valueGetter: (value, row) => value?.nome, minWidth: 100, flex: 1, renderCell: (params) => <UsuarioDisplayStack usuario={params.row.supervisor}/>},
-			{ field: 'gerente', headerName: 'Gerente', valueGetter: (value, row) => value?.nome, minWidth: 100, flex: 1, renderCell: (params) => <UsuarioDisplayStack usuario={params.row.gerente}/>},
+			{ field: 'supervisor', headerName: 'Supervisor', valueGetter: (value, row) => value?.nome, minWidth: 100, flex: 1, renderCell: (params) => <UsuarioDisplayChip usuario={params.row.supervisor}/>},
+			{ field: 'gerente', headerName: 'Gerente', valueGetter: (value, row) => value?.nome, minWidth: 100, flex: 1, renderCell: (params) => <UsuarioDisplayChip usuario={params.row.gerente}/>},
 			{ field: "actions", headerName: "Ações", width: 300, renderHeaderFilter: () => "", renderCell: (params) => <Stack direction="row" spacing={1}>
 				<Tooltip title="Editar" onClick={() => this.props.navigate("/equipes/" + params.row.equipeId)}>
 					<IconButton color="warning">

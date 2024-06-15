@@ -331,7 +331,7 @@ export default class AlterarJornadaBox extends React.Component {
 	render() {
 	
 		return (
-			<Box sx={{display: "flex", flexDirection: "column", gap: 3, justifyContent: "center", minWidth: "800px"}}>
+			<Box sx={{display: "flex", flexDirection: "column", gap: 3, justifyContent: "center"}}>
 				<ButtonGroup>
 						<LoadingButton component="label" variant="outlined" startIcon={<RefreshIcon />} loadingPosition="start" loading={this.state.calling} disabled={this.state.calling} onClick={this.getJornadaListFromApi}>Atualizar</LoadingButton>
 						<LoadingButton variant="contained" color="info" size="large" startIcon={<AddIcon />} loadingPosition="start" loading={this.state.adicionando} disabled={this.state.calling} onClick={() => this.addJornada(this.props.usuarioId)}>Nova Jornada</LoadingButton>

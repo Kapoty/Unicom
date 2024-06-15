@@ -33,8 +33,9 @@ import ApartmentIcon from '@mui/icons-material/Apartment';
 
 import JornadaChip from './JornadaChip';
 import RelatorioJornadaButton from './RelatorioJornadaButton';
-
+import UsuarioDisplayChip from "./UsuarioDisplayChip";
 import UsuarioAvatar from "./UsuarioAvatar";
+import UploadImage from '../components/UploadImage';
 
 import api from "../services/api";
 
@@ -68,7 +69,7 @@ class CustomAppBar extends React.Component {
 			            sx={{ mr: 2 }}
 			            onClick={this.props.toggleMenu}
 			          >
-			            <MenuIcon />
+			            <MenuIcon color="primary" />
 			         </IconButton>
 		           	<Box sx={{display: "flex", flexGrow: 1, justifyContent: "left", alignItems: "center", gap: "10px", height: "100%", gap: "10px"}}>
 	           			<Link to="/">
@@ -80,40 +81,41 @@ class CustomAppBar extends React.Component {
 		           			</Box>
 		           		</Link>
 		           		<Divider orientation="vertical" variant="middle" flexItem/>
-		           		<Typography>
+		           		{this.props.usuario.empresa?.iconFilename && <UploadImage filename={this.props.usuario.empresa?.iconFilename} style={{height: 24}}/>}
+		           		<Typography color="primary">
 		           			{this.props.usuario.empresa.nome}
 		           		</Typography>
 		           	</Box>
 		           	{this.props.usuario !== null && this.props.usuario.permissaoList.includes("VER_MODULO_IFRAME") && this.props.location.pathname.startsWith("/i/") ? <React.Fragment>
 			           	<Tooltip title="Recarregar">
 				           	<span><IconButton sx={{color: "#FFFFFF"}} onClick={() => {document.querySelector(".currentIframe").src += ""}}>
-					        	<Icon>refresh</Icon>
+					        	<Icon color="primary">refresh</Icon>
 				      		</IconButton></span>
 			      		</Tooltip>
 			      		<Tooltip title="Abrir em nova aba">
 				      		<span><IconButton sx={{color: "#FFFFFF"}} onClick={() => {window.open(document.querySelector(".currentIframe").src, "_blank")}}>
-					        	<Icon>open_in_new</Icon>
+					        	<Icon color="primary">open_in_new</Icon>
 				      		</IconButton></span>
 				      	</Tooltip>
 			      		<Divider orientation="vertical" variant="middle" flexItem/>
 			      	</React.Fragment> : ""}
 
-			      	<Tooltip title="Imprimir">
+			      	{/*<Tooltip title="Imprimir">
 				           	<span><IconButton sx={{color: "#FFFFFF"}} onClick={() => {window.print();}}>
 					        	<Icon>printer</Icon>
 				      		</IconButton></span>
-			      		</Tooltip>
+			      		</Tooltip>*/}
 		           	<Tooltip title="Tela cheia">
 			           	<span><IconButton sx={{color: "#FFFFFF"}} onClick={() => this.props.toggleFullscreen()}>
-				        	<Icon>{this.props.fullscreen ? "fullscreen_exit" : "fullscreen"}</Icon>
+				        	<Icon color="primary">{this.props.fullscreen ? "fullscreen_exit" : "fullscreen"}</Icon>
 			      		</IconButton></span>
 			      	</Tooltip>
 			      	{this.props.usuario !==null && this.props.usuario.permissaoList.includes("REGISTRAR_JORNADA") ? <JornadaChip usuario={this.props.usuario} me/> : ""}
-			      	<Chip
+			     	<UsuarioDisplayChip
+			     		color="primary"
 			      		clickable
-			      		avatar={<UsuarioAvatar usuario={this.props.usuario}/>}
-			      		label={this.props.usuario !== null ? this.props.usuario.nome : "..."}
-			      		ref={this.usuarioMenuRef}
+			      		usuario={this.props.usuario}
+			      		forwardedRef={this.usuarioMenuRef}
 			      		onClick={() => this.setState({usuarioMenuOpen: !this.props.usuarioMenuOpen})}
 			      	/>
 		      		<Menu

@@ -91,7 +91,7 @@ import CNPJInput from "../components/CNPJInput";
 import PhoneInput from "../components/PhoneInput";
 import CEPInput from "../components/CEPInput";
 import MoneyInput from "../components/MoneyInput";
-import UsuarioDisplayStack from "../components/UsuarioDisplayStack";
+import UsuarioDisplayChip from "../components/UsuarioDisplayChip";
 import VendaStatusChip from '../components/VendaStatusChip';
 import CustomDataGridPremium from "../components/CustomDataGridPremium";
 
@@ -354,7 +354,7 @@ const FaturaPaper = React.memo(({fatura, i, errors, calling, updateFatura, delet
 					<Grid item xs={12}>
 						<Divider><Chip label={i + 1} /></Divider>
 					</Grid>
-					<Grid item xs={4}>
+					<Grid item xs={3}>
 						<DatePicker
 							label="Mês"
 							views={['month', 'year']}
@@ -382,7 +382,7 @@ const FaturaPaper = React.memo(({fatura, i, errors, calling, updateFatura, delet
 							</Select>
 						</FormControl>
 					</Grid>
-					<Grid item container xs={4} display="flex" flexDirection="row" gap={3} alignItems="center">
+					<Grid item xs={5} display="flex" flexDirection="row" gap={3} alignItems="center">
 						<MoneyInput
 							required
 							value={fatura.valor}
@@ -557,7 +557,7 @@ class CreateEditVendaModule extends React.Component {
 			{ field: 'statusId', headerName: 'Status', valueGetter: (value, row) => this.state.vendaStatusByVendaStatusId?.[value]?.nome, minWidth: 100, flex: 1, renderCell: (params) => <VendaStatusChip
 				vendaStatus={this.state.vendaStatusByVendaStatusId?.[params.row.statusId]}
 			/>},
-			{ field: 'usuarioId', headerName: 'Usuário', valueGetter: (value, row) => this.state.usuarioByUsuarioId?.[value]?.nome, minWidth: 100, flex: 1, renderCell: (params) => <UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[params.row.usuarioId]}/>},
+			{ field: 'usuarioId', headerName: 'Usuário', valueGetter: (value, row) => this.state.usuarioByUsuarioId?.[value]?.nome, minWidth: 100, flex: 1, renderCell: (params) => <UsuarioDisplayChip usuario={this.state.usuarioByUsuarioId?.[params.row.usuarioId]}/>},
 			{ field: 'data', headerName: 'Data', minWidth: 150, flex: 1, type: 'date', renderCell: (params) => params.value !== null ? dayjs(params.value).format('L LTS') : "" },
 			{ field: 'relato', headerName: 'Relato', minWidth: 400, flex: 1, renderCell: (params) => <pre style={{overflow: "auto"}}>{params.value.replace(/(\\n)/g, "\n")}</pre> },
 		];
@@ -1380,7 +1380,7 @@ class CreateEditVendaModule extends React.Component {
 
 		return (
 			<React.Fragment>
-				<Paper elevation={0} sx={{flexGrow: 1, padding: this.props.inlineMode ? 0 : 2, minHeight: "100%", minWidth: "1000px", boxSizing: "border-box", display: "flex", flexDirection: "column", justifyContent: "start"}} className="modulePaper">
+				<Paper elevation={0} sx={{flexGrow: 1, padding: this.props.inlineMode ? 0 : 2, minHeight: "100%", minWidth: this.props.inlineMode ? "400px" : "800px", boxSizing: "border-box", display: "flex", flexDirection: "column", justifyContent: "start"}} className="modulePaper">
 					{!this.props.inlineMode && <React.Fragment>
 						<Typography variant="h3" gutterBottom>
 						{this.state.createMode ? "Nova Venda" : "Editar Venda"}
@@ -1390,7 +1390,7 @@ class CreateEditVendaModule extends React.Component {
 								{!this.state.createMode && <LoadingButton color="primary" variant="outlined" size="large" startIcon={<RefreshIcon />} loadingPosition="start" loading={this.state.updatingVenda} disabled={this.state.calling} onClick={this.getVendaFromApi}>Atualizar</LoadingButton>}
 						</ButtonGroup>
 					</React.Fragment>}
-					<Box display="flex" justifyContent="center">
+					<Box display="flex" justifyContent="center" sx={{pb: 3, pr: 3}}>
 						{((this.state.createMode || this.state.venda !== null)) ?
 							<Grid container spacing={3} sx={{margin: 0}} maxWidth="xl">
 								<Grid item xs={12}>
@@ -2254,13 +2254,13 @@ class CreateEditVendaModule extends React.Component {
 										<Grid item xs={3}>
 											<Stack spacing={3} justifyContent="space-between" height="100%">
 												<Typography align="center">Vendedor</Typography>
-												<UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[this.state.vendedorId]} direction="column"/>
+												<UsuarioDisplayChip usuario={this.state.usuarioByUsuarioId?.[this.state.vendedorId]}/>
 												{this.props.usuario.permissaoList.includes("ALTERAR_VENDEDOR") ? <Autocomplete
 													id="vendedor"
 													options={Object.keys(this.state.usuarioByUsuarioId ?? {}).map(key => parseInt(key))}
 													getOptionLabel={(option) => this.state.usuarioByUsuarioId?.[option]?.nome}
 													renderOption={(props, option) => <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props}>
-																<UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[option]}/>
+																<UsuarioDisplayChip usuario={this.state.usuarioByUsuarioId?.[option]}/>
 															</Box>}
 													value={this.state.vendedorId}
 													onChange={(event, value) => this.setState({vendedorId: value})}
@@ -2278,13 +2278,13 @@ class CreateEditVendaModule extends React.Component {
 										<Grid item xs={3}>
 											<Stack spacing={3} justifyContent="space-between" height="100%">
 												<Typography align="center">Supervisor</Typography>
-												<UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[this.state.supervisorId]} direction="column"/>
+												<UsuarioDisplayChip usuario={this.state.usuarioByUsuarioId?.[this.state.supervisorId]}/>
 												{this.props.usuario.permissaoList.includes("ALTERAR_VENDEDOR") ? <Autocomplete
 													id="supervisor"
 													options={Object.keys(this.state.usuarioByUsuarioId ?? {}).map(key => parseInt(key))}
 													getOptionLabel={(option) => this.state.usuarioByUsuarioId?.[option]?.nome}
 													renderOption={(props, option) => <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props}>
-																<UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[option]}/>
+																<UsuarioDisplayChip usuario={this.state.usuarioByUsuarioId?.[option]}/>
 															</Box>}
 													value={this.state.supervisorId}
 													onChange={(event, value) => this.setState({supervisorId: value})}
@@ -2302,13 +2302,13 @@ class CreateEditVendaModule extends React.Component {
 										<Grid item xs={3}>
 											<Stack spacing={3} justifyContent="space-between" height="100%">
 												<Typography align="center">Auditor</Typography>
-												<UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[this.state.auditorId]} direction="column"/>
+												<UsuarioDisplayChip usuario={this.state.usuarioByUsuarioId?.[this.state.auditorId]}/>
 												{this.props.usuario.permissaoList.includes("ALTERAR_AUDITOR") ? <Autocomplete
 													id="auditor"
 													options={Object.keys(this.state.usuarioByUsuarioId ?? {}).map(key => parseInt(key))}
 													getOptionLabel={(option) => this.state.usuarioByUsuarioId?.[option]?.nome}
 													renderOption={(props, option) => <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props}>
-																<UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[option]}/>
+																<UsuarioDisplayChip usuario={this.state.usuarioByUsuarioId?.[option]}/>
 															</Box>}
 													value={this.state.auditorId}
 													onChange={(event, value) => this.setState({auditorId: value})}
@@ -2326,13 +2326,13 @@ class CreateEditVendaModule extends React.Component {
 										<Grid item xs={3}>
 											<Stack spacing={3} justifyContent="space-between" height="100%">
 												<Typography align="center">Cadastrador</Typography>
-												<UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[this.state.cadastradorId]} direction="column"/>
+												<UsuarioDisplayChip usuario={this.state.usuarioByUsuarioId?.[this.state.cadastradorId]}/>
 												{this.props.usuario.permissaoList.includes("ALTERAR_AUDITOR") ? <Autocomplete
 													id="cadastrador"
 													options={Object.keys(this.state.usuarioByUsuarioId ?? {}).map(key => parseInt(key))}
 													getOptionLabel={(option) => this.state.usuarioByUsuarioId?.[option]?.nome}
 													renderOption={(props, option) => <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props}>
-																<UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[option]}/>
+																<UsuarioDisplayChip usuario={this.state.usuarioByUsuarioId?.[option]}/>
 															</Box>}
 													value={this.state.cadastradorId}
 													onChange={(event, value) => this.setState({cadastradorId: value})}
@@ -2629,10 +2629,9 @@ class CreateEditVendaModule extends React.Component {
 										</Grid>
 										<Grid item xs={12}>
 											{(this.state?.anexoList ?? []).length == 0 ? <Alert severity="info">Os anexos que você adicionar aparecerão aqui.</Alert> : ""}
-											<Stack direction="row" spacing={1}>
+											<Stack direction="row" gap={1} flexWrap="wrap">
 												{(this.state?.anexoList ?? []).map((anexo) =>
-													!anexo.trashed && <Tooltip title={anexo.thumbnailLink ? <img width="200px" src={anexo.thumbnailLink}/> : "Pré-visualização indisponível"} arrow><Chip
-														key={anexo.id}
+													!anexo.trashed && <Tooltip key={anexo.id} title={anexo.thumbnailLink ? <img width="200px" src={anexo.thumbnailLink}/> : "Pré-visualização indisponível"} arrow><Chip
 														component="a"
 														clickable
 														target="_blank"
@@ -2651,10 +2650,9 @@ class CreateEditVendaModule extends React.Component {
 												</Grid>
 												<Grid item xs={12}><Alert severity="warning">Os itens da lixeira serão excluídos definitivamente após 30 dias</Alert></Grid>
 												<Grid item xs={12}>
-													<Stack direction="row" spacing={1}>
+													<Stack direction="row" gap={1} flexWrap="wrap">
 														{(this.state?.anexoList ?? []).map((anexo) =>
-														anexo.trashed && <Tooltip title={anexo.thumbnailLink ? <img width="200px" src={anexo.thumbnailLink}/> : "Pré-visualização indisponível"} arrow><Chip
-															key={anexo.id}
+														anexo.trashed && <Tooltip key={anexo.id} title={anexo.thumbnailLink ? <img width="200px" src={anexo.thumbnailLink}/> : "Pré-visualização indisponível"} arrow><Chip
 															component="a"
 															clickable
 															target="_blank"

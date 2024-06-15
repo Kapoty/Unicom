@@ -47,7 +47,7 @@ import SmartphoneIcon from '@mui/icons-material/Smartphone';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import { TimePicker } from '@mui/x-date-pickers';
 
-import UsuarioDisplayStack from "../components/UsuarioDisplayStack";
+import UsuarioDisplayChip from "../components/UsuarioDisplayChip";
 
 import dayjs from 'dayjs';
 
@@ -253,7 +253,7 @@ class CreateEditEquipeModule extends React.Component {
 												options={Object.keys(this.state.usuarioByUsuarioId).map(key => parseInt(key))}
 												getOptionLabel={(option) => this.state.usuarioByUsuarioId[option].nome}
 												renderOption={(props, option) => <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props}>
-																<UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[option]}/>
+																<UsuarioDisplayChip usuario={this.state.usuarioByUsuarioId?.[option]}/>
 															</Box>}
 												value={this.state.supervisorId}
 												onChange={(event, value) => this.setState({supervisorId: value})}
@@ -272,7 +272,7 @@ class CreateEditEquipeModule extends React.Component {
 												options={Object.keys(this.state.usuarioByUsuarioId).map(key => parseInt(key))}
 												getOptionLabel={(option) => this.state.usuarioByUsuarioId[option].nome}
 												renderOption={(props, option) => <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props}>
-															<UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[option]}/>
+															<UsuarioDisplayChip usuario={this.state.usuarioByUsuarioId?.[option]}/>
 														</Box>}
 												value={this.state.gerenteId}
 												onChange={(event, value) => this.setState({gerenteId: value})}

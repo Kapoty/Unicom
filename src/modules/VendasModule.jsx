@@ -50,7 +50,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { DateRangePicker } from '@mui/x-date-pickers-pro/DateRangePicker';
 
 import VendaStatusChip from '../components/VendaStatusChip';
-import UsuarioDisplayStack from "../components/UsuarioDisplayStack";
+import UsuarioDisplayChip from "../components/UsuarioDisplayChip";
 import CustomDataGridPremium from "../components/CustomDataGridPremium";
 import CreateEditVendaModule from "./CreateEditVendaModule";
 
@@ -358,15 +358,15 @@ class VendasModule extends React.Component {
 			{ field: 'safra', headerName: 'Safra', width: 100, valueGetter: (value, row) => value !== null ? dayjs(value).format('MMMM YYYY') : "" },
 			{ field: 'dataVenda', headerName: 'Data da Venda', width: 200, type: 'date', renderCell: (params) => params.value !== null ? dayjs(params.value).format('L LTS') : "" },
 			{ field: 'loginVendedor', headerName: 'Login Vendedor', width: 200 },
-			{ field: 'cadastradorId', headerName: 'Cadastrador', valueGetter: (value, row) => this.state.usuarioByUsuarioId?.[value]?.nome, width: 200, renderCell: (params) => <UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[params.row.cadastradorId]}/>},
+			{ field: 'cadastradorId', headerName: 'Cadastrador', valueGetter: (value, row) => this.state.usuarioByUsuarioId?.[value]?.nome, width: 200, renderCell: (params) => <UsuarioDisplayChip usuario={this.state.usuarioByUsuarioId?.[params.row.cadastradorId]}/>},
 			{ field: 'sistemaId', headerName: 'Sistema', valueGetter: (value, row) => this.state.sistemaBySistemaId?.[value]?.nome, width: 150 },
-			{ field: 'auditorId', headerName: 'Auditor', valueGetter: (value, row) => this.state.usuarioByUsuarioId?.[value]?.nome, width: 200, renderCell: (params) => <UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[params.row.auditorId]}/>},
+			{ field: 'auditorId', headerName: 'Auditor', valueGetter: (value, row) => this.state.usuarioByUsuarioId?.[value]?.nome, width: 200, renderCell: (params) => <UsuarioDisplayChip usuario={this.state.usuarioByUsuarioId?.[params.row.auditorId]}/>},
 			{ field: 'os', headerName: 'OS', width: 100 },
 			{ field: 'custcode', headerName: 'Cust-Code', width: 100 },
 			{ field: 'ordem', headerName: 'Ordem', width: 100 },
 			{ field: 'origem', headerName: 'Mailing/Origem', width: 200 },
-			{ field: 'vendedorId', headerName: 'Vendedor', valueGetter: (value, row) => this.state.usuarioByUsuarioId?.[value]?.nome, width: 200, renderCell: (params) => <UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[params.row.vendedorId]}/>},
-			{ field: 'supervisorId', headerName: 'Supervisor', valueGetter: (value, row) => this.state.usuarioByUsuarioId?.[value]?.nome, width: 200, renderCell: (params) => <UsuarioDisplayStack usuario={this.state.usuarioByUsuarioId?.[params.row.supervisorId]}/>},
+			{ field: 'vendedorId', headerName: 'Vendedor', valueGetter: (value, row) => this.state.usuarioByUsuarioId?.[value]?.nome, width: 200, renderCell: (params) => <UsuarioDisplayChip usuario={this.state.usuarioByUsuarioId?.[params.row.vendedorId]}/>},
+			{ field: 'supervisorId', headerName: 'Supervisor', valueGetter: (value, row) => this.state.usuarioByUsuarioId?.[value]?.nome, width: 200, renderCell: (params) => <UsuarioDisplayChip usuario={this.state.usuarioByUsuarioId?.[params.row.supervisorId]}/>},
 			{ field: 'vendedorExterno', headerName: 'Vendedor Externo', width: 200 },
 			{ field: 'supervisorExterno', headerName: 'Supervisor Externo', width: 200 },
 			{ field: 'auditorExterno', headerName: 'Auditor Externo', width: 200 },
@@ -421,7 +421,6 @@ class VendasModule extends React.Component {
 
 		this.defaultColumnDimensions = {};
 		this.columns.forEach((column) => this.defaultColumnDimensions[column.field] = {width: column.width});
-		console.log(this.defaultColumnDimensions);
 
 		this.fixedVendaVisaoList = [
 			{
@@ -871,7 +870,7 @@ class VendasModule extends React.Component {
 		console.log("VendasModule was rendered at", new Date().toLocaleTimeString());
 		return (
 			<React.Fragment>
-				<Paper elevation={0} sx={{flexGrow: 1, padding: 2, minHeight: "100%", minWidth: "1000px", boxSizing: "border-box", display: "flex"/*this.props.location.pathname == `/vendas` ? "flex" : "none"*/, flexDirection: "column", aligmItems: "center", justifyContent: "start", gap: 3}} className="modulePaper">
+				<Paper elevation={0} sx={{flexGrow: 1, padding: 2, minHeight: "100%", minWidth: "800px", boxSizing: "border-box", display: "flex"/*this.props.location.pathname == `/vendas` ? "flex" : "none"*/, flexDirection: "column", aligmItems: "center", justifyContent: "start", gap: 3}} className="modulePaper">
 					<Box display={!this.state.dataGridMaximized ? "flex" : "none"} gap={3} flexDirection="column">
 						<Typography variant="h3">
 							Vendas

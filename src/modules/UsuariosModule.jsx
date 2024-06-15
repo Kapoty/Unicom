@@ -23,7 +23,7 @@ import Alert from '@mui/material/Alert';
 import Collapse from '@mui/material/Collapse';
 import Avatar from '@mui/material/Avatar';
 
-import UsuarioDisplayStack from "../components/UsuarioDisplayStack";
+import UsuarioDisplayChip from "../components/UsuarioDisplayChip";
 import CustomDataGridPremium from "../components/CustomDataGridPremium";
 
 const AlterarJornadaButton = React.lazy(() => import('../components/AlterarJornadaButton'));
@@ -53,7 +53,7 @@ class UsuariosModule extends React.Component {
 
 		this.columns = [
 			//{ field: 'usuarioId', headerName: 'ID', minWidth: 100, flex: 1},
-			{ field: 'usuario', headerName: 'Nome', valueGetter: (value, row) => value?.nome, minWidth: 200, flex: 1, renderCell: (params) => <UsuarioDisplayStack usuario={params.row.usuario}/>},
+			{ field: 'usuario', headerName: 'Nome', valueGetter: (value, row) => value?.nome, minWidth: 200, flex: 1, renderCell: (params) => <UsuarioDisplayChip usuario={params.row.usuario}/>},
 			{ field: 'nomeCompleto', headerName: 'Nome Completo', minWidth: 200, flex: 1 },
 			{ field: 'email', headerName: 'Email', minWidth: 200, flex: 1 },
 			{ field: 'papel', headerName: 'Papel', valueGetter: (value, row) => value.nome, minWidth: 200, flex: 1, renderCell: (params) => 

@@ -118,8 +118,8 @@ export default class RelatorioJornadaBox extends React.Component {
 		}
 
 		this.columns = [
-			{ field: 'dia', headerName: "DIA", renderCell: (params) => {
-				return <Box sx={{fontWeight: (params.row.data.day() == 0 || params.row.data.day() == 6) ? "bold" : "regular", color: (params.row.data.day() == 0 || params.row.data.day() == 6) ? "red" : "white"}}>{params.row.data.date()}</Box>
+			{ field: 'data', headerName: "DATA", renderCell: (params) => {
+				return <Box sx={{fontWeight: (params.row.data.day() == 0 || params.row.data.day() == 6) ? "bold" : "regular", color: (params.row.data.day() == 0 || params.row.data.day() == 6) ? "red" : "white"}}>{params.row.data.format("DD/MM/YYYY")}</Box>
 			}, minWidth: 50 },
 			{ field: 'entrada', headerName: 'ENTRADA', minWidth: 100, flex: 1 },
 			{ field: 'horasTrabalhadas', headerName: 'HORAS TRABALHADAS', minWidth: 200, flex: 1 },
@@ -1164,10 +1164,12 @@ export default class RelatorioJornadaBox extends React.Component {
 							<h3 style={{fontWeight: "bold", margin: "3mm 0 3mm 0", textAlign: "center"}}>
 								FOLHA DE PONTO - PERÍODO: {this.meses[this.state.report.mes - 1].toUpperCase()}/{this.state.report.ano}
 							</h3>
-							<span style={{marginBottom: "1mm", fontWeight: "bold", fontSize: "12pt"}}>
-								Colaborador(a)
-							</span>
 							<table className="colaboradorInfo">
+								<thead>
+									<tr>
+										<th colspan={2}>Colaborador(a)</th>
+									</tr>
+								</thead>
 								<tbody>
 									<tr>
 										<td>
@@ -1194,19 +1196,19 @@ export default class RelatorioJornadaBox extends React.Component {
 							<table className="dias">
 								<thead>
 									<tr>
-										<th style={{width: "5%"}}>DIA</th>
+										<th>DATA</th>
 										<th>ENTRADA</th>
 										<th>HORAS TRABALHADAS</th>
 										<th>INTERVALOS</th>
 										<th>SAÍDA</th>
 										<th>HORA EXTRA</th>
-										<th style={{width: "25%"}}>OBSERVAÇÃO</th>
+										<th style={{width: "30%"}}>OBSERVAÇÃO</th>
 									</tr>
 								</thead>
 								<tbody>
 									{this.state.dayRows.map((day) => 
 										<tr key={day.id}>
-											<td style={{backgroundColor: (day.data.day() == 0 || day.data.day() == 6) ? "grey" : "white", color: (day.data.day() == 0 || day.data.day() == 6) ? "white" : "black"}}>{day.data.date()}</td>
+											<td style={{backgroundColor: (day.data.day() == 0 || day.data.day() == 6) ? "grey" : "white", color: (day.data.day() == 0 || day.data.day() == 6) ? "white" : "black"}}>{day.data.format("DD/MM/YYYY")}</td>
 											<td>{day.entrada}</td>
 											<td>{day.horasTrabalhadas}</td>
 											<td>{day.horasNaoTrabalhadas}</td>
@@ -1217,35 +1219,43 @@ export default class RelatorioJornadaBox extends React.Component {
 									)}
 								</tbody>
 							</table>
-							<div className="totais">
-								<div>TOTAIS</div>
-								<div>
-									<span className="name">Hora Extra</span>
-									<span className="value">{dayjs.duration(this.state.totalHoraExtra, 'seconds').format("HH[h]mm[m]")}</span>
-								</div>
-								<div>
-									<span className="name">Dias Trabalhados</span>
-									<span className="value">{this.state.totalDiasTrabalhados}</span>
-								</div>
-								<div>
-									<span className="name">Faltas</span>
-									<span className="value">{this.state.totalFaltas}</span>
-								</div>
-								<div>
-									<span className="name">Folgas</span>
-									<span className="value">{this.state.totalFolgas}</span>
-								</div>
-								<div>
-									<span className="name">Atestados</span>
-									<span className="value">{this.state.totalAtestados}</span>
-								</div>
-								<div>
-									<span className="name">Atestados (em dias não trabalhados)</span>
-									<span className="value">{this.state.totalAtestadosNaoTrabalhados}</span>
-								</div>
-							</div>
+							<table className="colaboradorInfo">
+								<thead>
+									<tr>
+										<th colspan={5}>Totais</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr>
+										<td>
+											<span className="name">Hora Extra</span>
+											<span className="value">{dayjs.duration(this.state.totalHoraExtra, 'seconds').format("HH[h]mm[m]")}</span>
+										</td>
+										<td>
+											<span className="name">Dias Trabalhados</span>
+											<span className="value">{this.state.totalDiasTrabalhados}</span>
+										</td>
+										<td>
+											<span className="name">Faltas</span>
+											<span className="value">{this.state.totalFaltas}</span>
+										</td>
+										<td>
+											<span className="name">Folgas</span>
+											<span className="value">{this.state.totalFolgas}</span>
+										</td>
+										<td>
+											<span className="name">Atestados</span>
+											<span className="value">{this.state.totalAtestados}</span>
+										</td>
+										{/*<td>
+											<span className="name">Atestados (em dias não trabalhados)</span>
+											<span className="value">{this.state.totalAtestadosNaoTrabalhados}</span>
+										</td>*/}
+									</tr>
+								</tbody>
+							</table>
 							<div className="assinatura">
-								ASSINATURA DO(A) EMPREGADO(A)
+								Assinatura do(a) empregado(a)
 							</div>
 						</Box> : ""}
 					</React.Fragment>
