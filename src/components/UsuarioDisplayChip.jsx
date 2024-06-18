@@ -10,12 +10,12 @@ export default class UsuarioDisplayChip extends React.Component {
 	render() {
 		let {usuario, forwardedRef, ...rest} = this.props;
 		return <Chip
-					sx={{overflow: "hidden"}}
+					sx={{overflow: "hidden", minWidth: "100px"}}
 		      		avatar={<UsuarioAvatar usuario={usuario}/>}
 		      		label={
 		      			<Stack direction="row" gap={1} alignItems="center">
 		      				<Typography variant="body2">{usuario?.nome ?? ""}</Typography>
-		      				{usuario?.matricula && <Chip color="default" variant={this.props.color == "primary" ? "filled" : "outlined"} size="small" label={`#${usuario?.matricula}`} />}
+		      				{usuario?.matricula && <Chip sx={{overflow: "hidden", minWidth: "20px"}} color="default" variant={this.props.color == "primary" ? "filled" : "outlined"} size="small" label={`#${usuario?.matricula}`} />}
 		      			</Stack>
 		      		}
 		      		ref={forwardedRef}

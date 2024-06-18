@@ -85,6 +85,7 @@ import HubIcon from '@mui/icons-material/Hub';
 import PublicIcon from '@mui/icons-material/Public';
 import Pagination from '@mui/material/Pagination';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import FormHelperText from '@mui/material/FormHelperText';
 
 import CPFInput from "../components/CPFInput";
 import CNPJInput from "../components/CNPJInput";
@@ -423,6 +424,8 @@ class CreateEditVendaModule extends React.Component {
 			sistemaBySistemaId: {},
 			pontoDeVendaList: null,
 			pontoDeVendaById: {},
+			origemList: null,
+			origemByOrigemId: {},
 			adicionalList: null,
 			adicionalByAdicionalId: {},
 
@@ -569,6 +572,7 @@ class CreateEditVendaModule extends React.Component {
 		this.getProdutoListFromApi = this.getProdutoListFromApi.bind(this);
 		this.getSistemaListFromApi = this.getSistemaListFromApi.bind(this);
 		this.getPontoDeVendaListFromApi = this.getPontoDeVendaListFromApi.bind(this);
+		this.getOrigemListFromApi = this.getOrigemListFromApi.bind(this);
 		this.getAdicionalListFromApi = this.getAdicionalListFromApi.bind(this);
 
 		this.getCepInfoFromApi = this.getCepInfoFromApi.bind(this);
@@ -627,6 +631,7 @@ class CreateEditVendaModule extends React.Component {
 		this.getProdutoListFromApi();
 		this.getSistemaListFromApi();
 		this.getPontoDeVendaListFromApi();
+		this.getOrigemListFromApi();
 		this.getAdicionalListFromApi();
 		if (this.props.searchParams.get("novo") !== null) {
 			this.openAlert("success", 'Venda criada com sucesso!');
@@ -881,6 +886,20 @@ class CreateEditVendaModule extends React.Component {
 			});
 	}
 
+	getOrigemListFromApi() {
+		api.get("/empresa/me/origem")
+			.then((response) => {
+				let origemList = response.data;
+				let origemByOrigemId = {};
+				origemList.forEach((origem) => origemByOrigemId[origem.origemId] = origem);
+				this.setState({origemList: origemList, origemByOrigemId: origemByOrigemId});
+			})
+			.catch((err) => {
+				console.log(err);
+				setTimeout(this.getOrigemListFromApi, 3000);
+			});
+	}
+
 	getAdicionalListFromApi() {
 		api.get("/empresa/me/adicional")
 			.then((response) => {
@@ -1069,7 +1088,7 @@ class CreateEditVendaModule extends React.Component {
 
 	updateOrdem = (e) => this.setState({ordem: e.target.value});
 
-	updateOrigem = (e) => this.setState({origem: e.target.value});
+	updateOrigem = (event, value) => this.setState({origem: value});
 
 	updateSafra = (newValue) => this.setState({safra: newValue});
 
@@ -1994,17 +2013,19 @@ class CreateEditVendaModule extends React.Component {
 										/>
 									</Grid>
 									<Grid item xs={4}>
-										<FormControl fullWidth>
+										<FormControl fullWidth required>
 											<InputLabel>Sistema</InputLabel>
 											<Select
 												id="sistema"
 												value={this.state.sistemaId}
 												label="Sistema"
 												onChange={this.updateSistemaId}
-												>
+												error={"sistemaId" in this.state.errors}
+											>
 												<MenuItem key={"nenhum"} value={null}>Nenhum</MenuItem>
 												{(this.state.sistemaList ?? []).map((sistema) => <MenuItem key={sistema.sistemaId} value={sistema.sistemaId}>{sistema.nome}</MenuItem>)}
 											</Select>
+											<FormHelperText error>{this.state.errors?.sistemaId ?? ""}</FormHelperText>
 										</FormControl>
 									</Grid>
 									<Grid item xs={2}>
@@ -2024,20 +2045,23 @@ class CreateEditVendaModule extends React.Component {
 										/>
 									</Grid>
 									<Grid item xs={2}>
-										<TextField
-											required
+										<Autocomplete
 											id="origem"
+											freeSolo
+											disableClearable
+											options={(this.state.origemList ?? []).map(origem => origem.nome)}
 											value={this.state.origem}
-											onChange={this.updateOrigem}
-											fullWidth
-											label="Mailing/Origem"
-											variant="outlined"
-											disabled={this.state.calling}
-											error={"origem" in this.state.errors}
-											helperText={this.state.errors?.origem ?? ""}
-											inputProps={{
-												maxLength: 100,
-											}}
+											onInputChange={this.updateOrigem}
+											renderInput={(params) => (
+												<TextField
+													{...params}
+													required
+													variant="outlined"
+													label="Mailing/Origem"
+													error={"origem" in this.state.errors}
+													helperText={this.state.errors?.origem ?? ""}
+												/>
+											)}
 										/>
 									</Grid>
 									<Grid item xs={3}>
@@ -2419,17 +2443,19 @@ class CreateEditVendaModule extends React.Component {
 
 								{this.state.tab == "PAGAMENTO" ? <React.Fragment>
 									<Grid item xs={12}>
-										<FormControl fullWidth>
+										<FormControl fullWidth required>
 											<InputLabel>Forma de Pagamento</InputLabel>
 											<Select
 												id="forma-de-pagamento"
 												value={this.state.formaDePagamento}
 												label="Forma de Pagamento"
 												onChange={(e) => this.setState({formaDePagamento: e.target.value})}
+												error={"formaDePagamento" in this.state.errors}
 												>
 												<MenuItem key={"nenhum"} value={null}>Nenhum</MenuItem>
 												{Object.keys(VendaFormaDePagamentoEnum).map((formaDePagamento) => <MenuItem key={formaDePagamento} value={formaDePagamento}>{VendaFormaDePagamentoEnum[formaDePagamento]}</MenuItem>)}
 											</Select>
+											<FormHelperText error>{this.state.errors?.formaDePagamento ?? ""}</FormHelperText>
 										</FormControl>
 									</Grid>
 									<Grid item xs={12}>
@@ -2443,6 +2469,7 @@ class CreateEditVendaModule extends React.Component {
 											renderInput={(params) => (
 												<TextField
 													{...params}
+													required
 													variant="outlined"
 													label="Vencimento"
 													error={"vencimento" in this.state.errors}
