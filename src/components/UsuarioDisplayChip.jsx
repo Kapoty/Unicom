@@ -7,6 +7,11 @@ import CircularProgress from "@mui/material/CircularProgress";
 import UsuarioAvatar from "./UsuarioAvatar"
 
 export default class UsuarioDisplayChip extends React.Component {
+
+	shouldComponentUpdate(nextProps, nextState) {
+		return nextProps.usuario !== this.props.usuario;
+	}
+	
 	render() {
 		let {usuario, forwardedRef, ...rest} = this.props;
 		return <Chip

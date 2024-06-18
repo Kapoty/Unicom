@@ -396,8 +396,8 @@ export default class AlterarJornadaBox extends React.Component {
 											field: { clearable: true },
 											textField: {
 												fullWidth: true,
-												error: "entrada" in this.state.errors || "jornadaOrderValid" in this.state.errors,
-												helperText: "entrada" in this.state.errors ? this.state.errors["entrada"] : "jornadaOrderValid" in this.state.errors ? this.state.errors["jornadaOrderValid"] : ""
+												error: "entrada" in this.state.errors || "jornadaOrder" in this.state.errors,
+												helperText: "entrada" in this.state.errors ? this.state.errors["entrada"] : "jornadaOrder" in this.state.errors ? this.state.errors["jornadaOrder"] : ""
 											},
 										}}
 										variant="outlined"
@@ -458,6 +458,7 @@ export default class AlterarJornadaBox extends React.Component {
 										disabled={this.state.calling}
 									/>
 								</Grid>
+								{(!this.state.entrada || !this.state.intervaloInicio || !this.state.intervaloFim || !this.state.saida) && <Grid item container xs={12} justifyContent="center"><Chip label="NÃO REGISTRA" color="error" size="small" /></Grid>}
 								<Grid item xs={12}>
 									<FormControl component="fieldset">
 										<FormLabel component="legend">Dias da Semana</FormLabel>

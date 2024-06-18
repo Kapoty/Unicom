@@ -325,6 +325,9 @@ export default class RelatorioJornadaBox extends React.Component {
 						dayRow.horasNaoTrabalhadas = dayjs.duration(day.horasNaoTrabalhadas, 'seconds').format('HH[h]mm[m]')
 
 				}
+			} else if (day.registroJornadaCorrecao.jornadaEntrada == null) {
+				diaTrabalhado = false;
+				dayRow.correcao = "Aprovada";
 			} else {
 				dayRow.observacao = day.registroJornadaCorrecao.observacao !== null ? this.observacaoByValue[day.registroJornadaCorrecao.observacao].nome : "";
 				dayRow.correcao = "Aprovada";
@@ -333,7 +336,7 @@ export default class RelatorioJornadaBox extends React.Component {
 					dayRow.entrada = dayjs(day.registroJornadaCorrecao.entrada, "HH:mm:ss").format('HH:mm');
 					dayRow.saida = dayjs(day.registroJornadaCorrecao.saida, "HH:mm:ss").format('HH:mm');
 					dayRow.horasTrabalhadas =  dayjs.duration(day.registroJornadaCorrecao.horasTrabalhadas, 'seconds').format('HH[h]mm[m]');
-					intervaloEntradaSaida = dayjs(day.registroJornadaCorrecao.saida, "HH:mm:ss").diff(dayjs(day.registroJornadaCorrecao.entrada, "HH:mm:ss"), 'second');
+					intervaloEntradaSaida = calculateIntervaloEntradaSaida(dayjs(day.registroJornadaCorrecao.saida, "HH:mm:ss"), dayjs(day.registroJornadaCorrecao.entrada, "HH:mm:ss"));//dayjs(day.registroJornadaCorrecao.saida, "HH:mm:ss").diff(dayjs(day.registroJornadaCorrecao.entrada, "HH:mm:ss"), 'second');
 					horasNaoTrabalhadas = this.calculateHorasNaoTrabalhadas(intervaloEntradaSaida, day.registroJornadaCorrecao.horasTrabalhadas);
 					dayRow.horasNaoTrabalhadas = dayjs.duration(horasNaoTrabalhadas, 'seconds').format('HH[h]mm[m]');
 
@@ -444,10 +447,14 @@ export default class RelatorioJornadaBox extends React.Component {
 	}
 
 	calculateHorasIntervalo(jornadaIntervaloFim, jornadaIntervaloInicio) {
+		if (!jornadaIntervaloFim || !jornadaIntervaloInicio)
+			return 0;
 		return jornadaIntervaloFim.diff(jornadaIntervaloInicio, 'second');
 	}
 
 	calculateHorasJornada(jornadaSaida, jornadaEntrada) {
+		if (!jornadaSaida || !jornadaEntrada)
+			return 0;
 		return jornadaSaida.diff(jornadaEntrada, 'second');
 	}
 
@@ -463,6 +470,12 @@ export default class RelatorioJornadaBox extends React.Component {
 		return horasTrabalhadas - horasATrabalhar;
 	}
 
+	calculateIntervaloEntradaSaida(saida, entrada) {
+		if (!saida || !entrada)
+			return 0;
+		return saida.diff(entrada, 'second');
+	}
+
 	calculateCorrecaoDerivedFields() {
 		let horasATrabalhar = 0;
 		let horaExtra = 0;
@@ -476,20 +489,17 @@ export default class RelatorioJornadaBox extends React.Component {
 			horasJornada = this.calculateHorasJornada(this.state.jornadaSaida, this.state.jornadaEntrada);
 			horasATrabalhar = this.calculateHorasATrabalhar(horasJornada, horasIntervalo);
 		} catch (e) {
-
 		}
 
 		try {
 			horaExtra = this.calculateHoraExtra(durationToSeconds(this.state.horasTrabalhadas), horasATrabalhar);
 		} catch (e) {
-
 		}
 
 		try {
-			intervaloEntradaSaida = this.state.saida.diff(this.state.entrada, 'second');
+			intervaloEntradaSaida = this.calculateIntervaloEntradaSaida(this.state.saida, this.state.entrada);
 			horasNaoTrabalhadas = this.calculateHorasNaoTrabalhadas(intervaloEntradaSaida, durationToSeconds(this.state.horasTrabalhadas));
 		} catch (e) {
-
 		}
 
 		this.setState({
@@ -937,10 +947,11 @@ export default class RelatorioJornadaBox extends React.Component {
 															onChange={(newValue) => {this.setState({jornadaEntrada: newValue}, () => this.calculateCorrecaoDerivedFields())}}
 															label="Jornada - Entrada"
 															slotProps={{
+																field: { clearable: true },
 																textField: {
 																	fullWidth: true,
-																	error: "jornadaEntrada" in this.state.errors || "jornadaOrderValid" in this.state.errors,
-																	helperText: "jornadaEntrada" in this.state.errors ? this.state.errors["jornadaEntrada"] : "jornadaOrderValid" in this.state.errors ? this.state.errors["jornadaOrderValid"] : ""
+																	error: "jornadaEntrada" in this.state.errors || "jornadaOrder" in this.state.errors,
+																	helperText: "jornadaEntrada" in this.state.errors ? this.state.errors["jornadaEntrada"] : "jornadaOrder" in this.state.errors ? this.state.errors["jornadaOrder"] : ""
 																},
 															}}
 															variant="outlined"
@@ -954,6 +965,7 @@ export default class RelatorioJornadaBox extends React.Component {
 															onChange={(newValue) => {this.setState({jornadaIntervaloInicio: newValue}, () => this.calculateCorrecaoDerivedFields())}}
 															label="Jornada - Início do Intervalo"
 															slotProps={{
+																field: { clearable: true },
 																textField: {
 																	fullWidth: true,
 																	error: "jornadaIntervaloInicio" in this.state.errors,
@@ -971,6 +983,7 @@ export default class RelatorioJornadaBox extends React.Component {
 															onChange={(newValue) => {this.setState({jornadaIntervaloFim: newValue}, () => this.calculateCorrecaoDerivedFields())}}
 															label="Jornada - Fim do Intervalo"
 															slotProps={{
+																field: { clearable: true },
 																textField: {
 																	fullWidth: true,
 																	error: "jornadaIntervaloFim" in this.state.errors,
@@ -988,6 +1001,7 @@ export default class RelatorioJornadaBox extends React.Component {
 															onChange={(newValue) => {this.setState({jornadaSaida: newValue}, () => this.calculateCorrecaoDerivedFields())}}
 															label="Jornada - Saída"
 															slotProps={{
+																field: { clearable: true },
 																textField: {
 																	fullWidth: true,
 																	error: "jornadaSaida" in this.state.errors,
@@ -998,136 +1012,139 @@ export default class RelatorioJornadaBox extends React.Component {
 															disabled={(this.state.aprovada && this.props.me) || this.state.calling}
 														/>
 													</Grid>
-													<Grid item xs={6}>
-														<TimePicker
-															id="entrada"
-															value={this.state.entrada}
-															onChange={(newValue) => {this.setState({entrada: newValue}, () => this.calculateCorrecaoDerivedFields())}}
-															label="Entrada"
-															slotProps={{
-																field: { clearable: true },
-																textField: {
-																	fullWidth: true,
-																	error: "entrada" in this.state.errors || "entradaSaidaOrderValid" in this.state.errors,
-																	helperText: "entrada" in this.state.errors ? this.state.errors["entrada"] : "entradaSaidaOrderValid" in this.state.errors ? this.state.errors["entradaSaidaOrderValid"] : ""
-																},
-															}}
-															variant="outlined"
-															disabled={(this.state.aprovada && this.props.me) || this.state.calling}
-														/>
-													</Grid>
-													<Grid item xs={6}>
-														<TimePicker
-															id="saida"
-															value={this.state.saida}
-															onChange={(newValue) => {this.setState({saida: newValue}, () => this.calculateCorrecaoDerivedFields())}}
-															label="Saída"
-															slotProps={{
-																field: { clearable: true },
-																textField: {
-																	fullWidth: true,
-																	error: "saida" in this.state.errors,
-																	helperText: "saida" in this.state.errors ? this.state.errors["saida"] : ""
-																},
-															}}
-															variant="outlined"
-															disabled={(this.state.aprovada && this.props.me) || this.state.calling}
-														/>
-													</Grid>
-													<Grid item xs={6}>
-														<TextField
-															id="horas-a-trabalhar"
-															value={this.state.horasATrabalhar}
-															fullWidth
-															label="Horas a Trabalhar"
-															variant="outlined"
-															disabled
-														/>
-													</Grid>
-													<Grid item xs={6}>
-														<DurationInput
-															id="horas-trabalhadas"
-															value={this.state.horasTrabalhadas}
-															onChange={(e) => {this.setState({horasTrabalhadas: e.target.value}, () => this.calculateCorrecaoDerivedFields())}}
-															label="Horas Trabalhadas"
-															fullWidth
-															error={"horasTrabalhadas" in this.state.errors}
-															helperText={"horasTrabalhadas" in this.state.errors ? this.state.errors["horasTrabalhadas"] : ""}
-															variant="outlined"
-															disabled={(this.state.aprovada && this.props.me) || this.state.calling}
-														/>
-													</Grid>
-													<Grid item xs={6}>
-														<TextField
-															id="horas-nao-trabalhadas"
-															value={this.state.horasNaoTrabalhadas}
-															fullWidth
-															label="Intervalos"
-															variant="outlined"
-															disabled
-														/>
-													</Grid>
-													<Grid item xs={6}>
-														<TextField
-															id="hora-extra"
-															value={this.state.horaExtra}
-															fullWidth
-															label="Hora Extra"
-															variant="outlined"
-															disabled
-														/>
-													</Grid>
-													<Grid item xs={6}>
-														{this.state.contratoList !== null ?
+													{this.state.jornadaEntrada && this.state.jornadaIntervaloInicio && this.state.jornadaIntervaloFim && this.state.jornadaSaida ? <React.Fragment>
+														<Grid item xs={6}>
+															<TimePicker
+																id="entrada"
+																value={this.state.entrada}
+																onChange={(newValue) => {this.setState({entrada: newValue}, () => this.calculateCorrecaoDerivedFields())}}
+																label="Entrada"
+																slotProps={{
+																	field: { clearable: true },
+																	textField: {
+																		fullWidth: true,
+																		error: "entrada" in this.state.errors || "entradaSaidaOrderValid" in this.state.errors,
+																		helperText: "entrada" in this.state.errors ? this.state.errors["entrada"] : "entradaSaidaOrderValid" in this.state.errors ? this.state.errors["entradaSaidaOrderValid"] : ""
+																	},
+																}}
+																variant="outlined"
+																disabled={(this.state.aprovada && this.props.me) || this.state.calling}
+															/>
+														</Grid>
+														<Grid item xs={6}>
+															<TimePicker
+																id="saida"
+																value={this.state.saida}
+																onChange={(newValue) => {this.setState({saida: newValue}, () => this.calculateCorrecaoDerivedFields())}}
+																label="Saída"
+																slotProps={{
+																	field: { clearable: true },
+																	textField: {
+																		fullWidth: true,
+																		error: "saida" in this.state.errors,
+																		helperText: "saida" in this.state.errors ? this.state.errors["saida"] : ""
+																	},
+																}}
+																variant="outlined"
+																disabled={(this.state.aprovada && this.props.me) || this.state.calling}
+															/>
+														</Grid>
+														<Grid item xs={6}>
+															<TextField
+																id="horas-a-trabalhar"
+																value={this.state.horasATrabalhar}
+																fullWidth
+																label="Horas a Trabalhar"
+																variant="outlined"
+																disabled
+															/>
+														</Grid>
+														<Grid item xs={6}>
+															<DurationInput
+																id="horas-trabalhadas"
+																value={this.state.horasTrabalhadas}
+																onChange={(e) => {this.setState({horasTrabalhadas: e.target.value}, () => this.calculateCorrecaoDerivedFields())}}
+																label="Horas Trabalhadas"
+																fullWidth
+																error={"horasTrabalhadas" in this.state.errors}
+																helperText={"horasTrabalhadas" in this.state.errors ? this.state.errors["horasTrabalhadas"] : ""}
+																variant="outlined"
+																disabled={(this.state.aprovada && this.props.me) || this.state.calling}
+															/>
+														</Grid>
+														<Grid item xs={6}>
+															<TextField
+																id="horas-nao-trabalhadas"
+																value={this.state.horasNaoTrabalhadas}
+																fullWidth
+																label="Intervalos"
+																variant="outlined"
+																disabled
+															/>
+														</Grid>
+														<Grid item xs={6}>
+															<TextField
+																id="hora-extra"
+																value={this.state.horaExtra}
+																fullWidth
+																label="Hora Extra"
+																variant="outlined"
+																disabled
+															/>
+														</Grid>
+														<Grid item xs={6}>
+															{this.state.contratoList !== null ?
+																<FormControl fullWidth>
+																	<InputLabel>Contrato</InputLabel>
+																	<Select
+																		id="contrato"
+																		value={this.state.contratoId != null ? this.state.contratoId : ""}
+																		label="Contrato"
+																		onChange={(e) => this.setState({contratoId: e.target.value})}
+																		disabled={(this.state.aprovada && this.props.me) || this.state.calling}
+																		>
+																		<MenuItem value="">Nenhum</MenuItem>
+																		{this.state.contratoList.map((contrato) => <MenuItem key={contrato.contratoId} value={contrato.contratoId}>{contrato.nome}</MenuItem>)}
+																	</Select>
+																</FormControl>
+																: <CircularProgress size={20} color="inherit"/>}
+														</Grid>
+														<Grid item xs={6}>
+															<FormGroup>
+																<FormControlLabel sx={{justifyContent: "center"}} control={<Switch checked={this.state.horaExtraPermitida} disabled={(this.state.aprovada && this.props.me) || this.state.calling} onClick={(e) => this.setState({horaExtraPermitida: e.target.checked})} color="success"/>} label="Hora Extra Permitida" />
+															</FormGroup>
+														</Grid>
+														<Grid item xs={6}>
 															<FormControl fullWidth>
-																<InputLabel>Contrato</InputLabel>
+																<InputLabel>Observação</InputLabel>
 																<Select
-																	id="contrato"
-																	value={this.state.contratoId != null ? this.state.contratoId : ""}
-																	label="Contrato"
-																	onChange={(e) => this.setState({contratoId: e.target.value})}
+																	id="observacao"
+																	value={this.state.observacao != null ? this.state.observacao : ""}
+																	label="Observação"
+																	onChange={(e) => this.setState({observacao: e.target.value})}
 																	disabled={(this.state.aprovada && this.props.me) || this.state.calling}
 																	>
-																	<MenuItem value="">Nenhum</MenuItem>
-																	{this.state.contratoList.map((contrato) => <MenuItem key={contrato.contratoId} value={contrato.contratoId}>{contrato.nome}</MenuItem>)}
+																	<MenuItem value="">Nenhuma</MenuItem>
+																	{this.observacaoList.map((observacao) => <MenuItem key={observacao.value} value={observacao.value}>{observacao.nome}</MenuItem>)}
 																</Select>
 															</FormControl>
-															: <CircularProgress size={20} color="inherit"/>}
-													</Grid>
-													<Grid item xs={6}>
-														<FormGroup>
-															<FormControlLabel sx={{justifyContent: "center"}} control={<Switch checked={this.state.horaExtraPermitida} disabled={(this.state.aprovada && this.props.me) || this.state.calling} onClick={(e) => this.setState({horaExtraPermitida: e.target.checked})} color="success"/>} label="Hora Extra Permitida" />
-														</FormGroup>
-													</Grid>
-													<Grid item xs={6}>
-														<FormControl fullWidth>
-															<InputLabel>Observação</InputLabel>
-															<Select
-																id="observacao"
-																value={this.state.observacao != null ? this.state.observacao : ""}
-																label="Observação"
-																onChange={(e) => this.setState({observacao: e.target.value})}
+														</Grid>
+														<Grid item xs={6}>
+															<DurationInput
+																id="ajuste-hora-extra"
+																value={this.state.ajusteHoraExtra}
+																onChange={(e) => this.setState({ajusteHoraExtra: e.target.value})}
+																fullWidth
+																label="Ajuste Hora Extra"
+																variant="outlined"
+																sx={{visibility: !(this.state.calling || this.state.observacao == "" || (this.state.observacao !== null && !this.observacaoByValue[this.state.observacao].ajusteHoraExtra)) ? "visible" : "hidden"}}
+																error={"ajusteHoraExtra" in this.state.errors}
+																helperText={"ajusteHoraExtra" in this.state.errors ? this.state.errors["ajusteHoraExtra"] : ""}
 																disabled={(this.state.aprovada && this.props.me) || this.state.calling}
-																>
-																<MenuItem value="">Nenhuma</MenuItem>
-																{this.observacaoList.map((observacao) => <MenuItem key={observacao.value} value={observacao.value}>{observacao.nome}</MenuItem>)}
-															</Select>
-														</FormControl>
-													</Grid>
-													<Grid item xs={6}>
-														<DurationInput
-															id="ajuste-hora-extra"
-															value={this.state.ajusteHoraExtra}
-															onChange={(e) => this.setState({ajusteHoraExtra: e.target.value})}
-															fullWidth
-															label="Ajuste Hora Extra"
-															variant="outlined"
-															sx={{visibility: !(this.state.calling || this.state.observacao == "" || (this.state.observacao !== null && !this.observacaoByValue[this.state.observacao].ajusteHoraExtra)) ? "visible" : "hidden"}}
-															error={"ajusteHoraExtra" in this.state.errors}
-															helperText={"ajusteHoraExtra" in this.state.errors ? this.state.errors["ajusteHoraExtra"] : ""}
-															disabled={(this.state.aprovada && this.props.me) || this.state.calling}
-														/>
-													</Grid>
+															/>
+														</Grid>
+													</React.Fragment> : <Grid item container xs={12} justifyContent="center"><Chip label="NÃO REGISTRA" color="error" size="small" /></Grid>
+													}
 													<Grid item xs={12}>
 														<TextField
 															id="justificativa"

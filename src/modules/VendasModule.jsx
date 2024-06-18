@@ -46,6 +46,10 @@ import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import SaveIcon from '@mui/icons-material/Save';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
+import SvgIcon from '@mui/material/SvgIcon'
+
+import TableCellSelectionIcon from '../assets/svg/table-cell-selection.svg';
+import TableRowSelectionIcon from '../assets/svg/table-row-selection.svg';
 
 import { DateRangePicker } from '@mui/x-date-pickers-pro/DateRangePicker';
 
@@ -70,7 +74,7 @@ import api from "../services/api";
 
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 
-const VendaListDataGrid = memo(function VendaListDataGrid({ vendaRows, columns, vendaList, calling, vendaVisaoList, columnGroupingModel, apiRef, dataGridMaximized, maximizeDataGrid, getVendaVisaoListFromApi, applyVendaVisao }) {
+const VendaListDataGrid = memo(function VendaListDataGrid({ vendaRows, columns, vendaList, calling, vendaVisaoList, columnGroupingModel, apiRef, dataGridMaximized, maximizeDataGrid, dataGridRowSelection, toggleDataGridRowSelection, getVendaVisaoListFromApi, applyVendaVisao }) {
   console.log("VendaListDataGrid was rendered at", new Date().toLocaleTimeString());
 
   const theme = useTheme();
@@ -100,6 +104,8 @@ const VendaListDataGrid = memo(function VendaListDataGrid({ vendaRows, columns, 
 				apiRef: apiRef,
 				dataGridMaximized: dataGridMaximized,
 				maximizeDataGrid: maximizeDataGrid,
+				dataGridRowSelection: dataGridRowSelection,
+				toggleDataGridRowSelection: toggleDataGridRowSelection,
 				getVendaVisaoListFromApi: getVendaVisaoListFromApi,
 				applyVendaVisao: applyVendaVisao,
 			}
@@ -109,7 +115,8 @@ const VendaListDataGrid = memo(function VendaListDataGrid({ vendaRows, columns, 
 		apiRef={apiRef}
 		headerFilterHeight={70}
 		showCellVerticalBorder
-		cellSelection
+		cellSelection={!dataGridRowSelection}
+		rowSelection={dataGridRowSelection}
 	/>
   );
 });
@@ -260,12 +267,19 @@ const GridToolbarVisao = memo(function GridToolbarVisao({vendaVisaoList, apiRef,
 	}
 )
 
-const CustomToolbar = memo(function CustomToolbar({vendaVisaoList, apiRef, dataGridMaximized, maximizeDataGrid, getVendaVisaoListFromApi, applyVendaVisao}) {
+const CustomToolbar = memo(function CustomToolbar({vendaVisaoList, apiRef, dataGridMaximized, maximizeDataGrid, dataGridRowSelection, toggleDataGridRowSelection, getVendaVisaoListFromApi, applyVendaVisao}) {
 	return (
 		<GridToolbarContainer>
-			<IconButton color="primary" onClick={maximizeDataGrid}>
-	        	<Icon>{dataGridMaximized ? "fullscreen_exit" : "fullscreen"}</Icon>
-      		</IconButton>
+			<Tooltip title={dataGridMaximized ? "Reduzir" : "Maximizar"}>
+				<IconButton color="primary" onClick={maximizeDataGrid}>
+					<Icon>{dataGridMaximized ? "fullscreen_exit" : "fullscreen"}</Icon>
+				</IconButton>
+			</Tooltip>
+			<Tooltip title={dataGridRowSelection ? "Modo de Seleção de Linhas" : "Modo de Seleção de Células"}>
+	  		<IconButton color="primary" onClick={toggleDataGridRowSelection}>
+	  			<SvgIcon component={dataGridRowSelection ? TableRowSelectionIcon : TableCellSelectionIcon} inheritViewBox />
+	  		</IconButton>
+	  	</Tooltip>
 			<GridToolbarVisao vendaVisaoList={vendaVisaoList} apiRef={apiRef} getVendaVisaoListFromApi={getVendaVisaoListFromApi} applyVendaVisao={applyVendaVisao}/>
 			<GridToolbarColumnsButton />
 			<GridToolbarDensitySelector/>
@@ -295,6 +309,7 @@ class VendasModule extends React.Component {
 			vendaListDataGridApiRef: this.props.vendaListDataGridApiRef,
 
 			dataGridMaximized: false,
+			dataGridRowSelection: false,
 
 			// visao
 
@@ -337,7 +352,7 @@ class VendasModule extends React.Component {
 		this.numeroFaturas = 14;
 
 		this.columns = [
-			{ field: 'statusId', headerName: 'Status', valueGetter: (value, row) => this.state.vendaStatusByVendaStatusId?.[value]?.nome, width: 275, hideable: false, renderCell: (params) =>
+			{ field: 'statusId', headerName: 'Status', valueGetter: (value, row) => this.state.vendaStatusByVendaStatusId?.[value]?.nome, width: 275, renderCell: (params) =>
 				<Stack direction="row" justifyContent="space-around" alignItems="center" spacing={1} height="100%">
 					<VendaStatusChip
 						sx={{flexGrow: 1, overflow: "hidden"}}
@@ -532,6 +547,7 @@ class VendasModule extends React.Component {
 		this.resetFilters = this.resetFilters.bind(this);
 
 		this.maximizeDataGrid = this.maximizeDataGrid.bind(this);
+		this.toggleDataGridRowSelection = this.toggleDataGridRowSelection.bind(this);
 
 		this.openAlert = this.openAlert.bind(this);
 		this.closeAlert = this.closeAlert.bind(this);
@@ -866,6 +882,10 @@ class VendasModule extends React.Component {
 		this.setState({dataGridMaximized: !this.state.dataGridMaximized})
 	}
 
+	toggleDataGridRowSelection() {
+		this.setState({dataGridRowSelection: !this.state.dataGridRowSelection})
+	}
+
 	openAlert(severity, message) {
 		this.setState({alert: <Alert severity={severity} onClose={this.closeAlert} variant="filled">{message}</Alert>, alertOpen: true});
 	}
@@ -1089,6 +1109,8 @@ class VendasModule extends React.Component {
 							apiRef={this.state.vendaListDataGridApiRef}
 							dataGridMaximized={this.state.dataGridMaximized}
 							maximizeDataGrid={this.maximizeDataGrid}
+							dataGridRowSelection={this.state.dataGridRowSelection}
+							toggleDataGridRowSelection={this.toggleDataGridRowSelection}
 							getVendaVisaoListFromApi={this.getVendaVisaoListFromApi}
 							applyVendaVisao={this.applyVendaVisao}
 						/>

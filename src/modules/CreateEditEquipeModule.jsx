@@ -252,7 +252,7 @@ class CreateEditEquipeModule extends React.Component {
 												id="supervisor"
 												options={Object.keys(this.state.usuarioByUsuarioId).map(key => parseInt(key))}
 												getOptionLabel={(option) => this.state.usuarioByUsuarioId[option].nome}
-												renderOption={(props, option) => <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props}>
+												renderOption={(props, option) => <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props} key={option}>
 																<UsuarioDisplayChip usuario={this.state.usuarioByUsuarioId?.[option]}/>
 															</Box>}
 												value={this.state.supervisorId}
@@ -271,7 +271,7 @@ class CreateEditEquipeModule extends React.Component {
 												id="gerente"
 												options={Object.keys(this.state.usuarioByUsuarioId).map(key => parseInt(key))}
 												getOptionLabel={(option) => this.state.usuarioByUsuarioId[option].nome}
-												renderOption={(props, option) => <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props}>
+												renderOption={(props, option) => <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props} key={option}>
 															<UsuarioDisplayChip usuario={this.state.usuarioByUsuarioId?.[option]}/>
 														</Box>}
 												value={this.state.gerenteId}

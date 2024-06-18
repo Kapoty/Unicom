@@ -2283,7 +2283,7 @@ class CreateEditVendaModule extends React.Component {
 													id="vendedor"
 													options={Object.keys(this.state.usuarioByUsuarioId ?? {}).map(key => parseInt(key))}
 													getOptionLabel={(option) => this.state.usuarioByUsuarioId?.[option]?.nome}
-													renderOption={(props, option) => <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props}>
+													renderOption={(props, option) => <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props} key={option}>
 																<UsuarioDisplayChip usuario={this.state.usuarioByUsuarioId?.[option]}/>
 															</Box>}
 													value={this.state.vendedorId}
@@ -2307,7 +2307,7 @@ class CreateEditVendaModule extends React.Component {
 													id="supervisor"
 													options={Object.keys(this.state.usuarioByUsuarioId ?? {}).map(key => parseInt(key))}
 													getOptionLabel={(option) => this.state.usuarioByUsuarioId?.[option]?.nome}
-													renderOption={(props, option) => <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props}>
+													renderOption={(props, option) => <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props} key={option}>
 																<UsuarioDisplayChip usuario={this.state.usuarioByUsuarioId?.[option]}/>
 															</Box>}
 													value={this.state.supervisorId}
@@ -2331,7 +2331,7 @@ class CreateEditVendaModule extends React.Component {
 													id="auditor"
 													options={Object.keys(this.state.usuarioByUsuarioId ?? {}).map(key => parseInt(key))}
 													getOptionLabel={(option) => this.state.usuarioByUsuarioId?.[option]?.nome}
-													renderOption={(props, option) => <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props}>
+													renderOption={(props, option) => <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props} key={option}>
 																<UsuarioDisplayChip usuario={this.state.usuarioByUsuarioId?.[option]}/>
 															</Box>}
 													value={this.state.auditorId}
@@ -2355,7 +2355,7 @@ class CreateEditVendaModule extends React.Component {
 													id="cadastrador"
 													options={Object.keys(this.state.usuarioByUsuarioId ?? {}).map(key => parseInt(key))}
 													getOptionLabel={(option) => this.state.usuarioByUsuarioId?.[option]?.nome}
-													renderOption={(props, option) => <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props}>
+													renderOption={(props, option) => <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props} key={option}>
 																<UsuarioDisplayChip usuario={this.state.usuarioByUsuarioId?.[option]}/>
 															</Box>}
 													value={this.state.cadastradorId}

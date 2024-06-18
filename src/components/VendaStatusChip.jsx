@@ -5,20 +5,20 @@ import { getContrastRatio } from '@mui/material/styles';
 
 export default class VendaStatusChip extends React.Component {
 
-	render() {
-		let props = Object.assign({}, this.props);
+	shouldComponentUpdate(nextProps, nextState) {
+		return nextProps.vendaStatus !== this.props.vendaStatus;
+	}
 
-		let vendaStatus = props.vendaStatus;
+	render() {
+		let {vendaStatus, ...rest} = this.props; 
 
 		if (vendaStatus == null)
 			return "";
 
 		let cor = "#" + (vendaStatus?.cor ?? "000");
-
-		delete props["vendaStatus"];
 		
 		return  <Chip
-				{...props}
+				{...rest}
 				color="primary"
 				style={{backgroundColor: cor, color: '#fff', fontWeight: "bold"}}
 				variant="contained"
