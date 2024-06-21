@@ -416,6 +416,7 @@ class CreateEditVendaModule extends React.Component {
 			venda: null,
 			usuarioList: null,
 			usuarioByUsuarioId: {},
+			vendedorList: null,
 			vendaStatusList: null,
 			vendaStatusByVendaStatusId: {},
 			produtoList: null,
@@ -567,6 +568,7 @@ class CreateEditVendaModule extends React.Component {
 
 		this.getVendaFromApi = this.getVendaFromApi.bind(this);
 		this.getUsuarioListFromApi = this.getUsuarioListFromApi.bind(this);
+		this.getVendedorListFromApi = this.getVendedorListFromApi.bind(this);
 		this.getAnexoListFromApi = this.getAnexoListFromApi.bind(this);
 		this.getVendaStatusListFromApi = this.getVendaStatusListFromApi.bind(this);
 		this.getProdutoListFromApi = this.getProdutoListFromApi.bind(this);
@@ -627,6 +629,7 @@ class CreateEditVendaModule extends React.Component {
 	componentDidMount() {
 		!this.props.inlineMode ? this.setVendaIdFromParams() : this.setVendaIdFromProps();
 		this.getUsuarioListFromApi();
+		this.getVendedorListFromApi();
 		this.getVendaStatusListFromApi();
 		this.getProdutoListFromApi();
 		this.getSistemaListFromApi();
@@ -646,7 +649,7 @@ class CreateEditVendaModule extends React.Component {
 				this.getAnexoListFromApi();
 			});
 		else
-			this.setState({createMode: true});
+			this.setState({createMode: true, vendedorId: this.props.usuario.usuarioId});
 	}
 
 	setVendaIdFromProps() {
@@ -827,6 +830,18 @@ class CreateEditVendaModule extends React.Component {
 			.catch((err) => {
 				console.log(err);
 				setTimeout(this.getUsuarioListFromApi, 3000);
+			});
+	}
+
+	getVendedorListFromApi() {
+		api.get("/usuario/me/usuario-list?include-me=true")
+			.then((response) => {
+				let vendedorList = response.data;
+				this.setState({vendedorList: vendedorList});
+			})
+			.catch((err) => {
+				console.log(err);
+				setTimeout(this.getVendedorListFromApi, 3000);
 			});
 	}
 
@@ -2028,7 +2043,7 @@ class CreateEditVendaModule extends React.Component {
 											<FormHelperText error>{this.state.errors?.sistemaId ?? ""}</FormHelperText>
 										</FormControl>
 									</Grid>
-									<Grid item xs={2}>
+									<Grid item xs={3}>
 										<TextField
 											id="ordem"
 											value={this.state.ordem}
@@ -2044,7 +2059,7 @@ class CreateEditVendaModule extends React.Component {
 											}}
 										/>
 									</Grid>
-									<Grid item xs={2}>
+									<Grid item xs={3}>
 										<Autocomplete
 											id="origem"
 											freeSolo
@@ -2082,6 +2097,18 @@ class CreateEditVendaModule extends React.Component {
 										/>
 									</Grid>
 									<Grid item xs={3}>
+										<FormControl fullWidth>
+											<InputLabel>Reimputado</InputLabel>
+											<Select
+												value={this.state.reimputado}
+												label="Reimputado"
+												onChange={this.updateReimputado}
+												>
+												{Object.keys(VendaReimputadoEnum).map((reimputado) => <MenuItem key={reimputado} value={reimputado}>{VendaReimputadoEnum[reimputado]}</MenuItem>)}
+											</Select>
+										</FormControl>
+									</Grid>
+									<Grid item xs={this.state.tipoProduto == "MOVEL" ? 3 : 4}>
 										<DateTimePicker
 											label="Data da Venda"
 											value={this.state.dataVenda}
@@ -2098,20 +2125,8 @@ class CreateEditVendaModule extends React.Component {
 											}}
 										/>
 									</Grid>
-									<Grid item xs={2}>
-										<FormControl fullWidth>
-											<InputLabel>Reimputado</InputLabel>
-											<Select
-												value={this.state.reimputado}
-												label="Reimputado"
-												onChange={this.updateReimputado}
-												>
-												{Object.keys(VendaReimputadoEnum).map((reimputado) => <MenuItem key={reimputado} value={reimputado}>{VendaReimputadoEnum[reimputado]}</MenuItem>)}
-											</Select>
-										</FormControl>
-									</Grid>
 									{this.state.tipoProduto == "MOVEL" ? <React.Fragment>
-										<Grid item xs={4}>
+										<Grid item xs={3}>
 											<Autocomplete
 												id="pdv"
 												freeSolo
@@ -2131,7 +2146,7 @@ class CreateEditVendaModule extends React.Component {
 												)}
 											/>
 										</Grid>
-										<Grid item xs={4}>
+										<Grid item xs={3}>
 											<DateTimePicker
 													label="Data da Ativação"
 													value={this.state.dataAtivacao}
@@ -2146,7 +2161,7 @@ class CreateEditVendaModule extends React.Component {
 													}}
 												/>
 										</Grid>
-										<Grid item xs={4}>
+										<Grid item xs={3}>
 											<FormControl>
 												<FormLabel id="prints">Prints</FormLabel>
 												<RadioGroup
@@ -2162,7 +2177,7 @@ class CreateEditVendaModule extends React.Component {
 											</FormControl>
 										</Grid>
 									</React.Fragment> : <React.Fragment>
-										<Grid item xs={6}>
+										<Grid item xs={4}>
 											<DateTimePicker
 													label="Data de Agendamento"
 													value={this.state.dataAgendamento}
@@ -2177,7 +2192,7 @@ class CreateEditVendaModule extends React.Component {
 													}}
 												/>
 										</Grid>
-										<Grid item xs={6}>
+										<Grid item xs={4}>
 											<DateTimePicker
 													label="Data de Instalação"
 													value={this.state.dataInstalacao}
@@ -2271,17 +2286,16 @@ class CreateEditVendaModule extends React.Component {
 								</React.Fragment> : ""}
 
 								{this.state.tab == "ATORES" ? <React.Fragment>
-									{!this.state.createMode ? <React.Fragment>
 									<Grid item xs={12}>
 										<Divider><Chip icon={<HubIcon />} label="Interno" /></Divider>
 									</Grid>
 										<Grid item xs={3}>
-											<Stack spacing={3} justifyContent="space-between" height="100%">
+											<Stack spacing={3} justifyContent="start" height="100%">
 												<Typography align="center">Vendedor</Typography>
-												<UsuarioDisplayChip usuario={this.state.usuarioByUsuarioId?.[this.state.vendedorId]}/>
-												{this.props.usuario.permissaoList.includes("ALTERAR_VENDEDOR") ? <Autocomplete
+												<UsuarioDisplayChip usuario={this.state.usuarioByUsuarioId?.[this.state.vendedorId]} color={this.state.vendedorId ? "primary" : "default"}/>
+												{this.props.usuario.permissaoList.includes("ALTERAR_VENDEDOR") || this.state.createMode ? <Autocomplete
 													id="vendedor"
-													options={Object.keys(this.state.usuarioByUsuarioId ?? {}).map(key => parseInt(key))}
+													options={this.props.usuario.permissaoList.includes("ALTERAR_VENDEDOR") ? (Object.keys(this.state.usuarioByUsuarioId ?? {}).map(key => parseInt(key))) : (this.state.vendedorList?.map(vendedor => vendedor.usuarioId) ?? [])}
 													getOptionLabel={(option) => this.state.usuarioByUsuarioId?.[option]?.nome}
 													renderOption={(props, option) => <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props} key={option}>
 																<UsuarioDisplayChip usuario={this.state.usuarioByUsuarioId?.[option]}/>
@@ -2295,14 +2309,14 @@ class CreateEditVendaModule extends React.Component {
 														label="Vendedor"
 														/>
 													)}
-													loading={this.state.usuarioList == null}
+													loading={this.state.usuarioList == null || this.state.vendedorList == null}
 												/> : ""}
 											</Stack>
 										</Grid>
 										<Grid item xs={3}>
-											<Stack spacing={3} justifyContent="space-between" height="100%">
+											<Stack spacing={3} justifyContent="start" height="100%">
 												<Typography align="center">Supervisor</Typography>
-												<UsuarioDisplayChip usuario={this.state.usuarioByUsuarioId?.[this.state.supervisorId]}/>
+												<UsuarioDisplayChip usuario={this.state.usuarioByUsuarioId?.[this.state.supervisorId]} color={this.state.supervisorId ? "primary" : "default"}/>
 												{this.props.usuario.permissaoList.includes("ALTERAR_VENDEDOR") ? <Autocomplete
 													id="supervisor"
 													options={Object.keys(this.state.usuarioByUsuarioId ?? {}).map(key => parseInt(key))}
@@ -2324,9 +2338,9 @@ class CreateEditVendaModule extends React.Component {
 											</Stack>
 										</Grid>
 										<Grid item xs={3}>
-											<Stack spacing={3} justifyContent="space-between" height="100%">
+											<Stack spacing={3} justifyContent="start" height="100%">
 												<Typography align="center">Auditor</Typography>
-												<UsuarioDisplayChip usuario={this.state.usuarioByUsuarioId?.[this.state.auditorId]}/>
+												<UsuarioDisplayChip usuario={this.state.usuarioByUsuarioId?.[this.state.auditorId]} color={this.state.auditorId ? "primary" : "default"}/>
 												{this.props.usuario.permissaoList.includes("ALTERAR_AUDITOR") ? <Autocomplete
 													id="auditor"
 													options={Object.keys(this.state.usuarioByUsuarioId ?? {}).map(key => parseInt(key))}
@@ -2348,9 +2362,9 @@ class CreateEditVendaModule extends React.Component {
 											</Stack>
 										</Grid>
 										<Grid item xs={3}>
-											<Stack spacing={3} justifyContent="space-between" height="100%">
+											<Stack spacing={3} justifyContent="start" height="100%">
 												<Typography align="center">Cadastrador</Typography>
-												<UsuarioDisplayChip usuario={this.state.usuarioByUsuarioId?.[this.state.cadastradorId]}/>
+												<UsuarioDisplayChip usuario={this.state.usuarioByUsuarioId?.[this.state.cadastradorId]} color={this.state.cadastradorId ? "primary" : "default"}/>
 												{this.props.usuario.permissaoList.includes("ALTERAR_AUDITOR") ? <Autocomplete
 													id="cadastrador"
 													options={Object.keys(this.state.usuarioByUsuarioId ?? {}).map(key => parseInt(key))}
@@ -2382,7 +2396,7 @@ class CreateEditVendaModule extends React.Component {
 												fullWidth
 												label="Vendedor Externo"
 												variant="outlined"
-												disabled={this.state.calling || !this.props.usuario.permissaoList.includes("ALTERAR_VENDEDOR")}
+												disabled={this.state.calling || (!this.props.usuario.permissaoList.includes("ALTERAR_VENDEDOR") && !this.state.createMode)}
 												error={"vendedorExterno" in this.state.errors}
 												helperText={this.state.errors?.vendedorExterno ?? ""}
 												inputProps={{
@@ -2438,7 +2452,6 @@ class CreateEditVendaModule extends React.Component {
 												}}
 											/>
 										</Grid>
-									</React.Fragment> : <Grid item xs={12}><Alert severity="info">Você poderá ver os atores da venda após salva-la.</Alert></Grid>}
 								</React.Fragment> : ""}
 
 								{this.state.tab == "PAGAMENTO" ? <React.Fragment>

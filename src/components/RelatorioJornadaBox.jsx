@@ -336,7 +336,7 @@ export default class RelatorioJornadaBox extends React.Component {
 					dayRow.entrada = dayjs(day.registroJornadaCorrecao.entrada, "HH:mm:ss").format('HH:mm');
 					dayRow.saida = dayjs(day.registroJornadaCorrecao.saida, "HH:mm:ss").format('HH:mm');
 					dayRow.horasTrabalhadas =  dayjs.duration(day.registroJornadaCorrecao.horasTrabalhadas, 'seconds').format('HH[h]mm[m]');
-					intervaloEntradaSaida = calculateIntervaloEntradaSaida(dayjs(day.registroJornadaCorrecao.saida, "HH:mm:ss"), dayjs(day.registroJornadaCorrecao.entrada, "HH:mm:ss"));//dayjs(day.registroJornadaCorrecao.saida, "HH:mm:ss").diff(dayjs(day.registroJornadaCorrecao.entrada, "HH:mm:ss"), 'second');
+					intervaloEntradaSaida = this.calculateIntervaloEntradaSaida(dayjs(day.registroJornadaCorrecao.saida, "HH:mm:ss"), dayjs(day.registroJornadaCorrecao.entrada, "HH:mm:ss"));//dayjs(day.registroJornadaCorrecao.saida, "HH:mm:ss").diff(dayjs(day.registroJornadaCorrecao.entrada, "HH:mm:ss"), 'second');
 					horasNaoTrabalhadas = this.calculateHorasNaoTrabalhadas(intervaloEntradaSaida, day.registroJornadaCorrecao.horasTrabalhadas);
 					dayRow.horasNaoTrabalhadas = dayjs.duration(horasNaoTrabalhadas, 'seconds').format('HH[h]mm[m]');
 
