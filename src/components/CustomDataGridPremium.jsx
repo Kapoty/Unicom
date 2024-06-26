@@ -10,6 +10,7 @@ class CustomDataGridPremium extends React.Component {
 		const theme = this.props.theme;
 
 		return  <DataGridPremium
+				showCellVerticalBorder
 				{...this.props}
 				sx={{
 					...this.props.sx,

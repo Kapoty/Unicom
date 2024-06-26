@@ -119,7 +119,7 @@ export default class RelatorioJornadaBox extends React.Component {
 
 		this.columns = [
 			{ field: 'data', headerName: "DATA", renderCell: (params) => {
-				return <Box sx={{fontWeight: (params.row.data.day() == 0 || params.row.data.day() == 6) ? "bold" : "regular", color: (params.row.data.day() == 0 || params.row.data.day() == 6) ? "red" : "white"}}>{params.row.data.format("DD/MM/YYYY")}</Box>
+				return <Box sx={{fontWeight: (params.row.data.day() == 0 || params.row.data.day() == 6) ? "bold" : "regular", color: (params.row.data.day() == 0 || params.row.data.day() == 6) ? (theme) => theme.palette.info.light : "white"}}>{params.row.data.format("DD/MM/YYYY")}</Box>
 			}, minWidth: 50 },
 			{ field: 'entrada', headerName: 'ENTRADA', minWidth: 100, flex: 1 },
 			{ field: 'horasTrabalhadas', headerName: 'HORAS TRABALHADAS', minWidth: 200, flex: 1 },
@@ -128,7 +128,7 @@ export default class RelatorioJornadaBox extends React.Component {
 			{ field: 'horaExtra', headerName: 'HORA EXTRA', minWidth: 100, flex: 1 },
 			{ field: 'observacao', headerName: 'OBSERVAÇÃO', minWidth: 300, flex: 1 },
 			{ field: 'correcao', headerName: 'CORREÇÃO', minWidth: 100, flex: 1, renderCell: (params) =>
-				<Chip label={params.value} color={params.value == "Aprovada" ? "success" : params.value == "Não Aprovada" ? "warning" : "error"} />,
+				<Chip label={params.value} color={params.value == "Aprovada" ? "success" : params.value == "Em análise" ? "warning" : "info"} />,
 			},
 		];
 
@@ -291,7 +291,7 @@ export default class RelatorioJornadaBox extends React.Component {
 			if (day.registroJornadaCorrecao == null || !day.registroJornadaCorrecao.aprovada) {
 
 				if (day.registroJornadaCorrecao !== null)
-					dayRow.correcao = "Não Aprovada";
+					dayRow.correcao = "Em análise";
 
 				if (day.registroJornada !== null && day.entrada !== null) {
 

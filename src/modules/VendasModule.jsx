@@ -114,7 +114,6 @@ const VendaListDataGrid = memo(function VendaListDataGrid({ vendaRows, columns, 
 		columnGroupingModel={columnGroupingModel}
 		apiRef={apiRef}
 		headerFilterHeight={70}
-		showCellVerticalBorder
 		cellSelection={!dataGridRowSelection}
 		rowSelection={dataGridRowSelection}
 	/>

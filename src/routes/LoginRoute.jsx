@@ -61,7 +61,11 @@ class LoginRoute extends React.Component {
 			"dominio": this.state.dominio == "" ? window.location.hostname : this.state.dominio,
 		}, {redirect401: false}).then((response) => {
 			setToken(response.data.token);
-			this.props.navigate("/");
+
+			if (this.props.searchParams.get("jornada"))
+				this.props.navigate("/jornada")
+			else
+				this.props.navigate("/");
 		})
 		.catch((error) => {
 			if (error.response) {

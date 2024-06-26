@@ -13,9 +13,13 @@ export default class UsuarioDisplayChip extends React.Component {
 	}
 	
 	render() {
-		let {usuario, forwardedRef, ...rest} = this.props;
+		let {usuario, forwardedRef, sx, ...rest} = this.props;
 		return <Chip
 		      		avatar={<UsuarioAvatar usuario={usuario}/>}
+		      		sx={{
+		      			...sx,
+		      			overflow: "hidden"
+		      		}}
 		      		label={
 		      			<Stack direction="row" gap={1} alignItems="center">
 		      				<Typography variant="body2">{usuario?.nome ?? ""}</Typography>

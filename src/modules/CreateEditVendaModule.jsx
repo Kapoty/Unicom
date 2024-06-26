@@ -427,6 +427,8 @@ class CreateEditVendaModule extends React.Component {
 			pontoDeVendaById: {},
 			origemList: null,
 			origemByOrigemId: {},
+			bancoList: null,
+			bancoByBancoId: {},
 			adicionalList: null,
 			adicionalByAdicionalId: {},
 
@@ -575,6 +577,7 @@ class CreateEditVendaModule extends React.Component {
 		this.getSistemaListFromApi = this.getSistemaListFromApi.bind(this);
 		this.getPontoDeVendaListFromApi = this.getPontoDeVendaListFromApi.bind(this);
 		this.getOrigemListFromApi = this.getOrigemListFromApi.bind(this);
+		this.getBancoListFromApi = this.getBancoListFromApi.bind(this);
 		this.getAdicionalListFromApi = this.getAdicionalListFromApi.bind(this);
 
 		this.getCepInfoFromApi = this.getCepInfoFromApi.bind(this);
@@ -635,6 +638,7 @@ class CreateEditVendaModule extends React.Component {
 		this.getSistemaListFromApi();
 		this.getPontoDeVendaListFromApi();
 		this.getOrigemListFromApi();
+		this.getBancoListFromApi();
 		this.getAdicionalListFromApi();
 		if (this.props.searchParams.get("novo") !== null) {
 			this.openAlert("success", 'Venda criada com sucesso!');
@@ -912,6 +916,20 @@ class CreateEditVendaModule extends React.Component {
 			.catch((err) => {
 				console.log(err);
 				setTimeout(this.getOrigemListFromApi, 3000);
+			});
+	}
+
+	getBancoListFromApi() {
+		api.get("/empresa/me/banco")
+			.then((response) => {
+				let bancoList = response.data;
+				let bancoByBancoId = {};
+				bancoList.forEach((banco) => bancoByBancoId[banco.bancoId] = banco);
+				this.setState({bancoList: bancoList, bancoByBancoId: bancoByBancoId});
+			})
+			.catch((err) => {
+				console.log(err);
+				setTimeout(this.getBancoListFromApi, 3000);
 			});
 	}
 
@@ -2526,19 +2544,22 @@ class CreateEditVendaModule extends React.Component {
 											/>
 										</Grid>
 										<Grid item xs={4}>
-											<TextField
+											<Autocomplete
 												id="banco"
+												freeSolo
+												disableClearable
+												options={(this.state.bancoList ?? []).map(banco => banco.nome)}
 												value={this.state.banco}
-												onChange={(e) => this.setState({banco: e.target.value})}
-												fullWidth
-												label="Banco"
-												variant="outlined"
-												disabled={this.state.calling}
-												error={"banco" in this.state.errors}
-												helperText={this.state.errors?.banco ?? ""}
-												inputProps={{
-													maxLength: 50,
-												}}
+												onInputChange={(event, value) => this.setState({banco: value})}
+												renderInput={(params) => (
+													<TextField
+														{...params}
+														variant="outlined"
+														label="Banco"
+														error={"banco" in this.state.errors}
+														helperText={this.state.errors?.banco ?? ""}
+													/>
+												)}
 											/>
 										</Grid>
 									</React.Fragment> : ""}

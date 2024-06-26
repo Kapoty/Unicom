@@ -17,6 +17,8 @@ api.interceptors.request.use(
       config['redirect401'] = true;
     if (! ("redirect403" in config))
       config['redirect403'] = true;
+    if (! ("redirect401Path" in config))
+      config['redirect401Path'] = "/login";
     return config;
   },
   (error) => {
@@ -31,7 +33,7 @@ api.interceptors.response.use(
 
       if (error.response.status == 401 && error.config.redirect401) {
         removeToken();
-        history.push("/login");
+        history.push(error.config['redirect401Path']);
         return new Promise(() => {});
       } else if (error.response.status == 403 && error.config.redirect403) {
         history.push("/");

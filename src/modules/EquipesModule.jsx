@@ -22,9 +22,11 @@ import Tooltip from '@mui/material/Tooltip';
 import Alert from '@mui/material/Alert';
 import Collapse from '@mui/material/Collapse';
 import Avatar from '@mui/material/Avatar';
+import Icon from '@mui/material/Icon';
 
 import UsuarioDisplayChip from "../components/UsuarioDisplayChip";
 import CustomDataGridPremium from "../components/CustomDataGridPremium";
+import UploadImage from '../components/UploadImage';
 
 import api from "../services/api";
 
@@ -46,10 +48,12 @@ class EquipesModule extends React.Component {
 		}
 
 		this.columns = [
-			{ field: 'nome', headerName: 'Nome', minWidth: 100, flex: 1 },
-			{ field: 'supervisor', headerName: 'Supervisor', valueGetter: (value, row) => value?.nome, minWidth: 100, flex: 1, renderCell: (params) => <UsuarioDisplayChip usuario={params.row.supervisor}/>},
-			{ field: 'gerente', headerName: 'Gerente', valueGetter: (value, row) => value?.nome, minWidth: 100, flex: 1, renderCell: (params) => <UsuarioDisplayChip usuario={params.row.gerente}/>},
-			{ field: "actions", headerName: "Ações", width: 300, renderHeaderFilter: () => "", renderCell: (params) => <Stack direction="row" spacing={1}>
+			{ field: 'nome', headerName: 'Nome', minWidth: 200},
+			{ field: 'supervisor', headerName: 'Supervisor', valueGetter: (value, row) => value?.nome, minWidth: 200, renderCell: (params) => <UsuarioDisplayChip usuario={params.row.supervisor}/>},
+			{ field: 'gerente', headerName: 'Gerente', valueGetter: (value, row) => value?.nome, minWidth: 200, renderCell: (params) => <UsuarioDisplayChip usuario={params.row.gerente}/>},
+			{ field: 'icon', headerName: 'Ícone (MUI)', minWidth: 150, renderCell: (params) => <Icon>{params.value}</Icon>},
+			{ field: 'iconFilename', headerName: 'Ícone (Upload)', minWidth: 150, renderCell: (params) => params.value ? <UploadImage filename={params.value} style={{width: 24, height: 24}}/> : ""},
+			{ field: "actions", headerName: "Ações", minWidth: 100, renderHeaderFilter: () => "", renderCell: (params) => <Stack direction="row" spacing={1}>
 				<Tooltip title="Editar" onClick={() => this.props.navigate("/equipes/" + params.row.equipeId)}>
 					<IconButton color="warning">
 						<EditIcon />
@@ -78,6 +82,8 @@ class EquipesModule extends React.Component {
 					nome: equipe.nome,
 					supervisor: equipe.supervisor,
 					gerente: equipe.gerente,
+					icon: equipe.icon,
+					iconFilename: equipe.iconFilename,
 				}})
 				this.setState({equipeList: response.data, equipeRows: equipeRows, calling: false});
 			})
@@ -123,6 +129,7 @@ class EquipesModule extends React.Component {
 								headerFilterMenu: null,
 							}}
 							disableColumnFilter
+							pinnedColumns={{ left: ['nome'], right: ['actions'] }}
 						/>
 					</Box>
 					<Collapse in={this.state.alertOpen}>

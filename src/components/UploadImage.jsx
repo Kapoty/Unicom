@@ -19,6 +19,12 @@ export default class UploadImage extends React.Component {
 		this.loadUploadImageFromApi();
 	}
 
+	componentDidUpdate(prevProps) {
+	if (this.props.filename !== prevProps.filename) {
+			this.loadUploadImageFromApi();
+		}
+	}
+
 	loadUploadImageFromApi() {
 		api.get("/empresa/me/upload/" + this.props.filename, {responseType: "blob"})
 		.then((response) => {
@@ -31,6 +37,7 @@ export default class UploadImage extends React.Component {
 			reader.readAsDataURL(blob);
 		})
 		.catch((err) => {
+			this.setState({imageSrc: ""})
 			console.error(err);
 		});
 	}

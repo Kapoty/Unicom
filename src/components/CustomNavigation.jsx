@@ -272,7 +272,8 @@ class CustomNavigation extends React.Component {
 									<StyledListItem
 										key={equipe.equipeId}
 										onClick={() => {this.props.navigate(`minhas-equipes/${equipe.equipeId}`)}}
-										icon="groups"
+										icon={equipe.icon ?? "groups"}
+										iconFilename={equipe.iconFilename}
 										primary={equipe.nome}
 										selected={this.props.location.pathname == `/minhas-equipes/${equipe.equipeId}`}
 									/>

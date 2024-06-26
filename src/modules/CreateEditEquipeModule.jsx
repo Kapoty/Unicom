@@ -46,8 +46,10 @@ import NumbersIcon from '@mui/icons-material/Numbers';
 import SmartphoneIcon from '@mui/icons-material/Smartphone';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import { TimePicker } from '@mui/x-date-pickers';
+import Icon from '@mui/material/Icon';
 
 import UsuarioDisplayChip from "../components/UsuarioDisplayChip";
+import UploadImage from '../components/UploadImage';
 
 import dayjs from 'dayjs';
 
@@ -70,6 +72,9 @@ class CreateEditEquipeModule extends React.Component {
 			nome: "",
 			supervisorId: null,
 			gerenteId: null,
+			icon: "",
+			iconFilename: "",
+			iconFilenameDelayed: "",
 
 			saving: false,
 			deletando: false,
@@ -81,6 +86,8 @@ class CreateEditEquipeModule extends React.Component {
 			errors: {},
 		}
 
+		this.updateIconFilenameDelayedTimeout = null;
+
 		this.getEquipeFromApi = this.getEquipeFromApi.bind(this);
 		this.getUsuarioListFromApi = this.getUsuarioListFromApi.bind(this);
 
@@ -89,6 +96,9 @@ class CreateEditEquipeModule extends React.Component {
 		this.postEquipe = this.postEquipe.bind(this);
 		this.deleteEquipe = this.deleteEquipe.bind(this);
 		this.setEquipeIdFromParams = this.setEquipeIdFromParams.bind(this);
+
+		this.updateIconFilename = this.updateIconFilename.bind(this);
+		this.updateIconFilenameDelayed = this.updateIconFilenameDelayed.bind(this);
 
 		this.openAlert = this.openAlert.bind(this);
 		this.closeAlert = this.closeAlert.bind(this);
@@ -121,6 +131,9 @@ class CreateEditEquipeModule extends React.Component {
 					nome: equipe.nome,
 					supervisorId: equipe.supervisorId,
 					gerenteId: equipe.gerenteId,
+					icon: equipe.icon,
+					iconFilename: equipe.iconFilename,
+					iconFilenameDelayed: equipe.iconFilename,
 					calling: false});
 			})
 			.catch((err) => {
@@ -196,6 +209,8 @@ class CreateEditEquipeModule extends React.Component {
 			nome: this.state.nome,
 			supervisorId: this.state.supervisorId,
 			gerenteId: this.state.gerenteId,
+			icon: this.state.icon !== "" ? this.state.icon : null,
+			iconFilename: this.state.iconFilename !== "" ? this.state.iconFilename : null,
 		};
 
 		if (this.state.createMode)
@@ -216,6 +231,18 @@ class CreateEditEquipeModule extends React.Component {
 			})
 	}
 
+	updateIconFilename = (e) => {
+		this.setState({iconFilename: e.target.value}, () => {
+			if (this.updateIconFilenameDelayedTimeout)
+				clearTimeout(this.updateIconFilenameDelayedTimeout);
+			this.updateIconFilenameDelayedTimeout = setTimeout(this.updateIconFilenameDelayed, 500);
+		});
+	}
+
+	updateIconFilenameDelayed = () => {
+		this.setState({iconFilenameDelayed: this.state.iconFilename});
+	}
+
 	render() {
 		return (
 			<React.Fragment>
@@ -233,7 +260,7 @@ class CreateEditEquipeModule extends React.Component {
 							this.state.usuarioList == null
 							) ? <Box width="100%" display="flex" justifyContent="center" m={3}><CircularProgress/></Box> :
 									<Grid container spacing={3} maxWidth="xl">
-										<Grid item xs={6}>
+										<Grid item xs={4}>
 											<TextField
 												id="nome"
 												value={this.state.nome}
@@ -247,7 +274,7 @@ class CreateEditEquipeModule extends React.Component {
 												helperText={"nome" in this.state.errors ? this.state.errors["nome"] : ""}
 											/>
 										</Grid>
-										<Grid item xs={6}>
+										<Grid item xs={4}>
 											 <Autocomplete
 												id="supervisor"
 												options={Object.keys(this.state.usuarioByUsuarioId).map(key => parseInt(key))}
@@ -266,7 +293,7 @@ class CreateEditEquipeModule extends React.Component {
 												)}
 											/>
 										</Grid>
-										<Grid item xs={6}>
+										<Grid item xs={4}>
 											 <Autocomplete
 												id="gerente"
 												options={Object.keys(this.state.usuarioByUsuarioId).map(key => parseInt(key))}
@@ -283,6 +310,38 @@ class CreateEditEquipeModule extends React.Component {
 												label="Gerente"
 												/>
 												)}
+											/>
+										</Grid>
+										<Grid item xs={6}>
+											<TextField
+												id="icon"
+												value={this.state.icon}
+												onChange={(e) => this.setState({icon: e.target.value})}
+												fullWidth
+												label="Ícone (MUI)"
+												variant="outlined"
+												disabled={this.state.calling}
+												error={"icon" in this.state.errors}
+												helperText={"icon" in this.state.errors ? this.state.errors["icon"] : ""}
+												InputProps={{
+													endAdornment: <InputAdornment position="end"><Icon>{this.state.icon}</Icon></InputAdornment>,
+												}}
+											/>
+										</Grid>
+										<Grid item xs={6}>
+											<TextField
+												id="icon-filename"
+												value={this.state.iconFilename}
+												onChange={this.updateIconFilename}
+												fullWidth
+												label="Ícone (Upload)"
+												variant="outlined"
+												disabled={this.state.calling}
+												error={"iconFilename" in this.state.errors}
+												helperText={"iconFilename" in this.state.errors ? this.state.errors["iconFilename"] : ""}
+												InputProps={{
+													endAdornment: <InputAdornment position="end"><Icon>{this.state.iconFilenameDelayed !== "" ? <UploadImage filename={this.state.iconFilenameDelayed} style={{width: 24, height: 24}}/> : ""}</Icon></InputAdornment>,
+												}}
 											/>
 										</Grid>
 									</Grid>

@@ -5,6 +5,7 @@ import 'assets/css/general.css';
 
 const LoginRoute = React.lazy(() => import('routes/LoginRoute'));
 const PainelRoute = React.lazy(() => import('routes/PainelRoute'));
+const JornadaRoute = React.lazy(() => import('routes/JornadaRoute'));
 const PontoFacialRoute = React.lazy(() => import('routes/PontoFacialRoute'));
 
 import { red, green, grey } from '@mui/material/colors';
@@ -128,6 +129,7 @@ const SiteRouter = React.memo(({themePrimaryColor, updateThemePrimaryColor}) => 
 									<Routes>
 										 <Route path="/login" element={<LoginRoute updateThemePrimaryColor={updateThemePrimaryColor}/>} />
 										 {/*<Route path="/ponto-facial" element={<PontoFacialRoute/>} />*/}
+										 <Route path="/jornada" element={<JornadaRoute updateThemePrimaryColor={updateThemePrimaryColor}/>} />
 										 <Route path="/*" element={<PainelRoute updateThemePrimaryColor={updateThemePrimaryColor}/>} />
 									</Routes>
 								</Suspense>
