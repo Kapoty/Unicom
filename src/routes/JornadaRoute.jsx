@@ -3,15 +3,23 @@ import ReactDOM from "react-dom";
 
 import { Routes, Route} from "react-router-dom";
 
-import {isAuth as isPontoAuth, getToken as getPontoToken} from "../utils/pontoAuth"
-
 import api from "../services/api";
-import {removeToken} from "../utils/auth"
+import {setToken} from "../utils/auth"
+import {isPontoAuth, getPontoToken, setPontoToken} from "../utils/pontoAuth"
 
+import Paper from '@mui/material/Paper';
 import Box from '@mui/material/Box';
-
+import Stack from '@mui/material/Stack';
+import Typography from '@mui/material/Typography';
+import CloseIcon from '@mui/icons-material/Close';
+import Tooltip from '@mui/material/Tooltip';
+import IconButton from '@mui/material/IconButton';
 import Backdrop from '@mui/material/Backdrop';
 import CircularProgress from '@mui/material/CircularProgress';
+import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
+import ArrowLeftIcon from '@mui/icons-material/ArrowLeft';
+import ArrowRightIcon from '@mui/icons-material/ArrowRight';
+import Collapse from '@mui/material/Collapse';
 
 import { useNavigate, useLocation, useSearchParams, useParams } from "react-router-dom";
 
@@ -26,8 +34,11 @@ class JornadaRoute extends React.Component {
 		this.state = {
 			isAuth: false,
 			usuario: null,
+			open: true,
 
 			notificationsGranted: undefined,
+
+			n: 0,
 		};
 
 		this.lastPing = null;
@@ -40,12 +51,15 @@ class JornadaRoute extends React.Component {
 
 		this.getNotificationsStatus = this.getNotificationsStatus.bind(this);
 		this.requestNotificationsPermission = this.requestNotificationsPermission.bind(this);
+		this.getTokensFromSearchParams = this.getTokensFromSearchParams.bind(this);
+
+		this.handleOpen = this.handleOpen.bind(this);
 
 		this.ping = this.ping.bind(this);
 	}
 
 	getUsuarioFromApi() {
-		api.get("/usuario/me", {redirect401Path: "/login?jornada=true"})
+		api.get("/usuario/me", {redirect401: false})
 			.then((response) => {
 				let usuario = response.data;
 
@@ -63,25 +77,27 @@ class JornadaRoute extends React.Component {
 
 	logout() {
 		removeToken();
-		this.props.navigate("/login?jornada=true")
+		this.setState({isAuth: false});
 	}
 
 	componentDidMount() {
+		this.getTokensFromSearchParams();
 		this.getUsuarioFromApi();
-		document.body.onfullscreenchange = this.fullScreenChanged;
-		//window.onbeforeunload = s => "";
-		//this.disableDefaultContextMenu();
 		this.getNotificationsStatus();
-		document.body.addEventListener('click', this.ping, true);
-
-
+		document.body.addEventListener('mousemove', this.ping, true);
+		window?.electron?.onMouseMove?.(this.ping);
 
 		document.body.style.backgroundColor = "transparent";
 		document.body.height = "50px";
 	}
 
 	componentWillUnmount() {
-		document.body.removeEventListener("click", this.ping, true);
+		document.body.removeEventListener("mousemove", this.ping, true);
+	}
+
+	getTokensFromSearchParams() {
+		setToken(this.props.searchParams.get("token"));
+		setPontoToken(this.props.searchParams.get("ponto-token"));
 	}
 
 	getNotificationsStatus() {
@@ -89,15 +105,6 @@ class JornadaRoute extends React.Component {
 			this.setState({notificationsGranted: null})
  		} else if (Notification.permission === "granted") {
  			this.setState({notificationsGranted: true})
-			/*let title = 'Hi!';
-			let options = {
-				body: 'Very Important Message',
-			};
-
-			navigator.serviceWorker.ready.then(function(registration) {
-				registration.showNotification(title, options);
-			});*/
-			
  		} else if (Notification.permission !== "denied") {
  			this.setState({notificationsGranted: false})
 			//this.requestNotificationsPermission();
@@ -116,7 +123,12 @@ class JornadaRoute extends React.Component {
 		});
 	}
 
+	handleOpen() {
+		this.setState({open: !this.state.open});
+	}
+
 	ping() {
+		this.setState({n: this.state.n + 1});
 		if (!isPontoAuth())
 			return;
 		if (this.state.usuario !== null) {
@@ -135,16 +147,57 @@ class JornadaRoute extends React.Component {
 
 	render() {
 
-		if (!this.state.isAuth)
-			return <Backdrop sx={{color: "primary.main"}} open={true}>
+		return <Stack
+				direction="row"
+				justifyContent="end"
+			>
+			<Box
+				onMouseOver={() => window?.electron?.setIgnoreMouseEvents?.(false)}
+				onMouseOut={() => window?.electron?.setIgnoreMouseEvents?.(true, { forward: true })}
+				sx={{position: "relative", mr: "200px"}}
+			>
+				
+				{!this.state.isAuth ? <Box sx={{width: 200, backgroundColor: "rgba(0,0,0,0.5)"}}>
+					<Stack gap={2} alignItems="center">
 						<CircularProgress color="inherit"/>
-					</Backdrop>
-
-		return <React.Fragment>
-			<Box sx={{backgroundColor: "black", width: "auto"}}>
-				<JornadaChip usuario={this.state.usuario} me/>
+						<Typography textAlign="center">Aguardando identificação do usuário!</Typography>
+					</Stack>
+				</Box> :
+				<Paper
+					sx={{padding: 0}}
+				>
+					<Stack
+						gap={1}
+						direction="row"
+						alignItems="center"
+					>
+						{/*this.state.n*/}
+						<Tooltip title={this.state.open ? "Ocultar" : "Exibir"}>
+							<IconButton size="small" onClick={this.handleOpen}>
+								{this.state.open ? <ArrowRightIcon onClick={this.handleOpen}/> : <ArrowLeftIcon onClick={this.handleOpen}/>}
+							</IconButton>
+						</Tooltip>
+						<Collapse in={this.state.open} orientation="horizontal">
+							<Stack
+								gap={1}
+								direction="row"
+								alignItems="center"
+							>
+								<JornadaChip usuario={this.state.usuario} me/>
+								<Tooltip title="Fechar">
+									<IconButton size="small" onClick={() => window?.electron?.quit?.()}>
+										<CloseIcon/>
+									</IconButton>
+								</Tooltip>
+								{/*<DragIndicatorIcon
+									sx={{"-webkit-app-region": "drag"}}
+								/>*/}
+							</Stack>
+						</Collapse>
+					</Stack>
+				</Paper>}
 			</Box>
-		</React.Fragment>
+		</Stack>
 	}
 
 }

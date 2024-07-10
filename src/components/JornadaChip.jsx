@@ -39,6 +39,10 @@ import Tooltip from "@mui/material/Tooltip";
 import HourglassFullIcon from '@mui/icons-material/HourglassFull';
 import HourglassBottomIcon from '@mui/icons-material/HourglassBottom';
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
+import PushPinIcon from '@mui/icons-material/PushPin';
+import IconButton from '@mui/material/IconButton';
+
+import {getToken} from "../utils/auth";
 
 import { grey, green, yellow, blue, red } from '@mui/material/colors';
 
@@ -49,14 +53,14 @@ dayjs.extend(duration);
 
 import api from "../services/api";
 
-import {isAuth, getToken, setToken, removeToken} from "../utils/pontoAuth"
+import {isPontoAuth, getPontoToken, setPontoToken, removePontoToken} from "../utils/pontoAuth"
 
 export default class JornadaChip extends React.Component {
 
 	constructor(props) {
 		super(props);
 		this.state = {
-			isAuth: isAuth(),
+			isPontoAuth: isPontoAuth(),
 
 			registroJornada: null,
 			error: null,
@@ -123,7 +127,7 @@ export default class JornadaChip extends React.Component {
 
 	componentDidMount() {
 		this.getUsuarioRegistroJornadaFromApi();
-		if (this.state.isAuth)
+		if (this.state.isPontoAuth)
 			this.validateToken();
 	}
 
@@ -168,7 +172,7 @@ export default class JornadaChip extends React.Component {
 					alertAusente: this.props.me && registroJornada.secondsToAusente !== -1 ? registroJornada.secondsToAusente <= this.alertAusenteSeconds : false,
 				}, () => {
 					this.calculateChip();
-					if (this.state.isAuth && this.props.me) {
+					if (this.state.isPontoAuth && this.props.me) {
 						this.handleNotifyAlertAusente();
 						this.handleNotifyAusente();
 						this.handleNotifyDuracaoAcabou();
@@ -212,10 +216,10 @@ export default class JornadaChip extends React.Component {
 	}
 
 	handleAuthenticate() {
-		if (this.state.isAuth) {
+		if (this.state.isPontoAuth) {
 			this.openAlert("success", "Dispositivo desautorizado com sucesso!");
-			removeToken();
-			this.setState({isAuth: false});
+			removePontoToken();
+			this.setState({isPontoAuth: false});
 		} else
 			this.authenticate();
 	}
@@ -225,8 +229,8 @@ export default class JornadaChip extends React.Component {
 		api.get("/registro-jornada/generate-token")
 			.then((response) => {
 				this.openAlert("success", "Dispositivo autorizado com sucesso!");
-				setToken(response.data.token);
-				this.setState({authenticating: false, isAuth: true})
+				setPontoToken(response.data.token);
+				this.setState({authenticating: false, isPontoAuth: true})
 			})
 			.catch((err) => {
 				console.log(err);
@@ -237,22 +241,22 @@ export default class JornadaChip extends React.Component {
 
 	validateToken() {
 		api.post("/registro-jornada/validate-token", {
-			token: getToken()
+			token: getPontoToken()
 			})
 			.then((response) => {
-				this.setState({isAuth: true});
+				this.setState({isPontoAuth: true});
 			})
 			.catch((err) => {
 				this.openAlert("error", "Autorização do dispositivo expirou!");
-				removeToken();
-				this.setState({isAuth: false});
+				removePontoToken();
+				this.setState({isPontoAuth: false});
 			});
 	}
 
 	logar() {
 		this.setState({logando: true})
 		api.post(`/registro-jornada/${this.usuarioId}/logar`, {
-				token: getToken(),
+				token: getPontoToken(),
 			}, {redirect403: false})
 			.then((response) => {
 				this.openAlert("success", "Logado com sucesso!");
@@ -271,7 +275,7 @@ export default class JornadaChip extends React.Component {
 	deslogar() {
 		this.setState({deslogando: true})
 		api.post(`/registro-jornada/${this.usuarioId}/deslogar`, {
-				token: getToken(),
+				token: getPontoToken(),
 			}, {redirect403: false})
 			.then((response) => {
 				this.openAlert("success", "Deslogado com sucesso!");
@@ -290,7 +294,7 @@ export default class JornadaChip extends React.Component {
 	toggleHoraExtraPermitida() {
 		this.setState({togglingHoraExtraPermitida: true})
 		api.post(`/registro-jornada/${this.usuarioId}/toggle-hora-extra-permitida`, {
-				token: getToken(),
+				token: getPontoToken(),
 			}, {redirect403: false})
 			.then((response) => {
 				this.getUsuarioRegistroJornadaFromApi();
@@ -307,7 +311,7 @@ export default class JornadaChip extends React.Component {
 	imHere() {
 		this.setState({tellingImHere: true})
 		api.post("/registro-jornada/me/im-here", {
-				token: getToken(),
+				token: getPontoToken(),
 			})
 			.then((response) => {
 				this.getUsuarioRegistroJornadaFromApi();
@@ -324,7 +328,7 @@ export default class JornadaChip extends React.Component {
 	handleAlterarStatus(e) {
 		this.setState({alterandoStatus: true})
 		api.post(`/registro-jornada/${this.usuarioId}/alterar-status`, {
-				token: getToken(),
+				token: getPontoToken(),
 				jornadaStatusId: e.target.value,
 			}, {redirect403: false})
 			.then((response) => {
@@ -522,15 +526,21 @@ export default class JornadaChip extends React.Component {
 			         }}
 				>
 					<Stack gap={1} sx={{padding: 1}}>
-						<LoadingButton
-							loading={this.state.refreshing}
-							variant="contained"
-							onClick={this.getUsuarioRegistroJornadaFromApi}
-							startIcon={<RefreshIcon />}
-							loadingPosition="start"
-						>
-							Atualizar
-						</LoadingButton>
+						<Stack gap={1} direction="row">
+							<LoadingButton
+								sx={{flexGrow: 1}}
+								loading={this.state.refreshing}
+								variant="contained"
+								onClick={this.getUsuarioRegistroJornadaFromApi}
+								startIcon={<RefreshIcon />}
+								loadingPosition="start"
+							>
+								Atualizar
+							</LoadingButton>
+							{this.props.showFixButton && <Tooltip title="Fixar">
+								<IconButton onClick={() => window.open("jornada-unisystem://?token=" + getToken() + "&ponto-token=" + getPontoToken(), "_blank")}><PushPinIcon/></IconButton>
+							</Tooltip>}
+						</Stack>
 						{this.state.error ?
 						<Alert severity="error">{this.state.error}</Alert>
 						: ""}
@@ -595,7 +605,7 @@ export default class JornadaChip extends React.Component {
 								</Typography>) : ""}
 						</React.Fragment> : ""}
 						<Divider>
-							{this.state.isAuth ? 
+							{this.state.isPontoAuth ? 
 								<Chip icon={<VerifiedUserIcon/>} label="Dispositivo Autorizado" size="small" color="success" disabled={this.state.authenticating} onClick={this.props.usuario?.permissaoList?.includes("AUTORIZAR_DISPOSITIVO") ? this.handleAuthenticate : null} />
 								:
 								<Chip icon={<SecurityIcon/>} label="Dispositivo Não Autorizado" size="small" color="error" disabled={this.state.authenticating} onClick={this.props.usuario?.permissaoList?.includes("AUTORIZAR_DISPOSITIVO") ? this.handleAuthenticate : null} />
@@ -608,7 +618,7 @@ export default class JornadaChip extends React.Component {
 				</Popover>
 				{this.state.registroJornada !== null ?
 				<Modal
-					open={this.state.alertAusente && this.state.isAuth}
+					open={this.state.alertAusente && this.state.isPontoAuth}
 				>
 					<Box sx={{display: "flex", width: "100%", height: "100%", justifyContent: "center", alignItems: "center"}} onClick={this.imHere}>
 						<Paper sx={{display: "flex", flexDirection: "column", gap: 2, padding: 5, justifyContent: "center", alignItems: "center", color: "white"}}>

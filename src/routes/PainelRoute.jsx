@@ -7,7 +7,7 @@ import Config from "../config/Config";
 
 import api from "../services/api";
 import {removeToken} from "../utils/auth"
-import {isAuth as isPontoAuth, getToken as getPontoToken} from "../utils/pontoAuth"
+import {isPontoAuth, getPontoToken} from "../utils/pontoAuth"
 
 import Box from '@mui/material/Box';
 

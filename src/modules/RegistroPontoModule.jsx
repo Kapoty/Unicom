@@ -17,7 +17,7 @@ import LockOpenIcon from '@mui/icons-material/LockOpen';
 import Tooltip from '@mui/material/Tooltip';
 import ScheduleIcon from '@mui/icons-material/Schedule';
 
-import {isAuth, getToken, setToken, removeToken} from "../utils/pontoAuth"
+import {isPontoAuth, getPontoToken, setPontoToken, removePontoToken} from "../utils/pontoAuth"
 
 import api from "../services/api";
 
@@ -29,7 +29,7 @@ class RegistroPontoModule extends React.Component {
 		super(props);
 
 		this.state = {
-			isAuth: isAuth(),
+			isPontoAuth: isPontoAuth(),
 
 			registroPonto: null,
 
@@ -60,7 +60,7 @@ class RegistroPontoModule extends React.Component {
 
 	componentDidMount() {
 		this.getUsuarioRegistroPontoFromApi();
-		if (this.state.isAuth)
+		if (this.state.isPontoAuth)
 			this.validateToken();
 	}
 
@@ -115,7 +115,7 @@ class RegistroPontoModule extends React.Component {
 	registrarPonto() {
 		this.setState({calling: true, logging: true})
 		api.post("/registro-ponto/me/hoje/registrar", {
-				token: getToken(),
+				token: getPontoToken(),
 			})
 			.then((response) => {
 				this.setState({
@@ -179,10 +179,10 @@ class RegistroPontoModule extends React.Component {
 	}
 
 	handleAuthenticate() {
-		if (this.state.isAuth) {
+		if (this.state.isPontoAuth) {
 			this.openAlert("success", "Dispositivo desautorizado com sucesso!");
 			removeToken();
-			this.setState({isAuth: false});
+			this.setState({isPontoAuth: false});
 		} else
 			this.authenticate();
 	}
@@ -192,8 +192,8 @@ class RegistroPontoModule extends React.Component {
 		api.get("/registro-ponto/generate-token")
 			.then((response) => {
 				this.openAlert("success", "Dispositivo autorizado com sucesso!");
-				setToken(response.data.token);
-				this.setState({authenticating: false, isAuth: true})
+				setPontoToken(response.data.token);
+				this.setState({authenticating: false, isPontoAuth: true})
 			})
 			.catch((err) => {
 				console.log(err);
@@ -204,15 +204,15 @@ class RegistroPontoModule extends React.Component {
 
 	validateToken() {
 		api.post("/registro-ponto/validate-token", {
-			token: getToken()
+			token: getPontoToken()
 			})
 			.then((response) => {
-				this.setState({isAuth: true});
+				this.setState({isPontoAuth: true});
 			})
 			.catch((err) => {
 				this.openAlert("error", "Autorização do dispositivo expirou!");
 				removeToken();
-				this.setState({isAuth: false});
+				this.setState({isPontoAuth: false});
 			});
 	}
 
@@ -256,10 +256,10 @@ class RegistroPontoModule extends React.Component {
 								 	sx={{width: 400, height: 120}}
 								 	color={this.state.color}
 								 	loading={this.state.logging}
-								 	disabled={this.state.calling || this.state.naoRegistraReason !== null || this.state.lockedSeconds !== 0 || !this.state.isAuth}
+								 	disabled={this.state.calling || this.state.naoRegistraReason !== null || this.state.lockedSeconds !== 0 || !this.state.isPontoAuth}
 								 	onClick={this.registrarPonto}
 								>
-									{!this.state.isAuth ?  <Stack justifyContent="center" alignItems="center" gap={1}><LockIcon sx={{fontSize: 60}}/>Dispositivo não autorizado!</Stack> :
+									{!this.state.isPontoAuth ?  <Stack justifyContent="center" alignItems="center" gap={1}><LockIcon sx={{fontSize: 60}}/>Dispositivo não autorizado!</Stack> :
 									this.state.naoRegistraReason != null ?  <Stack justifyContent="center" alignItems="center" gap={1}><LockIcon sx={{fontSize: 60}}/> {this.state.naoRegistraReason}</Stack> :
 									this.state.lockedSeconds == null ? <CircularProgress color="inherit"/> :
 								 	this.state.lockedSeconds == 0 ? <FingerprintIcon sx={{fontSize: 60}} /> : <Stack justifyContent="center" alignItems="center" gap={1}><LockIcon sx={{fontSize: 60}}/> {`Aguarde ${this.state.lockedSeconds} segundos...`}</Stack>}
@@ -270,13 +270,13 @@ class RegistroPontoModule extends React.Component {
 								 	variant="contained"
 								 	size="large"
 								 	loading={this.state.authenticating}
-								 	startIcon={this.state.isAuth ? <LockIcon /> : <LockOpenIcon/>}
+								 	startIcon={this.state.isPontoAuth ? <LockIcon /> : <LockOpenIcon/>}
 								 	loadingPosition="start"
-								 	color={this.state.isAuth ? "error" : "success"}
-								 	disabled={this.state.authenticating}
+								 	color={this.state.isPontoAuth ? "error" : "success"}
+								 	disabled={this.state.isPontoAuth}
 								 	onClick={this.handleAuthenticate}
 								>
-									{this.state.isAuth ? "Desautorizar Dispositivo" : "Autorizar Dispositivo"}
+									{this.state.isPontoAuth ? "Desautorizar Dispositivo" : "Autorizar Dispositivo"}
 								 </LoadingButton>
 							</Grid> : ""}
 						</Grid>

@@ -4,7 +4,7 @@ import ReactDOM from "react-dom";
 import Config from "../config/Config";
 
 import api from "../services/api";
-import {isAuth, getToken, setToken} from "../utils/pontoAuth"
+import {isPontoAuth, getPontoToken, setPontoToken} from "../utils/pontoAuth"
 
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 
@@ -85,7 +85,7 @@ class PontoFacialRoute extends React.Component {
 
 	async handleUsuarioFotoChange(event) {
 		let data = {
-			token: getToken(),
+			token: getPontoToken(),
 			img: await toBase64(event.target.files[0])
 		}
 
@@ -107,7 +107,7 @@ class PontoFacialRoute extends React.Component {
 
 	async handlePicture(picture) {
 		let data = {
-			token: getToken(),
+			token: getPontoToken(),
 			img: picture
 		}
 
