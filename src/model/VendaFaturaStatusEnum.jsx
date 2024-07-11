@@ -5,5 +5,6 @@ export default {
 	"PAGA": "Paga",
 	"MULTA": "Multa",
 	"CHURN": "Churn",
-	"PARCELADA": "Parcelada"
+	"PARCELADA": "Parcelada",
+	"INADIMPLENTE": "Inadimplente"
 }

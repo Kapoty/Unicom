@@ -106,6 +106,7 @@ import VendaBrscanEnum from "../model/VendaBrscanEnum";
 import VendaSuporteEnum from "../model/VendaSuporteEnum";
 import VendaGeneroEnum from "../model/VendaGeneroEnum";
 import VendaReimputadoEnum from "../model/VendaReimputadoEnum";
+import VendaTipoDeContaEnum from "../model/VendaTipoDeContaEnum";
 
 import axios from "axios";
 
@@ -507,7 +508,7 @@ class CreateEditVendaModule extends React.Component {
 			dataInstalacao: null,
 			pdv: "",
 			reimputado: "NAO",
-			vendaOriginal: false,
+			vendaOriginal: true,
 			brscan: "NAO",
 			suporte: "NAO",
 			loginVendedor: "",
@@ -529,6 +530,7 @@ class CreateEditVendaModule extends React.Component {
 			agencia: "",
 			conta: "",
 			banco: "",
+			tipoDeConta: null,
 
 			//status
 			statusId: null,
@@ -557,7 +559,7 @@ class CreateEditVendaModule extends React.Component {
 			errors: {},
 		}
 
-		this.vencimentoEnum = ["1", "3", "7", "10"];
+		this.vencimentoEnum = ["7", "10", "15", "20"];
 
 		this.atualizacaoColumns = [
 			{ field: 'statusId', headerName: 'Status', valueGetter: (value, row) => this.state.vendaStatusByVendaStatusId?.[value]?.nome, minWidth: 100, flex: 1, renderCell: (params) => <VendaStatusChip
@@ -767,6 +769,7 @@ class CreateEditVendaModule extends React.Component {
 					agencia: venda.agencia,
 					conta: venda.conta,
 					banco: venda.banco,
+					tipoDeConta: venda.tipoDeConta,
 
 					//status
 					statusId: venda.statusId,
@@ -1186,7 +1189,7 @@ class CreateEditVendaModule extends React.Component {
 			"dataAgendamento", "dataInstalacao", "pdv", "reimputado", "vendaOriginal", "brscan", "suporte", "loginVendedor"].some(r => keys.includes(r)))
 			errors["DADOS_DO_CONTRATO"] = "";
 
-		if (["formaDePagamento", "vencimento", "agencia", "conta", "banco"].some(r => keys.includes(r)))
+		if (["formaDePagamento", "vencimento", "agencia", "conta", "banco", "tipoDeConta"].some(r => keys.includes(r)))
 			errors["PAGAMENTO"] = "";
 
 		if (["statusId", "relato"].some(r => keys.includes(r)))
@@ -1344,6 +1347,7 @@ class CreateEditVendaModule extends React.Component {
 			agencia: this.state.agencia,
 			conta: this.state.conta,
 			banco: this.state.banco,
+			tipoDeConta: this.state.tipoDeConta,
 
 			//status
 			statusId: this.state.novoStatusId,
@@ -1429,6 +1433,8 @@ class CreateEditVendaModule extends React.Component {
 	}
 
 	render() {
+
+		let ALTERAR_AUDITOR = this.props.usuario.permissaoList.includes("ALTERAR_AUDITOR");
 
 		return (
 			<React.Fragment>
@@ -1573,17 +1579,19 @@ class CreateEditVendaModule extends React.Component {
 											/>
 										</Grid>
 										<Grid item xs={6}>
-											<FormControl fullWidth>
+											<FormControl fullWidth required error={"genero" in this.state.errors}>
 												<InputLabel>Gênero</InputLabel>
 												<Select
 													id="genero"
 													value={this.state.genero}
 													label="Gênero"
 													onChange={(e) => this.setState({genero: e.target.value})}
+													
 													>
 													<MenuItem key={"nenhum"} value={null}>Nenhum</MenuItem>
 													{Object.keys(VendaGeneroEnum).map((genero) => <MenuItem key={genero} value={genero}>{VendaGeneroEnum[genero]}</MenuItem>)}
 												</Select>
+												<FormHelperText error>{this.state.errors?.genero ?? ""}</FormHelperText>
 											</FormControl>
 										</Grid>
 										<Grid item xs={4}>
@@ -1605,6 +1613,7 @@ class CreateEditVendaModule extends React.Component {
 										</Grid>
 										<Grid item xs={4}>
 											<TextField
+												required
 												id="rg-orgao-emissor"
 												value={this.state.rgOrgaoEmissor}
 												onChange={(e) => this.setState({rgOrgaoEmissor: e.target.value})}
@@ -1627,6 +1636,7 @@ class CreateEditVendaModule extends React.Component {
 												slotProps={{
 													field: { clearable: true },
 													textField: {
+														required: true,
 														fullWidth: true,
 														error: "rgDataEmissao" in this.state.errors,
 														helperText: this.state.errors?.rgDataEmissao ?? "",
@@ -1636,6 +1646,7 @@ class CreateEditVendaModule extends React.Component {
 										</Grid>
 										<Grid item xs={12}>
 											<TextField
+												required
 												id="nome-da-mae"
 												value={this.state.nomeDaMae}
 												onChange={(e) => this.setState({nomeDaMae: e.target.value})}
@@ -1808,6 +1819,7 @@ class CreateEditVendaModule extends React.Component {
 									</Grid>
 									<Grid item xs={4}>
 										<PhoneInput
+											required
 											id="contato2"
 											value={this.state.contato2}
 											onChange={(e) => this.setState({contato2: e.target.value})}
@@ -1834,6 +1846,7 @@ class CreateEditVendaModule extends React.Component {
 									</Grid>
 									<Grid item xs={12}>
 										<TextField
+											required
 											id="email"
 											value={this.state.email}
 											onChange={(e) => this.setState({email: e.target.value})}
@@ -2021,7 +2034,7 @@ class CreateEditVendaModule extends React.Component {
 											fullWidth
 											label="OS"
 											variant="outlined"
-											disabled={this.state.calling}
+											disabled={this.state.calling || !ALTERAR_AUDITOR}
 											error={"os" in this.state.errors}
 											helperText={this.state.errors?.os ?? ""}
 											inputProps={{
@@ -2037,7 +2050,7 @@ class CreateEditVendaModule extends React.Component {
 											fullWidth
 											label="Cust-Code"
 											variant="outlined"
-											disabled={this.state.calling}
+											disabled={this.state.calling || !ALTERAR_AUDITOR}
 											error={"os" in this.state.errors}
 											helperText={this.state.errors?.custcode ?? ""}
 											inputProps={{
@@ -2046,14 +2059,13 @@ class CreateEditVendaModule extends React.Component {
 										/>
 									</Grid>
 									<Grid item xs={4}>
-										<FormControl fullWidth required>
+										<FormControl fullWidth required error={"sistemaId" in this.state.errors}>
 											<InputLabel>Sistema</InputLabel>
 											<Select
 												id="sistema"
 												value={this.state.sistemaId}
 												label="Sistema"
 												onChange={this.updateSistemaId}
-												error={"sistemaId" in this.state.errors}
 											>
 												<MenuItem key={"nenhum"} value={null}>Nenhum</MenuItem>
 												{(this.state.sistemaList ?? []).map((sistema) => <MenuItem key={sistema.sistemaId} value={sistema.sistemaId}>{sistema.nome}</MenuItem>)}
@@ -2069,7 +2081,7 @@ class CreateEditVendaModule extends React.Component {
 											fullWidth
 											label="Ordem"
 											variant="outlined"
-											disabled={this.state.calling}
+											disabled={this.state.calling || !ALTERAR_AUDITOR}
 											error={"ordem" in this.state.errors}
 											helperText={this.state.errors?.ordem ?? ""}
 											inputProps={{
@@ -2115,7 +2127,7 @@ class CreateEditVendaModule extends React.Component {
 										/>
 									</Grid>
 									<Grid item xs={3}>
-										<FormControl fullWidth>
+										<FormControl fullWidth disabled={this.state.calling  || !ALTERAR_AUDITOR}>
 											<InputLabel>Reimputado</InputLabel>
 											<Select
 												value={this.state.reimputado}
@@ -2223,6 +2235,7 @@ class CreateEditVendaModule extends React.Component {
 															helperText: this.state.errors?.dataInstalacao ?? "",
 														},
 													}}
+													disabled={this.state.calling  || !ALTERAR_AUDITOR}
 												/>
 										</Grid>
 										<Grid item xs={3}>
@@ -2246,7 +2259,7 @@ class CreateEditVendaModule extends React.Component {
 											/>
 										</Grid>
 										<Grid item xs={3}>
-											<FormControl>
+											<FormControl disabled={this.state.calling  || !ALTERAR_AUDITOR}>
 												<FormLabel id="venda-original">Venda Original</FormLabel>
 												<RadioGroup
 													row
@@ -2261,7 +2274,7 @@ class CreateEditVendaModule extends React.Component {
 											</FormControl>
 										</Grid>
 										<Grid item xs={3}>
-											<FormControl fullWidth>
+											<FormControl fullWidth disabled={this.state.calling  || !ALTERAR_AUDITOR}>
 												<InputLabel>BrScan</InputLabel>
 												<Select
 													value={this.state.brscan}
@@ -2273,7 +2286,7 @@ class CreateEditVendaModule extends React.Component {
 											</FormControl>
 										</Grid>
 										<Grid item xs={3}>
-											<FormControl fullWidth>
+											<FormControl fullWidth disabled={this.state.calling  || !ALTERAR_AUDITOR}>
 												<InputLabel>Suporte</InputLabel>
 												<Select
 													value={this.state.suporte}
@@ -2292,7 +2305,7 @@ class CreateEditVendaModule extends React.Component {
 												fullWidth
 												label="Login Vendedor"
 												variant="outlined"
-												disabled={this.state.calling}
+												disabled={this.state.calling  || !ALTERAR_AUDITOR}
 												error={"loginVendedor" in this.state.errors}
 												helperText={this.state.errors?.loginVendedor ?? ""}
 												inputProps={{
@@ -2474,14 +2487,13 @@ class CreateEditVendaModule extends React.Component {
 
 								{this.state.tab == "PAGAMENTO" ? <React.Fragment>
 									<Grid item xs={12}>
-										<FormControl fullWidth required>
+										<FormControl fullWidth required error={"formaDePagamento" in this.state.errors}>
 											<InputLabel>Forma de Pagamento</InputLabel>
 											<Select
 												id="forma-de-pagamento"
 												value={this.state.formaDePagamento}
 												label="Forma de Pagamento"
 												onChange={(e) => this.setState({formaDePagamento: e.target.value})}
-												error={"formaDePagamento" in this.state.errors}
 												>
 												<MenuItem key={"nenhum"} value={null}>Nenhum</MenuItem>
 												{Object.keys(VendaFormaDePagamentoEnum).map((formaDePagamento) => <MenuItem key={formaDePagamento} value={formaDePagamento}>{VendaFormaDePagamentoEnum[formaDePagamento]}</MenuItem>)}
@@ -2511,7 +2523,7 @@ class CreateEditVendaModule extends React.Component {
 										/>
 									</Grid>
 									{this.state.formaDePagamento == "DEBITO_AUTOMATICO" ? <React.Fragment>
-										<Grid item xs={4}>
+										<Grid item xs={3}>
 											<TextField
 												id="agencia"
 												value={this.state.agencia}
@@ -2527,7 +2539,7 @@ class CreateEditVendaModule extends React.Component {
 												}}
 											/>
 										</Grid>
-										<Grid item xs={4}>
+										<Grid item xs={3}>
 											<TextField
 												id="conta"
 												value={this.state.conta}
@@ -2543,7 +2555,21 @@ class CreateEditVendaModule extends React.Component {
 												}}
 											/>
 										</Grid>
-										<Grid item xs={4}>
+										<Grid item xs={3}>
+											<FormControl fullWidth>
+												<InputLabel>Tipo de Conta</InputLabel>
+												<Select
+													id="tipoDeConta"
+													value={this.state.tipoDeConta}
+													label="Tipo de Conta"
+													onChange={(e) => this.setState({tipoDeConta: e.target.value})}
+													>
+													<MenuItem key={"nenhum"} value={null}>Nenhum</MenuItem>
+													{Object.keys(VendaTipoDeContaEnum).map((tipo) => <MenuItem key={tipo} value={tipo}>{VendaTipoDeContaEnum[tipo]}</MenuItem>)}
+												</Select>
+											</FormControl>
+										</Grid>
+										<Grid item xs={3}>
 											<Autocomplete
 												id="banco"
 												freeSolo
