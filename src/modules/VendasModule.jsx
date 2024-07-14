@@ -421,7 +421,7 @@ class VendasModule extends React.Component {
 			{ field: 'dataAtivacao', headerName: 'Data da Ativação', width: 200, type: 'date', renderCell: (params) => params.value !== null ? dayjs(params.value).format('L LTS') : "" },
 
 			{ field: 'vendaOriginal', headerName: 'Venda Original', width: 200 },
-			{ field: 'brscan', headerName: 'BrScan', width: 200 },
+			{ field: 'brscan', headerName: 'Biometria', width: 200 },
 			{ field: 'suporte', headerName: 'Suporte', width: 200 },
 			{ field: 'prints', headerName: 'Prints', width: 100 },
 
@@ -815,7 +815,7 @@ class VendasModule extends React.Component {
 			produtoList: venda.produtoList,
 			totalDeProdutos: venda.produtoList.length,
 			produto: venda.produtoList?.[0]?.nome ?? "",
-			valor: venda.produtoList?.[0] ? ("R$ " + (venda.produtoList?.[0].valor).toFixed(2)) : "",
+			valor: venda.produtoList?.[0] ? ("R$ " + (venda.produtoList?.[0].valor).toFixed(2).replace('.', ',')) : "",
 			quantidade: venda.produtoList?.[0]?.quantidade ?? "",
 			telefoneFixo: venda.produtoList?.[0] ? (venda.produtoList?.[0]?.telefoneFixo ? "Sim" : "Não") : "",
 			valorTelefoneFixo: venda.produtoList?.[0] ? (venda.produtoList?.[0]?.telefoneFixo ? ("R$ " + (venda.produtoList?.[0]?.valorTelefoneFixo ?? 0).toFixed(2)) : "") : "",
@@ -833,9 +833,9 @@ class VendasModule extends React.Component {
 			nome: venda.tipoPessoa == "CPF" ? venda.nome : venda.razaoSocial,
 			nomeContato: venda.nomeContato,
 
-			contato1: venda.contato1.replace(/(\d{2})(\d{1})(\d{4})(\d{4})/, "($1) $2 $3-$4"),
-			contato2: venda.contato2.replace(/(\d{2})(\d{1})(\d{4})(\d{4})/, "($1) $2 $3-$4"),
-			contato3: venda.contato3.replace(/(\d{2})(\d{1})(\d{4})(\d{4})/, "($1) $2 $3-$4"),
+			contato1: venda.contato1.length > 10 ? venda.contato1.replace(/(\d{2})(\d{1})(\d{4})(\d{4})/, "($1) $2 $3-$4") : venda.contato1.replace(/(\d{2})(\d{4})(\d{4})/, "($1) $2-$3"),
+			contato2: venda.contato2.length > 10 ? venda.contato2.replace(/(\d{2})(\d{1})(\d{4})(\d{4})/, "($1) $2 $3-$4") : venda.contato2.replace(/(\d{2})(\d{4})(\d{4})/, "($1) $2-$3"),
+			contato3: venda.contato3.length > 10 ? venda.contato3.replace(/(\d{2})(\d{1})(\d{4})(\d{4})/, "($1) $2 $3-$4") : venda.contato3.replace(/(\d{2})(\d{4})(\d{4})/, "($1) $2-$3"),
 			email: venda.email,
 			observacao: venda.observacao,
 
@@ -860,7 +860,7 @@ class VendasModule extends React.Component {
 		for (let i=1; i<=this.numeroFaturas; i++) {
 			row[`m${i}Mes`] = venda.faturaList?.[i - 1] ? new Date(venda.faturaList?.[i - 1].mes) : null;
 			row[`m${i}Status`] = venda.faturaList?.[i - 1] ? VendaFaturaStatusEnum[venda.faturaList?.[i - 1].status] : "";
-			row[`m${i}Valor`] = venda.faturaList?.[i - 1] ? ("R$ " + (venda.faturaList?.[i - 1].valor).toFixed(2)) : "";
+			row[`m${i}Valor`] = venda.faturaList?.[i - 1] ? ("R$ " + (venda.faturaList?.[i - 1].valor).toFixed(2).replace('.', ',')) : "";
 		}
 
 		return row;

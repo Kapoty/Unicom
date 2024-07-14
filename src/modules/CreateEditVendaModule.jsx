@@ -344,7 +344,7 @@ const ProdutoPaper = React.memo(({ produto, i, errors, calling, updateProduto, d
 			</Paper>
 });
 
-const FaturaPaper = React.memo(({fatura, i, errors, calling, updateFatura, deleteFatura}) => {
+const FaturaPaper = React.memo(({fatura, i, errors, calling, updateFatura, deleteFatura, ALTERAR_AUDITOR}) => {
 
 	const updateFaturaMes = useCallback((newValue) => updateFatura(i, "mes", newValue), [i]);
 	const updateFaturaStatus = useCallback((e) => updateFatura(i, "status", e.target.value), [i]);
@@ -370,10 +370,11 @@ const FaturaPaper = React.memo(({fatura, i, errors, calling, updateFatura, delet
 									helperText: errors?.[`faturaList[${i}].mes`] ?? ""
 								}
 							}}
+							disabled={calling || !ALTERAR_AUDITOR}
 						/>
 					</Grid>
 					<Grid item xs={4}>
-						<FormControl fullWidth required>
+						<FormControl fullWidth required disabled={calling || !ALTERAR_AUDITOR}>
 							<InputLabel>Status</InputLabel>
 							<Select
 								value={fatura.status}
@@ -391,12 +392,13 @@ const FaturaPaper = React.memo(({fatura, i, errors, calling, updateFatura, delet
 							onChange={updateFaturaValor}
 							label="Valor"
 							variant="outlined"
-							disabled={calling}
+							disabled={calling || !ALTERAR_AUDITOR}
 							error={`faturaList[${i}].valor` in errors}
 							helperText={errors?.[`faturaList[${i}].valor`] ?? ""}
 							sx={{flexGrow: 1}}
 						/>
 						<IconButton
+							disabled={calling || !ALTERAR_AUDITOR}
 							onClick={_deleteFatura}
 						>
 							<DeleteIcon/>
@@ -509,7 +511,7 @@ class CreateEditVendaModule extends React.Component {
 			pdv: "",
 			reimputado: "NAO",
 			vendaOriginal: true,
-			brscan: "NAO",
+			brscan: null,
 			suporte: "NAO",
 			loginVendedor: "",
 
@@ -1744,6 +1746,7 @@ class CreateEditVendaModule extends React.Component {
 												slotProps={{
 													field: { clearable: true },
 													textField: {
+														required: true,
 														fullWidth: true,
 														error: "dataEmissao" in this.state.errors,
 														helperText: this.state.errors?.dataEmissao ?? "",
@@ -1815,6 +1818,7 @@ class CreateEditVendaModule extends React.Component {
 											disabled={this.state.calling}
 											error={"contato1" in this.state.errors}
 											helperText={this.state.errors?.contato1 ?? ""}
+											fixoDinamico
 										/>
 									</Grid>
 									<Grid item xs={4}>
@@ -1829,6 +1833,7 @@ class CreateEditVendaModule extends React.Component {
 											disabled={this.state.calling}
 											error={"contato2" in this.state.errors}
 											helperText={this.state.errors?.contato2 ?? ""}
+											fixoDinamico
 										/>
 									</Grid>
 									<Grid item xs={4}>
@@ -1842,6 +1847,7 @@ class CreateEditVendaModule extends React.Component {
 											disabled={this.state.calling}
 											error={"contato3" in this.state.errors}
 											helperText={this.state.errors?.contato3 ?? ""}
+											fixoDinamico
 										/>
 									</Grid>
 									<Grid item xs={12}>
@@ -2275,12 +2281,13 @@ class CreateEditVendaModule extends React.Component {
 										</Grid>
 										<Grid item xs={3}>
 											<FormControl fullWidth disabled={this.state.calling  || !ALTERAR_AUDITOR}>
-												<InputLabel>BrScan</InputLabel>
+												<InputLabel>Biometria</InputLabel>
 												<Select
 													value={this.state.brscan}
-													label="BrScan"
+													label="Biometria"
 													onChange={this.updateBrscan}
 													>
+													<MenuItem key={"nenhum"} value={null}>Nenhum</MenuItem>
 													{Object.keys(VendaBrscanEnum).map((brscan) => <MenuItem key={brscan} value={brscan}>{VendaBrscanEnum[brscan]}</MenuItem>)}
 												</Select>
 											</FormControl>
@@ -2604,13 +2611,14 @@ class CreateEditVendaModule extends React.Component {
 														calling={this.state.calling}
 														updateFatura={this.updateFatura}
 														deleteFatura={this.deleteFatura}
+														ALTERAR_AUDITOR={ALTERAR_AUDITOR}
 													/>
 												)
 											}
 										</Box>
 									</Grid>
 									<Grid item xs={12} container display="flex" justifyContent="flex-end">
-										<Button variant="contained" size="large" startIcon={<AddIcon />} onClick={this.addFatura}>Adicionar Fatura</Button>
+										<Button variant="contained" size="large" startIcon={<AddIcon />} onClick={this.addFatura} disabled={this.state.calling || !ALTERAR_AUDITOR} >Adicionar Fatura</Button>
 									</Grid>
 								</React.Fragment> : ""}
 

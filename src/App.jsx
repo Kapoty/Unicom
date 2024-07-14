@@ -65,7 +65,7 @@ const SiteRouter = React.memo(({themePrimaryColor, updateThemePrimaryColor}) => 
 						main: grey[500],
 						dark: grey[700],
 						contrastText: "#111",
-					}
+					},
 			},
 			/*mixins: {
 				MuiDataGrid: {
