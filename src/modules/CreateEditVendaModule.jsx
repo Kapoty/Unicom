@@ -521,10 +521,12 @@ class CreateEditVendaModule extends React.Component {
 			vendedorId: null,
 			auditorId: null,
 			cadastradorId: null,
+			agenteBiometriaId: null,
 			vendedorExterno: "",
 			supervisorExterno: "",
 			auditorExterno: "",
 			cadastradorExterno: "",
+			agenteBiometriaExterno: "",
 
 			//pagamento
 			formaDePagamento: null,
@@ -760,10 +762,12 @@ class CreateEditVendaModule extends React.Component {
 					vendedorId: venda.vendedorId,
 					auditorId: venda.auditorId,
 					cadastradorId: venda.cadastradorId,
+					agenteBiometriaId: venda.agenteBiometriaId,
 					vendedorExterno: venda.vendedorExterno,
 					supervisorExterno: venda.supervisorExterno,
 					auditorExterno: venda.auditorExterno,
 					cadastradorExterno: venda.cadastradorExterno,
+					agenteBiometriaExterno: venda.agenteBiometriaExterno,
 
 					//pagamento
 					formaDePagamento: venda.formaDePagamento,
@@ -1338,10 +1342,12 @@ class CreateEditVendaModule extends React.Component {
 			vendedorId: this.state.vendedorId,
 			auditorId: this.state.auditorId,
 			cadastradorId: this.state.cadastradorId,
+			agenteBiometriaId: this.state.agenteBiometriaId,
 			vendedorExterno: this.state.vendedorExterno,
 			supervisorExterno: this.state.supervisorExterno,
 			auditorExterno: this.state.auditorExterno,
 			cadastradorExterno: this.state.cadastradorExterno,
+			agenteBiometriaExterno: this.state.agenteBiometriaExterno,
 
 			//pagamento
 			formaDePagamento: this.state.formaDePagamento,
@@ -2327,7 +2333,7 @@ class CreateEditVendaModule extends React.Component {
 									<Grid item xs={12}>
 										<Divider><Chip icon={<HubIcon />} label="Interno" /></Divider>
 									</Grid>
-										<Grid item xs={3}>
+										<Grid item xs={2.4}>
 											<Stack spacing={3} justifyContent="start" height="100%">
 												<Typography align="center">Vendedor</Typography>
 												<UsuarioDisplayChip usuario={this.state.usuarioByUsuarioId?.[this.state.vendedorId]} color={this.state.vendedorId ? "primary" : "default"}/>
@@ -2351,7 +2357,7 @@ class CreateEditVendaModule extends React.Component {
 												/> : ""}
 											</Stack>
 										</Grid>
-										<Grid item xs={3}>
+										<Grid item xs={2.4}>
 											<Stack spacing={3} justifyContent="start" height="100%">
 												<Typography align="center">Supervisor</Typography>
 												<UsuarioDisplayChip usuario={this.state.usuarioByUsuarioId?.[this.state.supervisorId]} color={this.state.supervisorId ? "primary" : "default"}/>
@@ -2375,7 +2381,7 @@ class CreateEditVendaModule extends React.Component {
 												/> : ""}
 											</Stack>
 										</Grid>
-										<Grid item xs={3}>
+										<Grid item xs={2.4}>
 											<Stack spacing={3} justifyContent="start" height="100%">
 												<Typography align="center">Auditor</Typography>
 												<UsuarioDisplayChip usuario={this.state.usuarioByUsuarioId?.[this.state.auditorId]} color={this.state.auditorId ? "primary" : "default"}/>
@@ -2399,7 +2405,7 @@ class CreateEditVendaModule extends React.Component {
 												/> : ""}
 											</Stack>
 										</Grid>
-										<Grid item xs={3}>
+										<Grid item xs={2.4}>
 											<Stack spacing={3} justifyContent="start" height="100%">
 												<Typography align="center">Cadastrador</Typography>
 												<UsuarioDisplayChip usuario={this.state.usuarioByUsuarioId?.[this.state.cadastradorId]} color={this.state.cadastradorId ? "primary" : "default"}/>
@@ -2423,10 +2429,34 @@ class CreateEditVendaModule extends React.Component {
 												/> : ""}
 											</Stack>
 										</Grid>
+										<Grid item xs={2.4}>
+											<Stack spacing={3} justifyContent="start" height="100%">
+												<Typography align="center">Agente Biometria</Typography>
+												<UsuarioDisplayChip usuario={this.state.usuarioByUsuarioId?.[this.state.agenteBiometriaId]} color={this.state.agenteBiometriaId ? "primary" : "default"}/>
+												{this.props.usuario.permissaoList.includes("ALTERAR_AUDITOR") ? <Autocomplete
+													id="agente-biometria"
+													options={Object.keys(this.state.usuarioByUsuarioId ?? {}).map(key => parseInt(key))}
+													getOptionLabel={(option) => this.state.usuarioByUsuarioId?.[option]?.nome}
+													renderOption={(props, option) => <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props} key={option}>
+																<UsuarioDisplayChip usuario={this.state.usuarioByUsuarioId?.[option]}/>
+															</Box>}
+													value={this.state.agenteBiometriaId}
+													onChange={(event, value) => this.setState({agenteBiometriaId: value})}
+													renderInput={(params) => (
+														<TextField
+														{...params}
+														variant="outlined"
+														label="Agente Biometria"
+														/>
+													)}
+													loading={this.state.usuarioList == null}
+												/> : ""}
+											</Stack>
+										</Grid>
 										<Grid item xs={12}>
 											<Divider><Chip icon={<PublicIcon />} label="Externo" /></Divider>
 										</Grid>
-										<Grid item xs={3}>
+										<Grid item xs={2.4}>
 											<TextField
 												id="vendedor-externo"
 												value={this.state.vendedorExterno}
@@ -2442,7 +2472,7 @@ class CreateEditVendaModule extends React.Component {
 												}}
 											/>
 										</Grid>
-										<Grid item xs={3}>
+										<Grid item xs={2.4}>
 											<TextField
 												id="supervisor-externo"
 												value={this.state.supervisorExterno}
@@ -2458,7 +2488,7 @@ class CreateEditVendaModule extends React.Component {
 												}}
 											/>
 										</Grid>
-										<Grid item xs={3}>
+										<Grid item xs={2.4}>
 											<TextField
 												id="auditor-externo"
 												value={this.state.auditorExterno}
@@ -2474,7 +2504,7 @@ class CreateEditVendaModule extends React.Component {
 												}}
 											/>
 										</Grid>
-										<Grid item xs={3}>
+										<Grid item xs={2.4}>
 											<TextField
 												id="cadastrador-externo"
 												value={this.state.cadastradorExterno}
@@ -2485,6 +2515,22 @@ class CreateEditVendaModule extends React.Component {
 												disabled={this.state.calling || !this.props.usuario.permissaoList.includes("ALTERAR_AUDITOR")}
 												error={"cadastradorExterno" in this.state.errors}
 												helperText={this.state.errors?.cadastradorExterno ?? ""}
+												inputProps={{
+													maxLength: 100,
+												}}
+											/>
+										</Grid>
+										<Grid item xs={2.4}>
+											<TextField
+												id="agente-biometria-externo"
+												value={this.state.agenteBiometriaExterno}
+												onChange={(e) => this.setState({agenteBiometriaExterno: e.target.value})}
+												fullWidth
+												label="Agente Biometria Externo"
+												variant="outlined"
+												disabled={this.state.calling || !this.props.usuario.permissaoList.includes("ALTERAR_AUDITOR")}
+												error={"agenteBiometriaExterno" in this.state.errors}
+												helperText={this.state.errors?.agenteBiometriaExterno ?? ""}
 												inputProps={{
 													maxLength: 100,
 												}}
