@@ -128,6 +128,7 @@ export default class RelatorioJornadaBox extends React.Component {
 			{ field: 'horaExtra', headerName: 'HORA EXTRA', minWidth: 100, flex: 1 },
 			{ field: 'observacao', headerName: 'OBSERVAÇÃO', minWidth: 300, flex: 1 },
 			{ field: 'correcao', headerName: 'CORREÇÃO', minWidth: 100, flex: 1, renderCell: (params) =>
+				params.value == "Não" ? <IconButton disabled={this.state.calling} onClick={() => {this.setState({rowSelected: this.state.report.dayList.filter((day) => day.data == params.row.data)[0]}, () => this.addCorrecao())}}><AddIcon /></IconButton> :
 				<Chip label={params.value} color={params.value == "Aprovada" ? "success" : params.value == "Em análise" ? "warning" : "info"} />,
 			},
 		];
@@ -696,7 +697,7 @@ export default class RelatorioJornadaBox extends React.Component {
 								FOLHA DE PONTO - PERÍODO: {this.meses[this.state.report.mes - 1].toUpperCase()}/{this.state.report.ano}
 							</Typography>*/}
 							<Typography variant="h5" align="left">
-								Colaborador
+								Empregado(a)
 							</Typography>
 							<form onSubmit={(e) => e.preventDefault()} disabled={true}>
 								<Grid container spacing={3}>
@@ -753,6 +754,7 @@ export default class RelatorioJornadaBox extends React.Component {
 									pagination
 									pageSizeOptions={[5, 10, 15, 20, 25, 30, 31]}
 									onRowSelectionModelChange={this.handleRowSelected}
+									rowSelectionModel={[this.state.rowSelected?.data]}
 								/>
 							</Box>
 							<Typography variant="h5" align="left">
@@ -928,7 +930,7 @@ export default class RelatorioJornadaBox extends React.Component {
 								</Accordion>
 								{this.state.rowSelected.registroJornadaCorrecao == null ? <LoadingButton variant="contained" size="large" startIcon={<AddIcon />} loadingPosition="start" loading={this.state.adicionando} disabled={this.state.calling} onClick={this.addCorrecao}>Adicionar Correção</LoadingButton> :
 									<Accordion defaultExpanded>
-										<AccordionSummary expandIcon={<ExpandMoreIcon />} >
+										<AccordionSummary expandIcon={<ExpandMoreIcon />}>
 											Correção
 										</AccordionSummary>
 										<AccordionDetails>
@@ -1184,7 +1186,7 @@ export default class RelatorioJornadaBox extends React.Component {
 							<table className="colaboradorInfo">
 								<thead>
 									<tr>
-										<th colspan={2}>Colaborador(a)</th>
+										<th colspan={2}>Empregado(a)</th>
 									</tr>
 								</thead>
 								<tbody>

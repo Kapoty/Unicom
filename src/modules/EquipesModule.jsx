@@ -105,13 +105,15 @@ class EquipesModule extends React.Component {
 		return (
 			<React.Fragment>
 				<Paper elevation={0} sx={{flexGrow: 1, padding: 2, minHeight: "100%", minWidth: "800px", boxSizing: "border-box", display: "flex", flexDirection: "column", aligmItems: "center", justifyContent: "start"}} className="modulePaper">
-					<Typography variant="h3" gutterBottom>
-					Equipes
-					</Typography>
-					<ButtonGroup sx={{marginBottom: 3}}>
-							<Button variant="contained" size="large" startIcon={<GroupAddIcon />} onClick={() => this.props.navigate("/equipes/novo")}>Nova Equipe</Button>
-					</ButtonGroup>
-					<Box sx={{ flexGrow: 1 }}>
+					<Stack direction="row" gap={3} alignItems="center">
+						<Typography variant="h3" gutterBottom>
+						Equipes
+						</Typography>
+						<ButtonGroup sx={{marginBottom: 3}}>
+								<Button variant="contained" size="large" startIcon={<GroupAddIcon />} onClick={() => this.props.navigate("/equipes/novo")}>Nova Equipe</Button>
+						</ButtonGroup>
+					</Stack>
+					<Box sx={{ flexGrow: 1, height: "1px", minHeight: "400px" }}>
 						<CustomDataGridPremium
 							rows={this.state.equipeRows}
 							columns={this.columns}
@@ -121,7 +123,7 @@ class EquipesModule extends React.Component {
 							  }}
 							pageSizeOptions={[10, 30, 50, 100]}
 							loading={this.state.equipeList == null || this.state.calling}
-							sx={{marginBottom: 3, height: 1000}}
+							sx={{marginBottom: 1}}
 							pagination
 							headerFilters
 							disableAggregation

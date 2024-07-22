@@ -170,7 +170,7 @@ class CreateEditUsuarioModule extends React.Component {
 					senha: "",
 					confirmaSenha: "",
 					dataNascimento: usuario.dataNascimento,
-					cpf: usuario.cpf !==null ? usuario.cpf : "",
+					cpf: usuario.cpf,
 					telefoneCelular: usuario.telefoneCelular !==null ? usuario.telefoneCelular : "",
 					whatsapp: usuario.whatsapp !==null ? usuario.whatsapp : "",
 					dataContratacao: usuario.dataContratacao,
@@ -327,7 +327,7 @@ class CreateEditUsuarioModule extends React.Component {
 			ativo: this.state.ativo,
 			papelId: this.state.papelId,
 			dataNascimento: this.state.dataNascimento,
-			cpf: this.state.cpf != "" ? this.state.cpf.replace(/\D/g, "") : null,
+			cpf: this.state.cpf.replace(/\D/g, ""),
 			telefoneCelular:  this.state.telefoneCelular != "" ? this.state.telefoneCelular.replace(/\D/g, "") : null,
 			whatsapp:  this.state.whatsapp != "" ? this.state.whatsapp.replace(/\D/g, "") : null,
 			dataContratacao: this.state.dataContratacao,
@@ -422,7 +422,7 @@ class CreateEditUsuarioModule extends React.Component {
 										<input type="file" accept="image/jpeg" id="foto-perfil" hidden onChange={this.handleUsuarioFotoChange}/>
 										</LoadingButton>
 										{this.state.usuario.fotoPerfil ? <LoadingButton variant="contained" sx={{width: "128px"}} startIcon={<DeleteIcon />} color="error" loadingPosition="start" loading={this.state.deletingFotoPerfil} onClick={this.deleteUsuarioFotoPerfil}>Remover</LoadingButton> : ""}
-									</React.Fragment> : <Avatar variant="square" sx={{ width: "128px", height: "128px"}} >{this.state.nome.charAt(0)}</Avatar>}
+									</React.Fragment> : <Avatar variant="square" sx={{ width: "128px", height: "128px"}} >{/*this.state.nome.charAt(0)*/}</Avatar>}
 								</Stack>
 							</Grid>
 							<Grid item xs={12}>
@@ -506,6 +506,7 @@ class CreateEditUsuarioModule extends React.Component {
 												onChange={(event, value) => this.setState({papelId: value})}
 												renderInput={(params) => (
 													<TextField
+													required={true}
 													error={"papelId" in this.state.errors}
 													helperText={this.state.errors?.papelId}
 														{...params}
@@ -538,6 +539,7 @@ class CreateEditUsuarioModule extends React.Component {
 										</Grid>
 										<Grid item xs={4}>
 											<CPFInput
+												required
 												id="cpf"
 												value={this.state.cpf}
 												onChange={(e) => this.setState({cpf: e.target.value})}
@@ -562,7 +564,7 @@ class CreateEditUsuarioModule extends React.Component {
 												value={this.state.telefoneCelular}
 												onChange={(e) => this.setState({telefoneCelular: e.target.value})}
 												fullWidth
-												label="Telefone Celular"
+												label="Telefone"
 												InputProps={{
 													startAdornment: (
 														<InputAdornment position="start">

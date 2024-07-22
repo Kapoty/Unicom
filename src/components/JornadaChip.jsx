@@ -538,7 +538,7 @@ export default class JornadaChip extends React.Component {
 								Atualizar
 							</LoadingButton>
 							{this.props.showFixButton && <Tooltip title="Fixar">
-								<IconButton onClick={() => window.open("jornada-unisystem://?token=" + getToken() + "&ponto-token=" + getPontoToken(), "_blank")}><PushPinIcon/></IconButton>
+								<IconButton onClick={() => window.location = "jornada-unisystem://?token=" + getToken() + "&ponto-token=" + getPontoToken()}><PushPinIcon/></IconButton>
 							</Tooltip>}
 						</Stack>
 						{this.state.error ?

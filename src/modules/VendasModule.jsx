@@ -3,7 +3,7 @@ import React, {memo} from "react";
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import CircularProgress from '@mui/material/CircularProgress';
-import { DataGridPremium, GridToolbar, GridToolbarContainer, GridToolbarExport, GridToolbarColumnsButton, GridToolbarDensitySelector, gridClasses, useGridApiRef } from '@mui/x-data-grid-premium';
+import { DataGridPremium, GridToolbar, GridToolbarContainer, GridToolbarExport, GridToolbarColumnsButton, GridToolbarDensitySelector, gridClasses, useGridApiRef, GridToolbarFilterButton } from '@mui/x-data-grid-premium';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import ButtonGroup from '@mui/material/ButtonGroup';
@@ -89,7 +89,7 @@ const VendaListDataGrid = memo(function VendaListDataGrid({ vendaRows, columns, 
 		pageSizeOptions={[10, 30, 50, 100, 1000]}
 		loading={calling}
 		sx={{
-			marginBottom: 3
+			marginBottom: 1
 		}}
 		pagination
 		headerFilters
@@ -281,6 +281,7 @@ const CustomToolbar = memo(function CustomToolbar({vendaVisaoList, apiRef, dataG
 	  	</Tooltip>
 			<GridToolbarVisao vendaVisaoList={vendaVisaoList} apiRef={apiRef} getVendaVisaoListFromApi={getVendaVisaoListFromApi} applyVendaVisao={applyVendaVisao}/>
 			<GridToolbarColumnsButton />
+			<GridToolbarFilterButton />
 			<GridToolbarDensitySelector/>
 			<GridToolbarExport />
 		</GridToolbarContainer>
@@ -903,16 +904,18 @@ class VendasModule extends React.Component {
 		console.log("VendasModule was rendered at", new Date().toLocaleTimeString());
 		return (
 			<React.Fragment>
-				<Paper elevation={0} sx={{flexGrow: 1, padding: 2, minHeight: "100%", minWidth: "800px", boxSizing: "border-box", display: "flex"/*this.props.location.pathname == `/vendas` ? "flex" : "none"*/, flexDirection: "column", aligmItems: "center", justifyContent: "start", gap: 3}} className="modulePaper">
-					<Box display={!this.state.dataGridMaximized ? "flex" : "none"} gap={3} flexDirection="column">
-						<Typography variant="h3">
-							Vendas
-						</Typography>
-						<ButtonGroup>
-								<Button variant="contained" size="large" startIcon={<AddCardIcon />} onClick={() => this.props.navigate("/vendas/novo")}>Nova Venda</Button>
-						</ButtonGroup>
+				<Paper elevation={0} sx={{flexGrow: 1, padding: 2, minHeight: "100%", minWidth: "800px", boxSizing: "border-box", display: "flex"/*this.props.location.pathname == `/vendas` ? "flex" : "none"*/, flexDirection: "column", aligmItems: "center", justifyContent: "start", gap: 1}} className="modulePaper">
+					<Box display={!this.state.dataGridMaximized ? "flex" : "none"} gap={1} flexDirection="column">
+						<Stack direction="row" gap={3} alignItems="center">
+							<Typography variant="h3">
+								Vendas
+							</Typography>
+							<ButtonGroup>
+									<Button variant="contained" size="large" startIcon={<AddCardIcon />} onClick={() => this.props.navigate("/vendas/novo")}>Nova Venda</Button>
+							</ButtonGroup>
+						</Stack>
 						<Divider/>
-						<Grid container spacing={3} sx={{maxWidth: 1500}}>
+						<Grid container spacing={1} sx={{maxWidth: 1500}}>
 							<Grid item xs={3}>
 								<FormControl fullWidth size="small">
 									<InputLabel>Tipo do Produto</InputLabel>

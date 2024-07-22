@@ -120,6 +120,7 @@ input {
 	float: left;
 	clear: left;
 	font-size: 7pt;
+	font-weight: bold;
 }
 
 .folhaPonto .dias, .folhaPonto .dias td, .folhaPonto .dias th, .folhaPonto .totais td {

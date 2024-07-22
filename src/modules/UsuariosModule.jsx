@@ -65,7 +65,7 @@ class UsuariosModule extends React.Component {
 			{ field: 'equipe', headerName: 'Equipe', valueGetter: (value, row) => value?.nome, minWidth: 200, flex: 1 },
 			{ field: 'contrato', headerName: 'Contrato', valueGetter: (value, row) => value?.nome, minWidth: 200, flex: 1 },
 			{ field: 'cpf', headerName: 'CPF', minWidth: 200, flex: 1 },
-			{ field: 'telefoneCelular', headerName: 'Telefone Celular', minWidth: 200, flex: 1 },
+			{ field: 'telefoneCelular', headerName: 'Telefone', minWidth: 200, flex: 1 },
 			{ field: 'whatsapp', headerName: 'Whatsapp', minWidth: 200, flex: 1 },
 			{ field: 'dataNascimento', headerName: 'Data de Nascimento', minWidth: 200, flex: 1, type: 'date', renderCell: (params) => params.value !== null ? dayjs(params.value).format('L') : "" },
 			{ field: 'dataContratacao', headerName: 'Data Contratação', minWidth: 200, flex: 1, type: 'date', renderCell: (params) => params.value !== null ? dayjs(params.value).format('L') : "" },
@@ -83,14 +83,14 @@ class UsuariosModule extends React.Component {
 				{params.row.ativo ?
 					<Tooltip title="Desativar">
 						<span>
-							<IconButton color="error" onClick={() => this.setUsuarioAtivo(params.row.usuarioId, !params.row.ativo)} disabled={params.row.usuarioId == this.props.usuario.usuarioId}>
-								<PersonOffIcon />
+							<IconButton color="success" onClick={() => this.setUsuarioAtivo(params.row.usuarioId, !params.row.ativo)} disabled={params.row.usuarioId == this.props.usuario.usuarioId}>
+								<PersonIcon />
 							</IconButton>
 						</span>
 					</Tooltip> :
 					<Tooltip title="Ativar" onClick={() => this.setUsuarioAtivo(params.row.usuarioId, !params.row.ativo)}>
-						<IconButton color="success">
-							<PersonIcon />
+						<IconButton color="error">
+							<PersonOffIcon />
 						</IconButton>
 					</Tooltip>
 				}
@@ -173,13 +173,15 @@ class UsuariosModule extends React.Component {
 		return (
 			<React.Fragment>
 				<Paper elevation={0} sx={{flexGrow: 1, padding: 2, minHeight: "100%", minWidth: "800px", boxSizing: "border-box", display: "flex", flexDirection: "column", aligmItems: "center", justifyContent: "start"}} className="modulePaper">
-					<Typography variant="h3" gutterBottom>
-					Usuários
-					</Typography>
-					<ButtonGroup sx={{marginBottom: 3}}>
-							<Button variant="contained" size="large" startIcon={<PersonAddIcon />} onClick={() => this.props.navigate("/usuarios/novo")}>Novo Usuário</Button>
-					</ButtonGroup>
-					<Box sx={{ flexGrow: 1 }}>
+					<Stack direction="row" gap={3} alignItems="center">
+						<Typography variant="h3" gutterBottom>
+						Usuários
+						</Typography>
+						<ButtonGroup sx={{marginBottom: 3}}>
+								<Button variant="contained" size="large" startIcon={<PersonAddIcon />} onClick={() => this.props.navigate("/usuarios/novo")}>Novo Usuário</Button>
+						</ButtonGroup>
+					</Stack>
+					<Box sx={{ flexGrow: 1, height: "1px", minHeight: "400px" }}>
 						<CustomDataGridPremium
 							rows={this.state.usuarioRows}
 							columns={this.columns}
@@ -201,7 +203,7 @@ class UsuariosModule extends React.Component {
 							pageSizeOptions={[10, 30, 50, 100]}
 							onRowSelectionModelChange={this.handleUsuarioSelected}
 							loading={this.state.usuarioList == null || this.state.calling}
-							sx={{marginBottom: 3, height: 1000}}
+							sx={{marginBottom: 3}}
 							pagination
 							headerFilters
 							disableAggregation

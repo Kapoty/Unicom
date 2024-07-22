@@ -110,7 +110,7 @@ class CustomAppBar extends React.Component {
 				        	<Icon color="primary">{this.props.fullscreen ? "fullscreen_exit" : "fullscreen"}</Icon>
 			      		</IconButton></span>
 			      	</Tooltip>
-			      	{this.props.usuario !==null && this.props.usuario.permissaoList.includes("REGISTRAR_JORNADA") ? <JornadaChip usuario={this.props.usuario} me /*showFixButton*//> : ""}
+			      	{this.props.usuario !==null && this.props.usuario.permissaoList.includes("REGISTRAR_JORNADA") ? <JornadaChip usuario={this.props.usuario} me showFixButton/> : ""}
 			     	<UsuarioDisplayChip
 			     		color="primary"
 			      		clickable

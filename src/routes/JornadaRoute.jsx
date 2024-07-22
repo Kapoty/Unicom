@@ -20,6 +20,7 @@ import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import ArrowLeftIcon from '@mui/icons-material/ArrowLeft';
 import ArrowRightIcon from '@mui/icons-material/ArrowRight';
 import Collapse from '@mui/material/Collapse';
+import Button from '@mui/material/Button';
 
 import { useNavigate, useLocation, useSearchParams, useParams } from "react-router-dom";
 
@@ -71,7 +72,7 @@ class JornadaRoute extends React.Component {
 			})
 			.catch((err) => {
 				console.error(err);
-				setTimeout(this.getUsuarioFromApi, 3000);
+				//setTimeout(this.getUsuarioFromApi, 3000);
 			});
 	}
 
@@ -145,6 +146,13 @@ class JornadaRoute extends React.Component {
 		}
 	}
 
+	onMouseOver() {
+		window?.electron?.setIgnoreMouseEvents?.(false);
+	}
+
+	onMouseOut() {
+		window?.electron?.setIgnoreMouseEvents?.(true, { forward: true });
+	}
 	render() {
 
 		return <Stack
@@ -152,50 +160,61 @@ class JornadaRoute extends React.Component {
 				justifyContent="end"
 			>
 			<Box
-				onMouseOver={() => window?.electron?.setIgnoreMouseEvents?.(false)}
-				onMouseOut={() => window?.electron?.setIgnoreMouseEvents?.(true, { forward: true })}
-				sx={{position: "relative", mr: "200px"}}
+				sx={{
+					position: "fixed",
+					width: "100vw",
+					height: "100vh",
+				}}
+				onMouseEnter={this.onMouseOut}
+			></Box>
+			<Box
+				onMouseOver={this.onMouseOver}
+				onMouseOut={this.onMouseOut}
+				sx={{
+					position: "relative",
+					mr: "10%"
+				}}
 			>
-				
-				{!this.state.isAuth ? <Box sx={{width: 200, backgroundColor: "rgba(0,0,0,0.5)"}}>
-					<Stack gap={2} alignItems="center">
-						<CircularProgress color="inherit"/>
-						<Typography textAlign="center">Aguardando identificação do usuário!</Typography>
-					</Stack>
-				</Box> :
 				<Paper
 					sx={{padding: 0}}
 				>
-					<Stack
-						gap={1}
-						direction="row"
-						alignItems="center"
-					>
-						{/*this.state.n*/}
+					<Stack sx={{gap: this.state.open ? "1px" : 0}}>
+						<Stack
+							gap={this.state.open ? 1 : 0}
+							direction="row"
+							alignItems="center"
+						>
+							{/*this.state.n*/}
+							{/*<Tooltip title={this.state.open ? "Ocultar" : "Exibir"}>
+								<IconButton size="small" onClick={this.handleOpen}>
+									{this.state.open ? <ArrowRightIcon onClick={this.handleOpen}/> : <ArrowLeftIcon onClick={this.handleOpen} sx={{ fontSize: 10 }}/>}
+								</IconButton>
+							</Tooltip>*/}
+							<Collapse in={this.state.open} orientation="vertical">
+								<Stack
+									gap={1}
+									direction="row"
+									alignItems="center"
+								>
+									{!this.state.isAuth ? <CircularProgress color="inherit" size={24}/>:
+									<JornadaChip usuario={this.state.usuario} me/>}
+									<Tooltip title="Fechar">
+										<IconButton size="small" onClick={() => window?.electron?.quit?.()}>
+											<CloseIcon/>
+										</IconButton>
+									</Tooltip>
+									{/*<DragIndicatorIcon
+										sx={{"-webkit-app-region": "drag"}}
+									/>*/}
+								</Stack>
+							</Collapse>
+						</Stack>
 						<Tooltip title={this.state.open ? "Ocultar" : "Exibir"}>
-							<IconButton size="small" onClick={this.handleOpen}>
-								{this.state.open ? <ArrowRightIcon onClick={this.handleOpen}/> : <ArrowLeftIcon onClick={this.handleOpen}/>}
-							</IconButton>
+							<Button color="primary" disableElevation variant="contained" sx={{height: "4px", borderRadius: '0', padding: "0px", margin: "0px"}} onClick={this.handleOpen}>
+							</Button>	
 						</Tooltip>
-						<Collapse in={this.state.open} orientation="horizontal">
-							<Stack
-								gap={1}
-								direction="row"
-								alignItems="center"
-							>
-								<JornadaChip usuario={this.state.usuario} me/>
-								<Tooltip title="Fechar">
-									<IconButton size="small" onClick={() => window?.electron?.quit?.()}>
-										<CloseIcon/>
-									</IconButton>
-								</Tooltip>
-								{/*<DragIndicatorIcon
-									sx={{"-webkit-app-region": "drag"}}
-								/>*/}
-							</Stack>
-						</Collapse>
 					</Stack>
-				</Paper>}
+				</Paper>
 			</Box>
 		</Stack>
 	}
