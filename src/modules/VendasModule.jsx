@@ -865,7 +865,7 @@ class VendasModule extends React.Component {
 		};
 
 		for (let i=1; i<=this.numeroFaturas; i++) {
-			row[`m${i}Mes`] = venda.faturaList?.[i - 1] ? new Date(venda.faturaList?.[i - 1].mes) : null;
+			row[`m${i}Mes`] = venda.faturaList?.[i - 1] ? new Date(venda.faturaList?.[i - 1].mes + "T00:00:00") : null;
 			row[`m${i}Status`] = venda.faturaList?.[i - 1] ? VendaFaturaStatusEnum[venda.faturaList?.[i - 1].status] : "";
 			row[`m${i}Valor`] = venda.faturaList?.[i - 1] ? ("R$ " + (venda.faturaList?.[i - 1].valor).toFixed(2).replace('.', ',')) : "";
 		}

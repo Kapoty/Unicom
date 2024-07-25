@@ -44,6 +44,7 @@ import MenuItem from '@mui/material/MenuItem';
 import CircularProgress from '@mui/material/CircularProgress';
 import Chip from '@mui/material/Chip';
 import ListItemIcon from '@mui/material/ListItemIcon';
+import Badge from '@mui/material/Badge';
 
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
@@ -62,8 +63,26 @@ export default class RelatorioJornadaButton extends React.Component {
 		super(props);
 		this.state = {
 			dialogOpen: false,
+			numeroCorrecoesNaoAprovadas: 0,
 		}
 
+		this.getNumeroCorrecoesNaoAprovadas = this.getNumeroCorrecoesNaoAprovadas.bind(this);
+
+	}
+
+	componentDidMount() {
+		this.getNumeroCorrecoesNaoAprovadas();
+	}
+
+	getNumeroCorrecoesNaoAprovadas() {
+		api.get("/registro-jornada/" + this.props.usuarioId + "/numero-correcoes-nao-aprovadas")
+			.then((response) => {
+				this.setState({numeroCorrecoesNaoAprovadas: response.data});
+			})
+			.catch((err) => {
+				if (err?.response?.status != 400)
+					setTimeout(this.getNumeroCorrecoesNaoAprovadas, 3000);
+			});
 	}
 
 	render() {
@@ -73,16 +92,22 @@ export default class RelatorioJornadaButton extends React.Component {
 				{this.props.me ?
 				<MenuItem onClick={() => this.setState({dialogOpen: true})}>
 					<ListItemIcon>
-						<EventNoteIcon fontSize="small"/>
+						<Badge color="warning" badgeContent={this.state.numeroCorrecoesNaoAprovadas}>
+							<EventNoteIcon fontSize="small"/>
+						</Badge>
 					</ListItemIcon>
-					Folha de Ponto
+						Folha de Ponto
 		        </MenuItem> : !this.props.iconButton ?
-				<Button variant="contained" startIcon={<EventNoteIcon />} onClick={() => this.setState({dialogOpen: true})} fullWidth>
-					Folha de Ponto
-				</Button> :
+				<Badge color="warning" badgeContent={this.state.numeroCorrecoesNaoAprovadas} sx={{width: 1}}>
+					<Button variant="contained" startIcon={<EventNoteIcon />} onClick={() => this.setState({dialogOpen: true})} fullWidth>
+						Folha de Ponto
+					</Button>
+				</Badge>	:
 				<Tooltip title="Folha de Ponto" onClick={() => this.setState({dialogOpen: true})}>
 					<IconButton color="success">
-						<EventNoteIcon />
+						<Badge color="warning" badgeContent={this.state.numeroCorrecoesNaoAprovadas}>
+							<EventNoteIcon />
+						</Badge>
 					</IconButton>
 				</Tooltip>
 				}

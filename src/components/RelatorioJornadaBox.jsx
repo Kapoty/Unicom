@@ -44,6 +44,7 @@ import MenuItem from '@mui/material/MenuItem';
 import CircularProgress from '@mui/material/CircularProgress';
 import Chip from '@mui/material/Chip';
 import ListItemIcon from '@mui/material/ListItemIcon';
+import Badge from '@mui/material/Badge';
 
 import CPFInput from "./CPFInput";
 import CustomDataGridPremium from "./CustomDataGridPremium";
@@ -124,8 +125,18 @@ export default class RelatorioJornadaBox extends React.Component {
 			{ field: 'entrada', headerName: 'ENTRADA', minWidth: 100, flex: 1 },
 			{ field: 'horasTrabalhadas', headerName: 'HORAS TRABALHADAS', minWidth: 200, flex: 1 },
 			{ field: 'horasNaoTrabalhadas', headerName: 'INTERVALOS', minWidth: 200, flex: 1 },
-			{ field: 'saida', headerName: 'SAIDA', minWidth: 100, flex: 1 },
-			{ field: 'horaExtra', headerName: 'HORA EXTRA', minWidth: 100, flex: 1 },
+			{ field: 'saida', headerName: 'SAIDA', minWidth: 100, flex: 1, renderCell: (params) =>
+				<Badge color="warning" variant="dot" invisible={params.value != "23:55" || params.row.correcao == "Aprovada"}>
+					<Box sx={{alignItems: "center", display: "flex", height: "30px"}}>
+						{params.value}
+					</Box>
+				</Badge> },
+			{ field: 'horaExtra', headerName: 'HORA EXTRA', minWidth: 100, flex: 1, renderCell: (params) =>
+				<Badge color="warning" variant="dot" invisible={params.value >= 0 || params.row.correcao == "Aprovada"}>
+					<Box sx={{alignItems: "center", display: "flex", height: "30px"}}>
+						{params.value !=0 && dayjs.duration(params.value, 'seconds').format('HH[h]mm[m]')}
+					</Box>
+				</Badge> },
 			{ field: 'observacao', headerName: 'OBSERVAÇÃO', minWidth: 300, flex: 1 },
 			{ field: 'correcao', headerName: 'CORREÇÃO', minWidth: 100, flex: 1, renderCell: (params) =>
 				params.value == "Não" ? <IconButton disabled={this.state.calling} onClick={() => {this.setState({rowSelected: this.state.report.dayList.filter((day) => day.data == params.row.data)[0]}, () => this.addCorrecao())}}><AddIcon /></IconButton> :
@@ -180,9 +191,7 @@ export default class RelatorioJornadaBox extends React.Component {
 		this.observacaoByValue = {};
 		this.observacaoList.forEach((observacao) => this.observacaoByValue[observacao.value] = observacao);
 
-		this.usuarioId = this.props.usuario.usuarioId;
-		if (!props.me)
-			this.usuarioId = this.props.usuarioId;
+		this.usuarioId = this.props.usuarioId;
 
 		this.getReportFromApi = this.getReportFromApi.bind(this);
 		this.saveCorrecao = this.saveCorrecao.bind(this);
@@ -274,7 +283,7 @@ export default class RelatorioJornadaBox extends React.Component {
 				horasTrabalhadas: "",
 				horasNaoTrabalhadas: "",
 				saida: "",
-				horaExtra: "",
+				horaExtra: 0,
 				observacao: "",
 				correcao: "Não"
 			};
@@ -315,8 +324,7 @@ export default class RelatorioJornadaBox extends React.Component {
 							else
 								horaExtraFinal = Math.min(0, horaExtra);
 
-							if (horaExtraFinal != 0)
-								dayRow.horaExtra = dayjs.duration(horaExtraFinal, 'seconds').format('HH[h]mm[m]');
+								dayRow.horaExtra = horaExtraFinal;
 
 						}
 
@@ -390,8 +398,7 @@ export default class RelatorioJornadaBox extends React.Component {
 				else
 					horaExtraFinal = Math.min(0, horaExtra);
 
-				if (horaExtraFinal != 0)
-					dayRow.horaExtra = dayjs.duration(horaExtraFinal, 'seconds').format('HH[h]mm[m]');
+					dayRow.horaExtra = horaExtraFinal;
 			}
 
 			totalHoraExtra += horaExtraFinal;
@@ -468,7 +475,10 @@ export default class RelatorioJornadaBox extends React.Component {
 	}
 
 	calculateHoraExtra(horasTrabalhadas, horasATrabalhar) {
-		return horasTrabalhadas - horasATrabalhar;
+		let horaExtra =  horasTrabalhadas - horasATrabalhar;
+		if (Math.abs(horaExtra) <= 600)
+			horaExtra = 0;
+		return horaExtra;
 	}
 
 	calculateIntervaloEntradaSaida(saida, entrada) {
@@ -754,7 +764,7 @@ export default class RelatorioJornadaBox extends React.Component {
 									pagination
 									pageSizeOptions={[5, 10, 15, 20, 25, 30, 31]}
 									onRowSelectionModelChange={this.handleRowSelected}
-									rowSelectionModel={[this.state.rowSelected?.data]}
+									rowSelectionModel={[this.state.rowSelected?.data ?? -1]}
 								/>
 							</Box>
 							<Typography variant="h5" align="left">
@@ -897,7 +907,7 @@ export default class RelatorioJornadaBox extends React.Component {
 														</Grid>
 														<Grid item xs={6}>
 															<TextField
-																value={dayjs.duration(this.state.rowSelected.horasTrabalhadas - this.state.rowSelected.horasATrabalhar, 'seconds').format("HH[h]mm[m]")}
+																value={dayjs.duration(this.calculateHoraExtra(this.state.rowSelected.horasTrabalhadas,this.state.rowSelected.horasATrabalhar), 'seconds').format("HH[h]mm[m]")}
 																fullWidth
 																label="Hora Extra"
 																variant="outlined"
@@ -1186,7 +1196,7 @@ export default class RelatorioJornadaBox extends React.Component {
 							<table className="colaboradorInfo">
 								<thead>
 									<tr>
-										<th colspan={2}>Empregado(a)</th>
+										<th colSpan={2}>Empregado(a)</th>
 									</tr>
 								</thead>
 								<tbody>
@@ -1241,7 +1251,7 @@ export default class RelatorioJornadaBox extends React.Component {
 							<table className="colaboradorInfo">
 								<thead>
 									<tr>
-										<th colspan={5}>Totais</th>
+										<th colSpan={5}>Totais</th>
 									</tr>
 								</thead>
 								<tbody>

@@ -30,6 +30,10 @@ import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
 import NotificationsOffIcon from '@mui/icons-material/NotificationsOff';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 import ApartmentIcon from '@mui/icons-material/Apartment';
+import Snackbar from '@mui/material/Snackbar';
+import Alert from '@mui/material/Alert';
+import Collapse from '@mui/material/Collapse';
+import Stack from '@mui/material/Stack';
 
 import JornadaChip from './JornadaChip';
 import RelatorioJornadaButton from './RelatorioJornadaButton';
@@ -47,13 +51,61 @@ class CustomAppBar extends React.Component {
 		super(props);
 		this.state = {
 			usuarioMenuOpen: false,
+			diaFechamentoFolha: null,
+			diasAteFechamentoFolha: null,
+			alertFechamentoFolhaOpen: false,
 		};
+
+		this.getDiaFechamentoFolha = this.getDiaFechamentoFolha.bind(this);
+
+		this.checkAlertFechamentoFolha = this.checkAlertFechamentoFolha.bind(this);
+		this.openAlertFechamentoFolha = this.openAlertFechamentoFolha.bind(this);
+		this.closeAlertFechamentoFolha = this.closeAlertFechamentoFolha.bind(this);
 
 		this.usuarioMenuRef = React.createRef();
 
 	}
 
 	componentDidMount() {
+		this.getDiaFechamentoFolha();
+	}
+
+	getDiaFechamentoFolha() {
+		api.get("/registro-jornada/me/dia-fechamento-folha")
+			.then((response) => {
+				this.setState({diaFechamentoFolha: response.data}, () => this.checkAlertFechamentoFolha());
+			})
+			.catch((err) => {
+				if (err?.response?.status != 400)
+					setTimeout(this.getDiaFechamentoFolha, 3000);
+			});
+	}
+
+	checkAlertFechamentoFolha() {
+		let hoje = new Date();
+		let diaFechamentoFolha = this.state.diaFechamentoFolha;
+		let dataFechamentoFolha;
+		let diasAteFechamentoFolha;
+
+		if (hoje.getDate() <= diaFechamentoFolha)
+			dataFechamentoFolha = new Date(hoje.getFullYear(), hoje.getMonth(), Math.min(diaFechamentoFolha, new Date(hoje.getFullYear(), hoje.getMonth()+1, 0).getDate()));
+		else
+			dataFechamentoFolha = new Date(hoje.getFullYear(), hoje.getMonth() + 1, Math.min(diaFechamentoFolha, new Date(hoje.getFullYear(), hoje.getMonth()+2, 0).getDate()));
+
+		diasAteFechamentoFolha =  Math.ceil((dataFechamentoFolha - hoje) / 86400000);
+
+		if (diasAteFechamentoFolha <= 5)
+			setTimeout(this.openAlertFechamentoFolha, 3000);
+
+		this.setState({diasAteFechamentoFolha: diasAteFechamentoFolha});
+	}
+
+	openAlertFechamentoFolha() {
+		this.setState({alertFechamentoFolhaOpen: true});
+	}
+
+	closeAlertFechamentoFolha() {
+		this.setState({alertFechamentoFolhaOpen: false});
 	}
 
 	render() {
@@ -110,14 +162,22 @@ class CustomAppBar extends React.Component {
 				        	<Icon color="primary">{this.props.fullscreen ? "fullscreen_exit" : "fullscreen"}</Icon>
 			      		</IconButton></span>
 			      	</Tooltip>
+
 			      	{this.props.usuario !==null && this.props.usuario.permissaoList.includes("REGISTRAR_JORNADA") ? <JornadaChip usuario={this.props.usuario} me showFixButton/> : ""}
-			     	<UsuarioDisplayChip
-			     		color="primary"
-			      		clickable
-			      		usuario={this.props.usuario}
-			      		forwardedRef={this.usuarioMenuRef}
-			      		onClick={() => this.setState({usuarioMenuOpen: !this.props.usuarioMenuOpen})}
-			      	/>
+
+			      	<Stack direction="row" spacing={1} justifyContent="center" alignItems="center">
+			      		<Collapse in={this.state.alertFechamentoFolhaOpen} orientation="horizontal">
+				      		<Alert severity="warning" onClose={this.closeAlertFechamentoFolha}><Box sx={{textWrap: "nowrap"}}>Restam {this.state.diasAteFechamentoFolha} dias para fechamento da folha. Verifique sua folha!</Box></Alert>
+				      	</Collapse>
+				      	<UsuarioDisplayChip
+							color="primary"
+							clickable
+							usuario={this.props.usuario}
+							forwardedRef={this.usuarioMenuRef}
+							onClick={() => this.setState({usuarioMenuOpen: !this.props.usuarioMenuOpen})}
+						/>
+			      	</Stack>
+
 		      		<Menu
 				        anchorEl={this.usuarioMenuRef.current}
 				        open={this.state.usuarioMenuOpen}
@@ -205,7 +265,7 @@ class CustomAppBar extends React.Component {
 							</ListItemIcon>
 							Testar notificação
 				        </MenuItem>
-				        {this.props.usuario !==null && this.props.usuario.permissaoList.includes("REGISTRAR_JORNADA") ? <RelatorioJornadaButton usuario={this.props.usuario} me={true}/> : ""}
+				        {this.props.usuario !==null && this.props.usuario.permissaoList.includes("REGISTRAR_JORNADA") ? <RelatorioJornadaButton usuario={this.props.usuario} usuarioId={this.props.usuario.usuarioId} me={true}/> : ""}
 				        <Divider/>
 				        <MenuItem onClick={this.props.logout}>
 							<ListItemIcon>
@@ -217,7 +277,7 @@ class CustomAppBar extends React.Component {
 		        </Toolbar>
 		        <Divider/>
 	     	</AppBar>
-		  );
+	     );
 	}
 
 }
