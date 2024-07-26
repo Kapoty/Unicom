@@ -117,6 +117,11 @@ export default class RelatorioJornadaButton extends React.Component {
 	        			maxWidth={"xl"}
 						onClose={() => this.setState({dialogOpen: false})}
 						open={this.state.dialogOpen}
+						sx={{
+							"& .MuiDialog-paper": {
+								height: "100%"
+							}
+						}}
 					>
 	      				<DialogTitle>Folha de Ponto</DialogTitle>
 	      				<IconButton

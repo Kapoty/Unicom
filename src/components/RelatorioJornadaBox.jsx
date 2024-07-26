@@ -45,6 +45,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import Chip from '@mui/material/Chip';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import Badge from '@mui/material/Badge';
+import InfoIcon from '@mui/icons-material/Info';
 
 import CPFInput from "./CPFInput";
 import CustomDataGridPremium from "./CustomDataGridPremium";
@@ -115,6 +116,9 @@ export default class RelatorioJornadaBox extends React.Component {
 			alertOpen: false,
 			alert: null,
 
+			correcaoDialogOpen: false,
+			informacoesDialogOpen: false,
+
 			
 		}
 
@@ -138,9 +142,11 @@ export default class RelatorioJornadaBox extends React.Component {
 					</Box>
 				</Badge> },
 			{ field: 'observacao', headerName: 'OBSERVAÇÃO', minWidth: 300, flex: 1 },
-			{ field: 'correcao', headerName: 'CORREÇÃO', minWidth: 100, flex: 1, renderCell: (params) =>
-				params.value == "Não" ? <IconButton disabled={this.state.calling} onClick={() => {this.setState({rowSelected: this.state.report.dayList.filter((day) => day.data == params.row.data)[0]}, () => this.addCorrecao())}}><AddIcon /></IconButton> :
-				<Chip label={params.value} color={params.value == "Aprovada" ? "success" : params.value == "Em análise" ? "warning" : "info"} />,
+			{ field: 'correcao', headerName: 'CORREÇÃO', minWidth: 120, renderCell: (params) =>
+				params.value == "Não" ? <IconButton disabled={this.state.calling} onClick={() => {this.setState({rowSelected: params.row.day}, () => this.addCorrecao())}}><AddIcon /></IconButton> :
+				<Chip onClick={() => this.setState({rowSelected: params.row.day, correcaoDialogOpen: true})} label={params.value} color={params.value == "Aprovada" ? "success" : params.value == "Em análise" ? "warning" : "info"} />,
+			},
+			{ field: 'info', headerName: 'INFO', renderCell: (params) => <IconButton onClick={() => this.setState({rowSelected: params.row.day, informacoesDialogOpen: true})}><InfoIcon/></IconButton>,
 			},
 		];
 
@@ -203,7 +209,6 @@ export default class RelatorioJornadaBox extends React.Component {
 		this.calculateRows = this.calculateRows.bind(this);
 		this.setCorrecaoFieldsFromRowSelected = this.setCorrecaoFieldsFromRowSelected.bind(this);
 		this.calculateCorrecaoDerivedFields = this.calculateCorrecaoDerivedFields.bind(this);
-		this.openDialog = this.openDialog.bind(this);
 
 		this.folhaPontoRef = React.createRef();
 
@@ -278,6 +283,7 @@ export default class RelatorioJornadaBox extends React.Component {
 		this.state.report.dayList.forEach((day) => {
 			let dayRow = {
 				id: day.data,
+				day: day,
 				data: dayjs(day.data),
 				entrada: "",
 				horasTrabalhadas: "",
@@ -570,7 +576,7 @@ export default class RelatorioJornadaBox extends React.Component {
 			.then((response) => {
 				this.openCorrecaoAlert("success", `Correção adicionada com sucesso!`);
 				this.getCorrecaoFromApi();
-				this.setState({calling: false, adicionando: false, errors: {}});
+				this.setState({calling: false, adicionando: false, errors: {}, correcaoDialogOpen: true});
 			})
 			.catch((err) => {
 				let errors = err?.response?.data?.errors;
@@ -665,18 +671,10 @@ export default class RelatorioJornadaBox extends React.Component {
 		this.setState({correcaoAlertOpen: false});
 	}
 
-	openDialog() {
-		this.setState({
-			dialogOpen: true,
-			report: null,
-			rowSelected: null,
-		});
-	}
-
 	render() {
 	
 		return (
-			<Box sx={{display: "flex", flexDirection: "column", justifyContent: "center", gap: 3}}>
+			<Box sx={{display: "flex", flexDirection: "column", justifyContent: "start", gap: 3, height: "100%"}}>
 				<Stack direction="row" gap={3} justifyContent="center" alignItems="center">
 					<DatePicker
 						label="Período"
@@ -749,7 +747,7 @@ export default class RelatorioJornadaBox extends React.Component {
 									</Grid>
 								</Grid>
 							</form>
-							<Box>
+							<Box sx={{ flexGrow: 1, height: "1px", minHeight: "400px" }}>
 								<CustomDataGridPremium
 									rows={this.state.dayRows}
 									columns={this.columns}
@@ -760,11 +758,11 @@ export default class RelatorioJornadaBox extends React.Component {
 									initialState={{
 									    pagination: { paginationModel: { pageSize: 31 } },
 									  }}
-									sx={{height: 800}}
 									pagination
 									pageSizeOptions={[5, 10, 15, 20, 25, 30, 31]}
-									onRowSelectionModelChange={this.handleRowSelected}
-									rowSelectionModel={[this.state.rowSelected?.data ?? -1]}
+									/*onRowSelectionModelChange={this.handleRowSelected}
+									rowSelectionModel={[this.state.rowSelected?.data ?? -1]}*/
+									disableRowSelectionOnClick
 								/>
 							</Box>
 							<Typography variant="h5" align="left">
@@ -828,15 +826,28 @@ export default class RelatorioJornadaBox extends React.Component {
 									</Grid>
 								</Grid>
 							</form>
-							{this.state.rowSelected == null ? <Alert severity="warning">Selecione um dia</Alert> :
-							<React.Fragment>
-								<Typography variant="h4" align="center">{dayjs(this.state.rowSelected.data, "YYYY-MM-DD").format("DD/MM/YYYY")}</Typography>
-								<Accordion defaultExpanded>
-									<AccordionSummary expandIcon={<ExpandMoreIcon />} >
-										Informações
-									</AccordionSummary>
-									<AccordionDetails>
-										<Box sx={{display: "flex", flexDirection: "column", gap: 3}}>
+							{this.state.informacoesDialogOpen && 
+								<Dialog
+									fullWidth={true}
+				        			maxWidth={"lg"}
+									onClose={() => this.setState({informacoesDialogOpen: false})}
+									open={this.state.informacoesDialogOpen}
+								>
+				      				<DialogTitle>Informações - {dayjs(this.state.rowSelected.data, "YYYY-MM-DD").format("DD/MM/YYYY")}</DialogTitle>
+				      				<IconButton
+										onClick={() => this.setState({informacoesDialogOpen: false})}
+										sx={{
+											position: 'absolute',
+												right: 8,
+											top: 8,
+											color: (theme) => theme.palette.grey[500],
+										}}
+									>
+									<CloseIcon />
+									</IconButton>
+				      				<DialogContent dividers>
+				      					
+				      					<Box sx={{display: "flex", flexDirection: "column", gap: 3}}>
 											{this.state.rowSelected.registroJornada == null ? <Alert severity="warning">Sem Registro</Alert> :
 												<Paper elevation={2} sx={{padding: 3, gap: 3, display: "flex", flexDirection: "column"}}>
 													<Stack gap={3} direction="row" justifyContent="center">
@@ -936,256 +947,273 @@ export default class RelatorioJornadaBox extends React.Component {
 												</Paper>
 											}
 										</Box>
-									</AccordionDetails>
-								</Accordion>
-								{this.state.rowSelected.registroJornadaCorrecao == null ? <LoadingButton variant="contained" size="large" startIcon={<AddIcon />} loadingPosition="start" loading={this.state.adicionando} disabled={this.state.calling} onClick={this.addCorrecao}>Adicionar Correção</LoadingButton> :
-									<Accordion defaultExpanded>
-										<AccordionSummary expandIcon={<ExpandMoreIcon />}>
-											Correção
-										</AccordionSummary>
-										<AccordionDetails>
-											<Box sx={{display: "flex", flexDirection: "column", gap: 3}}>
+
+									</DialogContent>
+								</Dialog>}
+								{this.state.correcaoDialogOpen && 
+									<Dialog
+										fullWidth={true}
+					        			maxWidth={"lg"}
+										onClose={() => this.setState({correcaoDialogOpen: false})}
+										open={this.state.correcaoDialogOpen}
+									>
+					      				<DialogTitle>Correção - {dayjs(this.state.rowSelected.data, "YYYY-MM-DD").format("DD/MM/YYYY")}</DialogTitle>
+					      				<IconButton
+											onClick={() => this.setState({correcaoDialogOpen: false})}
+											sx={{
+												position: 'absolute',
+													right: 8,
+												top: 8,
+												color: (theme) => theme.palette.grey[500],
+											}}
+										>
+											<CloseIcon />
+										</IconButton>
+					      				<DialogContent dividers>
+					      					<Box sx={{display: "flex", flexDirection: "column", gap: 3}}>
 												<Grid container spacing={3}>
-													<Grid item xs={12}>
-														<ButtonGroup sx={{marginBottom: 3}}>
-															<LoadingButton variant="contained" color="error" size="large" startIcon={<DeleteIcon />} loadingPosition="start" loading={this.state.deletando} disabled={(this.state.aprovada && this.props.me) || this.state.calling} onClick={this.deleteCorrecao}>Deletar</LoadingButton>
-															<LoadingButton variant="contained" size="large" startIcon={<SaveIcon />} loadingPosition="start" loading={this.state.saving} disabled={(this.state.aprovada && this.props.me) || this.state.calling} onClick={this.saveCorrecao}>Salvar</LoadingButton>
-														</ButtonGroup>
-													</Grid>
-													<Grid item xs={3}>
-														<TimePicker
-															id="jornada-entrada"
-															value={this.state.jornadaEntrada}
-															onChange={(newValue) => {this.setState({jornadaEntrada: newValue}, () => this.calculateCorrecaoDerivedFields())}}
-															label="Jornada - Entrada"
-															slotProps={{
-																field: { clearable: true },
-																textField: {
-																	fullWidth: true,
-																	error: "jornadaEntrada" in this.state.errors || "jornadaOrder" in this.state.errors,
-																	helperText: "jornadaEntrada" in this.state.errors ? this.state.errors["jornadaEntrada"] : "jornadaOrder" in this.state.errors ? this.state.errors["jornadaOrder"] : ""
-																},
-															}}
-															variant="outlined"
-															disabled={(this.state.aprovada && this.props.me) || this.state.calling}
-														/>
-													</Grid>
-													<Grid item xs={3}>
-														<TimePicker
-															id="jornada-intervalo-inicio"
-															value={this.state.jornadaIntervaloInicio}
-															onChange={(newValue) => {this.setState({jornadaIntervaloInicio: newValue}, () => this.calculateCorrecaoDerivedFields())}}
-															label="Jornada - Início do Intervalo"
-															slotProps={{
-																field: { clearable: true },
-																textField: {
-																	fullWidth: true,
-																	error: "jornadaIntervaloInicio" in this.state.errors,
-																	helperText: "jornadaIntervaloInicio" in this.state.errors ? this.state.errors["jornadaIntervaloInicio"] : ""
-																},
-															}}
-															variant="outlined"
-															disabled={(this.state.aprovada && this.props.me) || this.state.calling}
-														/>
-													</Grid>
-													<Grid item xs={3}>
-														<TimePicker
-															id="jornada-intervalo-fim"
-															value={this.state.jornadaIntervaloFim}
-															onChange={(newValue) => {this.setState({jornadaIntervaloFim: newValue}, () => this.calculateCorrecaoDerivedFields())}}
-															label="Jornada - Fim do Intervalo"
-															slotProps={{
-																field: { clearable: true },
-																textField: {
-																	fullWidth: true,
-																	error: "jornadaIntervaloFim" in this.state.errors,
-																	helperText: "jornadaIntervaloFim" in this.state.errors ? this.state.errors["jornadaIntervaloFim"] : ""
-																},
-															}}
-															variant="outlined"
-															disabled={(this.state.aprovada && this.props.me) || this.state.calling}
-														/>
-													</Grid>
-													<Grid item xs={3}>
-														<TimePicker
-															id="jornada-saida"
-															value={this.state.jornadaSaida}
-															onChange={(newValue) => {this.setState({jornadaSaida: newValue}, () => this.calculateCorrecaoDerivedFields())}}
-															label="Jornada - Saída"
-															slotProps={{
-																field: { clearable: true },
-																textField: {
-																	fullWidth: true,
-																	error: "jornadaSaida" in this.state.errors,
-																	helperText: "jornadaSaida" in this.state.errors ? this.state.errors["jornadaSaida"] : ""
-																},
-															}}
-															variant="outlined"
-															disabled={(this.state.aprovada && this.props.me) || this.state.calling}
-														/>
-													</Grid>
-													{this.state.jornadaEntrada && this.state.jornadaIntervaloInicio && this.state.jornadaIntervaloFim && this.state.jornadaSaida ? <React.Fragment>
-														<Grid item xs={6}>
+													{this.state.rowSelected.registroJornadaCorrecao == null ? 
+														<Grid item xs={12}>
+															<LoadingButton variant="contained" size="large" startIcon={<AddIcon />} loadingPosition="start" loading={this.state.adicionando} disabled={this.state.calling} onClick={this.addCorrecao}>Adicionar Correção</LoadingButton>
+														</Grid> : <React.Fragment>
+														<Grid item xs={12}>
+															<ButtonGroup sx={{marginBottom: 3}}>
+																<LoadingButton variant="contained" color="error" size="large" startIcon={<DeleteIcon />} loadingPosition="start" loading={this.state.deletando} disabled={(this.state.aprovada && this.props.me) || this.state.calling} onClick={this.deleteCorrecao}>Deletar</LoadingButton>
+																<LoadingButton variant="contained" size="large" startIcon={<SaveIcon />} loadingPosition="start" loading={this.state.saving} disabled={(this.state.aprovada && this.props.me) || this.state.calling} onClick={this.saveCorrecao}>Salvar</LoadingButton>
+															</ButtonGroup>
+														</Grid>
+														<Grid item xs={3}>
 															<TimePicker
-																id="entrada"
-																value={this.state.entrada}
-																onChange={(newValue) => {this.setState({entrada: newValue}, () => this.calculateCorrecaoDerivedFields())}}
-																label="Entrada"
+																id="jornada-entrada"
+																value={this.state.jornadaEntrada}
+																onChange={(newValue) => {this.setState({jornadaEntrada: newValue}, () => this.calculateCorrecaoDerivedFields())}}
+																label="Jornada - Entrada"
 																slotProps={{
 																	field: { clearable: true },
 																	textField: {
 																		fullWidth: true,
-																		error: "entrada" in this.state.errors || "entradaSaidaOrderValid" in this.state.errors,
-																		helperText: "entrada" in this.state.errors ? this.state.errors["entrada"] : "entradaSaidaOrderValid" in this.state.errors ? this.state.errors["entradaSaidaOrderValid"] : ""
+																		error: "jornadaEntrada" in this.state.errors || "jornadaOrder" in this.state.errors,
+																		helperText: "jornadaEntrada" in this.state.errors ? this.state.errors["jornadaEntrada"] : "jornadaOrder" in this.state.errors ? this.state.errors["jornadaOrder"] : ""
 																	},
 																}}
 																variant="outlined"
 																disabled={(this.state.aprovada && this.props.me) || this.state.calling}
 															/>
 														</Grid>
-														<Grid item xs={6}>
+														<Grid item xs={3}>
 															<TimePicker
-																id="saida"
-																value={this.state.saida}
-																onChange={(newValue) => {this.setState({saida: newValue}, () => this.calculateCorrecaoDerivedFields())}}
-																label="Saída"
+																id="jornada-intervalo-inicio"
+																value={this.state.jornadaIntervaloInicio}
+																onChange={(newValue) => {this.setState({jornadaIntervaloInicio: newValue}, () => this.calculateCorrecaoDerivedFields())}}
+																label="Jornada - Início do Intervalo"
 																slotProps={{
 																	field: { clearable: true },
 																	textField: {
 																		fullWidth: true,
-																		error: "saida" in this.state.errors,
-																		helperText: "saida" in this.state.errors ? this.state.errors["saida"] : ""
+																		error: "jornadaIntervaloInicio" in this.state.errors,
+																		helperText: "jornadaIntervaloInicio" in this.state.errors ? this.state.errors["jornadaIntervaloInicio"] : ""
 																	},
 																}}
 																variant="outlined"
 																disabled={(this.state.aprovada && this.props.me) || this.state.calling}
 															/>
 														</Grid>
-														<Grid item xs={6}>
-															<TextField
-																id="horas-a-trabalhar"
-																value={this.state.horasATrabalhar}
-																fullWidth
-																label="Horas a Trabalhar"
-																variant="outlined"
-																disabled
-															/>
-														</Grid>
-														<Grid item xs={6}>
-															<DurationInput
-																id="horas-trabalhadas"
-																value={this.state.horasTrabalhadas}
-																onChange={(e) => {this.setState({horasTrabalhadas: e.target.value}, () => this.calculateCorrecaoDerivedFields())}}
-																label="Horas Trabalhadas"
-																fullWidth
-																error={"horasTrabalhadas" in this.state.errors}
-																helperText={"horasTrabalhadas" in this.state.errors ? this.state.errors["horasTrabalhadas"] : ""}
+														<Grid item xs={3}>
+															<TimePicker
+																id="jornada-intervalo-fim"
+																value={this.state.jornadaIntervaloFim}
+																onChange={(newValue) => {this.setState({jornadaIntervaloFim: newValue}, () => this.calculateCorrecaoDerivedFields())}}
+																label="Jornada - Fim do Intervalo"
+																slotProps={{
+																	field: { clearable: true },
+																	textField: {
+																		fullWidth: true,
+																		error: "jornadaIntervaloFim" in this.state.errors,
+																		helperText: "jornadaIntervaloFim" in this.state.errors ? this.state.errors["jornadaIntervaloFim"] : ""
+																	},
+																}}
 																variant="outlined"
 																disabled={(this.state.aprovada && this.props.me) || this.state.calling}
 															/>
 														</Grid>
-														<Grid item xs={6}>
-															<TextField
-																id="horas-nao-trabalhadas"
-																value={this.state.horasNaoTrabalhadas}
-																fullWidth
-																label="Intervalos"
+														<Grid item xs={3}>
+															<TimePicker
+																id="jornada-saida"
+																value={this.state.jornadaSaida}
+																onChange={(newValue) => {this.setState({jornadaSaida: newValue}, () => this.calculateCorrecaoDerivedFields())}}
+																label="Jornada - Saída"
+																slotProps={{
+																	field: { clearable: true },
+																	textField: {
+																		fullWidth: true,
+																		error: "jornadaSaida" in this.state.errors,
+																		helperText: "jornadaSaida" in this.state.errors ? this.state.errors["jornadaSaida"] : ""
+																	},
+																}}
 																variant="outlined"
-																disabled
+																disabled={(this.state.aprovada && this.props.me) || this.state.calling}
 															/>
 														</Grid>
-														<Grid item xs={6}>
-															<TextField
-																id="hora-extra"
-																value={this.state.horaExtra}
-																fullWidth
-																label="Hora Extra"
-																variant="outlined"
-																disabled
-															/>
-														</Grid>
-														<Grid item xs={6}>
-															{this.state.contratoList !== null ?
+														{this.state.jornadaEntrada && this.state.jornadaIntervaloInicio && this.state.jornadaIntervaloFim && this.state.jornadaSaida ? <React.Fragment>
+															<Grid item xs={6}>
+																<TimePicker
+																	id="entrada"
+																	value={this.state.entrada}
+																	onChange={(newValue) => {this.setState({entrada: newValue}, () => this.calculateCorrecaoDerivedFields())}}
+																	label="Entrada"
+																	slotProps={{
+																		field: { clearable: true },
+																		textField: {
+																			fullWidth: true,
+																			error: "entrada" in this.state.errors || "entradaSaidaOrderValid" in this.state.errors,
+																			helperText: "entrada" in this.state.errors ? this.state.errors["entrada"] : "entradaSaidaOrderValid" in this.state.errors ? this.state.errors["entradaSaidaOrderValid"] : ""
+																		},
+																	}}
+																	variant="outlined"
+																	disabled={(this.state.aprovada && this.props.me) || this.state.calling}
+																/>
+															</Grid>
+															<Grid item xs={6}>
+																<TimePicker
+																	id="saida"
+																	value={this.state.saida}
+																	onChange={(newValue) => {this.setState({saida: newValue}, () => this.calculateCorrecaoDerivedFields())}}
+																	label="Saída"
+																	slotProps={{
+																		field: { clearable: true },
+																		textField: {
+																			fullWidth: true,
+																			error: "saida" in this.state.errors,
+																			helperText: "saida" in this.state.errors ? this.state.errors["saida"] : ""
+																		},
+																	}}
+																	variant="outlined"
+																	disabled={(this.state.aprovada && this.props.me) || this.state.calling}
+																/>
+															</Grid>
+															<Grid item xs={6}>
+																<TextField
+																	id="horas-a-trabalhar"
+																	value={this.state.horasATrabalhar}
+																	fullWidth
+																	label="Horas a Trabalhar"
+																	variant="outlined"
+																	disabled
+																/>
+															</Grid>
+															<Grid item xs={6}>
+																<DurationInput
+																	id="horas-trabalhadas"
+																	value={this.state.horasTrabalhadas}
+																	onChange={(e) => {this.setState({horasTrabalhadas: e.target.value}, () => this.calculateCorrecaoDerivedFields())}}
+																	label="Horas Trabalhadas"
+																	fullWidth
+																	error={"horasTrabalhadas" in this.state.errors}
+																	helperText={"horasTrabalhadas" in this.state.errors ? this.state.errors["horasTrabalhadas"] : ""}
+																	variant="outlined"
+																	disabled={(this.state.aprovada && this.props.me) || this.state.calling}
+																/>
+															</Grid>
+															<Grid item xs={6}>
+																<TextField
+																	id="horas-nao-trabalhadas"
+																	value={this.state.horasNaoTrabalhadas}
+																	fullWidth
+																	label="Intervalos"
+																	variant="outlined"
+																	disabled
+																/>
+															</Grid>
+															<Grid item xs={6}>
+																<TextField
+																	id="hora-extra"
+																	value={this.state.horaExtra}
+																	fullWidth
+																	label="Hora Extra"
+																	variant="outlined"
+																	disabled
+																/>
+															</Grid>
+															<Grid item xs={6}>
+																{this.state.contratoList !== null ?
+																	<FormControl fullWidth>
+																		<InputLabel>Contrato</InputLabel>
+																		<Select
+																			id="contrato"
+																			value={this.state.contratoId != null ? this.state.contratoId : ""}
+																			label="Contrato"
+																			onChange={(e) => this.setState({contratoId: e.target.value})}
+																			disabled={(this.state.aprovada && this.props.me) || this.state.calling}
+																			>
+																			<MenuItem value="">Nenhum</MenuItem>
+																			{this.state.contratoList.map((contrato) => <MenuItem key={contrato.contratoId} value={contrato.contratoId}>{contrato.nome}</MenuItem>)}
+																		</Select>
+																	</FormControl>
+																	: <CircularProgress size={20} color="inherit"/>}
+															</Grid>
+															<Grid item xs={6}>
+																<FormGroup>
+																	<FormControlLabel sx={{justifyContent: "center"}} control={<Switch checked={this.state.horaExtraPermitida} disabled={(this.state.aprovada && this.props.me) || this.state.calling} onClick={(e) => this.setState({horaExtraPermitida: e.target.checked})} color="success"/>} label="Hora Extra Permitida" />
+																</FormGroup>
+															</Grid>
+															<Grid item xs={6}>
 																<FormControl fullWidth>
-																	<InputLabel>Contrato</InputLabel>
+																	<InputLabel>Observação</InputLabel>
 																	<Select
-																		id="contrato"
-																		value={this.state.contratoId != null ? this.state.contratoId : ""}
-																		label="Contrato"
-																		onChange={(e) => this.setState({contratoId: e.target.value})}
+																		id="observacao"
+																		value={this.state.observacao != null ? this.state.observacao : ""}
+																		label="Observação"
+																		onChange={(e) => this.setState({observacao: e.target.value})}
 																		disabled={(this.state.aprovada && this.props.me) || this.state.calling}
 																		>
-																		<MenuItem value="">Nenhum</MenuItem>
-																		{this.state.contratoList.map((contrato) => <MenuItem key={contrato.contratoId} value={contrato.contratoId}>{contrato.nome}</MenuItem>)}
+																		<MenuItem value="">Nenhuma</MenuItem>
+																		{this.observacaoList.map((observacao) => <MenuItem key={observacao.value} value={observacao.value}>{observacao.nome}</MenuItem>)}
 																	</Select>
 																</FormControl>
-																: <CircularProgress size={20} color="inherit"/>}
-														</Grid>
-														<Grid item xs={6}>
-															<FormGroup>
-																<FormControlLabel sx={{justifyContent: "center"}} control={<Switch checked={this.state.horaExtraPermitida} disabled={(this.state.aprovada && this.props.me) || this.state.calling} onClick={(e) => this.setState({horaExtraPermitida: e.target.checked})} color="success"/>} label="Hora Extra Permitida" />
-															</FormGroup>
-														</Grid>
-														<Grid item xs={6}>
-															<FormControl fullWidth>
-																<InputLabel>Observação</InputLabel>
-																<Select
-																	id="observacao"
-																	value={this.state.observacao != null ? this.state.observacao : ""}
-																	label="Observação"
-																	onChange={(e) => this.setState({observacao: e.target.value})}
+															</Grid>
+															<Grid item xs={6}>
+																<DurationInput
+																	id="ajuste-hora-extra"
+																	value={this.state.ajusteHoraExtra}
+																	onChange={(e) => this.setState({ajusteHoraExtra: e.target.value})}
+																	fullWidth
+																	label="Ajuste Hora Extra"
+																	variant="outlined"
+																	sx={{visibility: !(this.state.calling || this.state.observacao == "" || (this.state.observacao !== null && !this.observacaoByValue[this.state.observacao].ajusteHoraExtra)) ? "visible" : "hidden"}}
+																	error={"ajusteHoraExtra" in this.state.errors}
+																	helperText={"ajusteHoraExtra" in this.state.errors ? this.state.errors["ajusteHoraExtra"] : ""}
 																	disabled={(this.state.aprovada && this.props.me) || this.state.calling}
-																	>
-																	<MenuItem value="">Nenhuma</MenuItem>
-																	{this.observacaoList.map((observacao) => <MenuItem key={observacao.value} value={observacao.value}>{observacao.nome}</MenuItem>)}
-																</Select>
-															</FormControl>
-														</Grid>
-														<Grid item xs={6}>
-															<DurationInput
-																id="ajuste-hora-extra"
-																value={this.state.ajusteHoraExtra}
-																onChange={(e) => this.setState({ajusteHoraExtra: e.target.value})}
+																/>
+															</Grid>
+														</React.Fragment> : <Grid item container xs={12} justifyContent="center"><Chip label="NÃO REGISTRA" color="error" size="small" /></Grid>
+														}
+														<Grid item xs={12}>
+															<TextField
+																id="justificativa"
+																value={this.state.justificativa != null ? this.state.justificativa : ""}
+																onChange={(e) => this.setState({justificativa: e.target.value})}
 																fullWidth
-																label="Ajuste Hora Extra"
+																multiline
+																label="Justificativa"
 																variant="outlined"
-																sx={{visibility: !(this.state.calling || this.state.observacao == "" || (this.state.observacao !== null && !this.observacaoByValue[this.state.observacao].ajusteHoraExtra)) ? "visible" : "hidden"}}
-																error={"ajusteHoraExtra" in this.state.errors}
-																helperText={"ajusteHoraExtra" in this.state.errors ? this.state.errors["ajusteHoraExtra"] : ""}
+																error={"justificativa" in this.state.errors}
+																helperText={"justificativa" in this.state.errors ? this.state.errors["justificativa"] : ""}
 																disabled={(this.state.aprovada && this.props.me) || this.state.calling}
 															/>
 														</Grid>
-													</React.Fragment> : <Grid item container xs={12} justifyContent="center"><Chip label="NÃO REGISTRA" color="error" size="small" /></Grid>
-													}
-													<Grid item xs={12}>
-														<TextField
-															id="justificativa"
-															value={this.state.justificativa != null ? this.state.justificativa : ""}
-															onChange={(e) => this.setState({justificativa: e.target.value})}
-															fullWidth
-															multiline
-															label="Justificativa"
-															variant="outlined"
-															error={"justificativa" in this.state.errors}
-															helperText={"justificativa" in this.state.errors ? this.state.errors["justificativa"] : ""}
-															disabled={(this.state.aprovada && this.props.me) || this.state.calling}
-														/>
-													</Grid>
-													<Grid item xs={12}>
-														<FormGroup>
-															<FormControlLabel sx={{justifyContent: "center"}} control={<Switch checked={this.state.aprovada} disabled={this.props.me || this.state.calling} onClick={(e) => this.setState({aprovada: e.target.checked})} color="success"/>} label="Aprovada" />
-														</FormGroup>
-													</Grid>
+														<Grid item xs={12}>
+															<FormGroup>
+																<FormControlLabel sx={{justifyContent: "center"}} control={<Switch checked={this.state.aprovada} disabled={this.props.me || this.state.calling} onClick={(e) => this.setState({aprovada: e.target.checked})} color="success"/>} label="Aprovada" />
+															</FormGroup>
+														</Grid>
+													</React.Fragment>}
 												</Grid>
 												<Collapse in={this.state.correcaoAlertOpen}>
 													{this.state.correcaoAlert}
 												</Collapse>
 											</Box>
-										</AccordionDetails>
-									</Accordion>
-								}
-							</React.Fragment>
-							}
+										</DialogContent>
+									</Dialog>}
 						</Box>
 						{this.state.report !== null ?
 						<Box ref={this.folhaPontoRef} className="folhaPonto">
@@ -1242,7 +1270,7 @@ export default class RelatorioJornadaBox extends React.Component {
 											<td>{day.horasTrabalhadas}</td>
 											<td>{day.horasNaoTrabalhadas}</td>
 											<td>{day.saida}</td>
-											<td>{day.horaExtra}</td>
+											<td>{day.horaExtra !=0 && dayjs.duration(day.horaExtra, 'seconds').format('HH[h]mm[m]')}</td>
 											<td>{day.observacao}</td>
 										</tr>
 									)}

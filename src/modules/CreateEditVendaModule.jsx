@@ -1209,21 +1209,24 @@ class CreateEditVendaModule extends React.Component {
 
 	postVenda(data) {
 		this.setState({calling: true, saving: true});
-		api.post(`/venda/`, data)
+		api.post(`/venda/`, data, {redirect403: false})
 			.then((response) => {
 				this.props.navigate("/vendas/" + response.data.vendaId + "?novo");
 			})
 			.catch((err) => {
 				let errors = err?.response?.data?.errors ?? {};
 				errors = this.parseErrors(errors);
-				this.openAlert("error", "Falha ao salvar venda!");
+				if (err?.response?.status == 403)
+					this.openAlert("error", "Não permitido!");
+				else
+					this.openAlert("error", "Falha ao salvar venda!");
 				this.setState({calling: false, saving: false, errors: errors});
 			})
 	}
 
 	patchVenda(data) {
 		this.setState({calling: true, saving: true});
-		api.patch(`/venda/${this.state.vendaId}`, data)
+		api.patch(`/venda/${this.state.vendaId}`, data, {redirect403: false})
 			.then((response) => {
 				this.openAlert("success", `Venda salva com sucesso!`);
 				this.getVendaFromApi();
@@ -1232,7 +1235,10 @@ class CreateEditVendaModule extends React.Component {
 			.catch((err) => {
 				let errors = err?.response?.data?.errors ?? {};
 				errors = this.parseErrors(errors);
-				this.openAlert("error", "Falha ao salvar venda!");
+				if (err?.response?.status == 403)
+					this.openAlert("error", "Não permitido!");
+				else
+					this.openAlert("error", "Falha ao salvar venda!");
 				this.setState({calling: false, saving: false, errors: errors});
 			})
 	}
@@ -1382,6 +1388,7 @@ class CreateEditVendaModule extends React.Component {
 			headers: {
 			'content-type': 'multipart/form-data',
 			},
+			redirect403: false,
 		};
 
 		api.post(`/anexo/venda/${this.state.vendaId}/upload`, formData, config)
@@ -1391,7 +1398,10 @@ class CreateEditVendaModule extends React.Component {
 				this.setState({calling: false, uploadingAnexo: false, errors: {}});
 			})
 			.catch((err) => {
-				this.openAlert("error", "Falha ao salvar anexo!");
+				if (err?.response?.status == 403)
+					this.openAlert("error", "Não permitido!");
+				else
+					this.openAlert("error", "Falha ao salvar anexo!");
 				this.setState({calling: false, uploadingAnexo: false, errors: {}});
 			})
 
@@ -1400,42 +1410,51 @@ class CreateEditVendaModule extends React.Component {
 
 	trashAnexo(anexoId) {
 		this.setState({calling: true});
-		api.post(`/anexo/trash/${anexoId}`, {}, {redirect403: false})
+		api.post(`/anexo/venda/${this.state.vendaId}/trash/${anexoId}`, {}, {redirect403: false})
 			.then((response) => {
 				this.openAlert("success", "Anexo enviado para lixeira com sucesso!");
 				this.getAnexoListFromApi();
 				this.setState({calling: false, errors: {}});
 			})
 			.catch((err) => {
-				this.openAlert("error", "Falha ao enviar anexo para lixeira!");
+				if (err?.response?.status == 403)
+					this.openAlert("error", "Não permitido!");
+				else
+					this.openAlert("error", "Falha ao enviar anexo para lixeira!");
 				this.setState({calling: false, errors: {}});
 			})
 	}
 
 	untrashAnexo(anexoId) {
 		this.setState({calling: true});
-		api.post(`/anexo/untrash/${anexoId}`, {}, {redirect403: false})
+		api.post(`/anexo/venda/${this.state.vendaId}/untrash/${anexoId}`, {}, {redirect403: false})
 			.then((response) => {
 				this.openAlert("success", "Anexo restaurado com sucesso!");
 				this.getAnexoListFromApi();
 				this.setState({calling: false, errors: {}});
 			})
 			.catch((err) => {
-				this.openAlert("error", "Falha ao restaurar para lixeira!");
+				if (err?.response?.status == 403)
+					this.openAlert("error", "Não permitido!");
+				else
+					this.openAlert("error", "Falha ao restaurar para lixeira!");
 				this.setState({calling: false, errors: {}});
 			})
 	}
 
 	deleteAnexo(anexoId) {
 		this.setState({calling: true});
-		api.delete(`/anexo/delete/${anexoId}`, {redirect403: false})
+		api.delete(`/anexo/venda/${this.state.vendaId}/delete/${anexoId}`, {redirect403: false})
 			.then((response) => {
 				this.openAlert("success", "Anexo deletado com sucesso!");
 				this.getAnexoListFromApi();
 				this.setState({calling: false, errors: {}});
 			})
 			.catch((err) => {
-				this.openAlert("error", "Falha ao deletar anexo!");
+				if (err?.response?.status == 403)
+					this.openAlert("error", "Não permitido!");
+				else
+					this.openAlert("error", "Falha ao deletar anexo!");
 				this.setState({calling: false, errors: {}});
 			})
 	}
@@ -1443,6 +1462,7 @@ class CreateEditVendaModule extends React.Component {
 	render() {
 
 		let ALTERAR_AUDITOR = this.props.usuario.permissaoList.includes("ALTERAR_AUDITOR");
+		let BLOQUEADO_POS_VENDA = (!ALTERAR_AUDITOR && this.state.vendaStatusByVendaStatusId?.[this.state.statusId]?.categoria == "POS_VENDA");
 
 		return (
 			<React.Fragment>
@@ -2724,6 +2744,9 @@ class CreateEditVendaModule extends React.Component {
 													/>
 													))
 												}
+												getOptionDisabled={(option) =>
+													!ALTERAR_AUDITOR && this.state.vendaStatusByVendaStatusId?.[option]?.categoria == "POS_VENDA"
+												}
 											/>
 											{!this.state.createMode ? <Stack direction="row" spacing={1} justifyContent="center" alignItems="center">
 												<Typography>Status atual:</Typography>
@@ -2751,8 +2774,11 @@ class CreateEditVendaModule extends React.Component {
 										/>
 									</Grid>
 									<Grid item xs={12}>
-										<LoadingButton color="success" fullWidth variant="contained" size="large" startIcon={<SaveIcon />} loadingPosition="start" loading={this.state.saving} disabled={this.state.calling} onClick={this.saveVenda}>Salvar Venda</LoadingButton>
+										<LoadingButton color="success" fullWidth variant="contained" size="large" startIcon={<SaveIcon />} loadingPosition="start" loading={this.state.saving} disabled={this.state.calling || BLOQUEADO_POS_VENDA} onClick={this.saveVenda}>Salvar Venda</LoadingButton>
 									</Grid>
+									{BLOQUEADO_POS_VENDA && <Grid item xs={12}>
+										<Alert severity="error">Você não tem permissão para alterar essa venda.</Alert>
+									</Grid>}
 								</React.Fragment> : ""}
 
 								{this.state.tab == "ANEXOS" ? <React.Fragment>
@@ -2762,7 +2788,7 @@ class CreateEditVendaModule extends React.Component {
 												<LoadingButton component="label" variant="outlined" startIcon={<RefreshIcon />} loadingPosition="start" loading={this.state.updatingAnexoList} disabled={this.state.updatingAnexoList || this.state.calling} onClick={this.getAnexoListFromApi}>
 													Atualizar
 												</LoadingButton>
-												<LoadingButton component="label" variant="contained" startIcon={<CloudUploadIcon />} loadingPosition="start" loading={this.state.uploadingAnexo} disabled={this.state.updatingAnexoList || this.state.calling}>
+												<LoadingButton component="label" variant="contained" startIcon={<CloudUploadIcon />} loadingPosition="start" loading={this.state.uploadingAnexo} disabled={this.state.updatingAnexoList || this.state.calling || BLOQUEADO_POS_VENDA}>
 													Adicionar Anexo
 													<input type="file" id="anexo" hidden onChange={this.handleUploadAnexoChange}/>
 												</LoadingButton>
