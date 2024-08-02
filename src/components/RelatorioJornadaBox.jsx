@@ -144,10 +144,9 @@ export default class RelatorioJornadaBox extends React.Component {
 			{ field: 'observacao', headerName: 'OBSERVAÇÃO', minWidth: 300, flex: 1 },
 			{ field: 'correcao', headerName: 'CORREÇÃO', minWidth: 120, renderCell: (params) =>
 				params.value == "Não" ? <IconButton disabled={this.state.calling} onClick={() => {this.setState({rowSelected: params.row.day}, () => this.addCorrecao())}}><AddIcon /></IconButton> :
-				<Chip onClick={() => this.setState({rowSelected: params.row.day, correcaoDialogOpen: true})} label={params.value} color={params.value == "Aprovada" ? "success" : params.value == "Em análise" ? "warning" : "info"} />,
+				<Chip onClick={() => this.setState({rowSelected: params.row.day, correcaoDialogOpen: true}, () => this.setCorrecaoFieldsFromRowSelected())} label={params.value} color={params.value == "Aprovada" ? "success" : params.value == "Em análise" ? "warning" : "info"} />,
 			},
-			{ field: 'info', headerName: 'INFO', renderCell: (params) => <IconButton onClick={() => this.setState({rowSelected: params.row.day, informacoesDialogOpen: true})}><InfoIcon/></IconButton>,
-			},
+			{ field: 'info', headerName: 'INFO', renderCell: (params) => <IconButton disabled={params.row.day.registroJornada == null} onClick={() => this.setState({rowSelected: params.row.day, informacoesDialogOpen: true})}><InfoIcon/></IconButton>},
 		];
 
 		this.meses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];

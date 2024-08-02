@@ -86,6 +86,7 @@ import PublicIcon from '@mui/icons-material/Public';
 import Pagination from '@mui/material/Pagination';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import FormHelperText from '@mui/material/FormHelperText';
+import CloseIcon from '@mui/icons-material/Close';
 
 import CPFInput from "../components/CPFInput";
 import CNPJInput from "../components/CNPJInput";
@@ -550,6 +551,8 @@ class CreateEditVendaModule extends React.Component {
 			//atualização
 			atualizacaoList: null,
 			atualizacaoRows: [],
+			atualizacaoDetalhesDialogOpen: false,
+			atualizacaoSelected: null,
 
 			saving: false,
 			calling: false,
@@ -572,6 +575,7 @@ class CreateEditVendaModule extends React.Component {
 			{ field: 'usuarioId', headerName: 'Usuário', valueGetter: (value, row) => this.state.usuarioByUsuarioId?.[value]?.nome, minWidth: 100, flex: 1, renderCell: (params) => <UsuarioDisplayChip usuario={this.state.usuarioByUsuarioId?.[params.row.usuarioId]}/>},
 			{ field: 'data', headerName: 'Data', minWidth: 150, flex: 1, type: 'date', renderCell: (params) => params.value !== null ? dayjs(params.value).format('L LTS') : "" },
 			{ field: 'relato', headerName: 'Relato', minWidth: 400, flex: 1, renderCell: (params) => <pre style={{overflow: "auto"}}>{params.value.replace(/(\\n)/g, "\n")}</pre> },
+			{ field: 'detalhes', headerName: 'Detalhes', renderCell: (params) => <IconButton disabled={params.value == null} onClick={() => this.setState({atualizacaoSelected: params.row.atualizacao, atualizacaoDetalhesDialogOpen: true})}><InfoIcon/></IconButton>},
 		];
 
 		this.getVendaFromApi = this.getVendaFromApi.bind(this);
@@ -813,6 +817,8 @@ class CreateEditVendaModule extends React.Component {
 				usuarioId: atualizacao.usuarioId,
 				data: new Date(atualizacao.data),
 				relato: atualizacao.relato,
+				detalhes: atualizacao.detalhes,
+				atualizacao: atualizacao,
 			}
 		});
 		this.setState({atualizacaoRows: atualizacaoRows});
@@ -2909,6 +2915,30 @@ class CreateEditVendaModule extends React.Component {
 						<Button variant="outlined" onClick={() => this.setState({addProdutoDialogOpen: false})}>Cancelar</Button>
 						<Button variant="contained" onClick={this.addProduto}>Adicionar</Button>
 					</DialogActions>
+				</Dialog>
+				<Dialog
+					fullWidth={true}
+        			maxWidth={"lg"}
+					onClose={() => this.setState({atualizacaoDetalhesDialogOpen: false})}
+					open={this.state.atualizacaoDetalhesDialogOpen}
+				>
+      				<DialogTitle>Detalhes</DialogTitle>
+      				<IconButton
+						onClick={() => this.setState({atualizacaoDetalhesDialogOpen: false})}
+						sx={{
+							position: 'absolute',
+								right: 8,
+							top: 8,
+							color: (theme) => theme.palette.grey[500],
+						}}
+					>
+					<CloseIcon />
+					</IconButton>
+      				<DialogContent dividers>
+      					<Box>
+							<pre>{this.state.atualizacaoSelected?.detalhes ?? <Alert severity="warning">Sem detalhes</Alert>}</pre>
+						</Box>
+					</DialogContent>
 				</Dialog>
 		    </React.Fragment>
 		  );
