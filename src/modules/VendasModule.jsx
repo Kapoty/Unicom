@@ -517,7 +517,7 @@ class VendasModule extends React.Component {
 					},
 					pagination: { paginationModel: { pageSize: 100 } },
 					sorting: {
-						sortModel: [{ field: 'dataVenda', sort: 'desc' }],
+						sortModel: [{ field: 'dataStatus', sort: 'desc' }],
 					},
 					pinnedColumns: { left: ['statusId'] },
 					density: "compact",
