@@ -273,6 +273,9 @@ export default class JornadaChip extends React.Component {
 	}
 
 	deslogar() {
+		if (!window.confirm("Você deseja realmente sair?"))
+			return;
+
 		this.setState({deslogando: true})
 		api.post(`/registro-jornada/${this.usuarioId}/deslogar`, {
 				token: getPontoToken(),
@@ -326,6 +329,9 @@ export default class JornadaChip extends React.Component {
 	}
 
 	handleAlterarStatus(e) {
+		if (!window.confirm("Você deseja realmente sair?"))
+			return;
+		
 		this.setState({alterandoStatus: true})
 		api.post(`/registro-jornada/${this.usuarioId}/alterar-status`, {
 				token: getPontoToken(),
@@ -592,8 +598,8 @@ export default class JornadaChip extends React.Component {
 								</Select>
 							</FormControl> : ""}
 							{((this.state.registroJornada.canUsuarioLogar && this.props.me) || (this.state.registroJornada.canSupervisorLogar && !this.props.me)) ? 
-								<LoadingButton loading={this.state.logando} variant="contained" color="success" loadingPosition="start" startIcon={<LoginIcon />} onClick={this.logar}>Logar</LoadingButton> : ""}
-							{this.state.registroJornada.canUsuarioDeslogar ? <LoadingButton loading={this.state.deslogando} variant="contained" color="error" startIcon={<LogoutIcon />} onClick={this.deslogar}>Deslogar</LoadingButton> : ""}
+								<LoadingButton loading={this.state.logando} variant="contained" color="success" loadingPosition="start" startIcon={<LoginIcon />} onClick={this.logar}>Entrada</LoadingButton> : ""}
+							{this.state.registroJornada.canUsuarioDeslogar ? <LoadingButton loading={this.state.deslogando} variant="contained" color="error" startIcon={<LogoutIcon />} onClick={this.deslogar}>Saída</LoadingButton> : ""}
 							{((!this.state.registroJornada.canUsuarioLogar && this.props.me) || (!this.state.registroJornada.canSupervisorLogar && !this.props.me)) && this.state.registroJornada.statusAtual == null ? <Alert severity="warning">Fora da jornada</Alert> : ""}
 							{!this.props.me ? <FormGroup>
 									<FormControlLabel sx={{justifyContent: "center"}} control={<Switch checked={this.state.registroJornada.horaExtraPermitida} disabled={this.state.togglingHoraExtraPermitida} onClick={this.toggleHoraExtraPermitida} color="success"/>} label="Hora Extra Permitida" />

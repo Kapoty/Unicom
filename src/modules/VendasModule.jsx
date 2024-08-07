@@ -67,6 +67,10 @@ import VendaFaturaStatusEnum from "../model/VendaFaturaStatusEnum";
 import VendaFormaDePagamentoEnum from "../model/VendaFormaDePagamentoEnum";
 import VendaBrscanEnum from "../model/VendaBrscanEnum";
 import VendaSuporteEnum from "../model/VendaSuporteEnum";
+import VendaReimputadoEnum from "../model/VendaReimputadoEnum";
+import VendaTipoDeContaEnum from "../model/VendaTipoDeContaEnum";
+import VendaInfracoEnum from "../model/VendaInfracoEnum";
+
 
 import dayjs from 'dayjs';
 
@@ -375,12 +379,14 @@ class VendasModule extends React.Component {
 			{ field: 'loginVendedor', headerName: 'Login Vendedor', width: 200 },
 			{ field: 'cadastradorId', headerName: 'Cadastrador', valueGetter: (value, row) => this.state.usuarioByUsuarioId?.[value]?.nome, width: 200, renderCell: (params) => <UsuarioDisplayChip usuario={this.state.usuarioByUsuarioId?.[params.row.cadastradorId]}/>},
 			{ field: 'agenteBiometriaId', headerName: 'Agente Biometria', valueGetter: (value, row) => this.state.usuarioByUsuarioId?.[value]?.nome, width: 200, renderCell: (params) => <UsuarioDisplayChip usuario={this.state.usuarioByUsuarioId?.[params.row.agenteBiometriaId]}/>},
+			{ field: 'agenteSuporteId', headerName: 'Agente Suporte', valueGetter: (value, row) => this.state.usuarioByUsuarioId?.[value]?.nome, width: 200, renderCell: (params) => <UsuarioDisplayChip usuario={this.state.usuarioByUsuarioId?.[params.row.agenteSuporteId]}/>},
 			{ field: 'sistemaId', headerName: 'Sistema', valueGetter: (value, row) => this.state.sistemaBySistemaId?.[value]?.nome, width: 150 },
 			{ field: 'auditorId', headerName: 'Auditor', valueGetter: (value, row) => this.state.usuarioByUsuarioId?.[value]?.nome, width: 200, renderCell: (params) => <UsuarioDisplayChip usuario={this.state.usuarioByUsuarioId?.[params.row.auditorId]}/>},
 			{ field: 'os', headerName: 'OS', width: 100 },
 			{ field: 'custcode', headerName: 'Cust-Code', width: 100 },
 			{ field: 'ordem', headerName: 'Ordem', width: 100 },
 			{ field: 'origem', headerName: 'Mailing/Origem', width: 200 },
+			{ field: 'infraco', headerName: 'Infraco', width: 200 },
 			{ field: 'vendedorId', headerName: 'Vendedor', valueGetter: (value, row) => this.state.usuarioByUsuarioId?.[value]?.nome, width: 200, renderCell: (params) => <UsuarioDisplayChip usuario={this.state.usuarioByUsuarioId?.[params.row.vendedorId]}/>},
 			{ field: 'supervisorId', headerName: 'Supervisor', valueGetter: (value, row) => this.state.usuarioByUsuarioId?.[value]?.nome, width: 200, renderCell: (params) => <UsuarioDisplayChip usuario={this.state.usuarioByUsuarioId?.[params.row.supervisorId]}/>},
 			{ field: 'vendedorExterno', headerName: 'Vendedor Externo', width: 200 },
@@ -388,11 +394,13 @@ class VendasModule extends React.Component {
 			{ field: 'auditorExterno', headerName: 'Auditor Externo', width: 200 },
 			{ field: 'cadastradorExterno', headerName: 'Cadastrador Externo', width: 200 },
 			{ field: 'agenteBiometriaExterno', headerName: 'Agente Biometria Externo', width: 200 },
+			{ field: 'agenteSuporteExterno', headerName: 'Agente Suporte Externo', width: 200 },
 			{ field: 'vendedorReal', headerName: 'Vendedor Real', width: 200 , valueGetter: (value, row) => typeof value == "string" ? value : this.state.usuarioByUsuarioId?.[value]?.nome, width: 200, renderCell: (params) => typeof params.row.vendedorReal == "string" ? params.row.vendedorReal : <UsuarioDisplayChip usuario={this.state.usuarioByUsuarioId?.[params.row.vendedorReal]}/>},
 			{ field: 'supervisorReal', headerName: 'Supervisor Real', width: 200 , valueGetter: (value, row) => typeof value == "string" ? value : this.state.usuarioByUsuarioId?.[value]?.nome, width: 200, renderCell: (params) => typeof params.row.supervisorReal == "string" ? params.row.supervisorReal : <UsuarioDisplayChip usuario={this.state.usuarioByUsuarioId?.[params.row.supervisorReal]}/>},
 			{ field: 'auditorReal', headerName: 'Auditor Real', width: 200 , valueGetter: (value, row) => typeof value == "string" ? value : this.state.usuarioByUsuarioId?.[value]?.nome, width: 200, renderCell: (params) => typeof params.row.auditorReal == "string" ? params.row.auditorReal : <UsuarioDisplayChip usuario={this.state.usuarioByUsuarioId?.[params.row.auditorReal]}/>},
 			{ field: 'cadastradorReal', headerName: 'Cadastrador Real', width: 200 , valueGetter: (value, row) => typeof value == "string" ? value : this.state.usuarioByUsuarioId?.[value]?.nome, width: 200, renderCell: (params) => typeof params.row.cadastradorReal == "string" ? params.row.cadastradorReal : <UsuarioDisplayChip usuario={this.state.usuarioByUsuarioId?.[params.row.cadastradorReal]}/>},
 			{ field: 'agenteBiometriaReal', headerName: 'Agente Biometria Real', width: 200 , valueGetter: (value, row) => typeof value == "string" ? value : this.state.usuarioByUsuarioId?.[value]?.nome, width: 200, renderCell: (params) => typeof params.row.agenteBiometriaReal == "string" ? params.row.agenteBiometriaReal : <UsuarioDisplayChip usuario={this.state.usuarioByUsuarioId?.[params.row.agenteBiometriaReal]}/>},
+			{ field: 'agenteSuporteReal', headerName: 'Agente Suporte Real', width: 200 , valueGetter: (value, row) => typeof value == "string" ? value : this.state.usuarioByUsuarioId?.[value]?.nome, width: 200, renderCell: (params) => typeof params.row.agenteSuporteReal == "string" ? params.row.agenteSuporteReal : <UsuarioDisplayChip usuario={this.state.usuarioByUsuarioId?.[params.row.agenteSuporteReal]}/>},
 			{ field: 'totalDeProdutos', headerName: 'N° de Produtos', width: 100 },
 			{ field: 'produto', headerName: 'Produto', width: 200 },
 			{ field: 'valor', headerName: 'Valor', width: 100 },
@@ -419,6 +427,10 @@ class VendasModule extends React.Component {
 
 			{ field: 'formaDePagamento', headerName: 'Forma de Pagamento', width: 200 },
 			{ field: 'vencimento', headerName: 'Vencimento', width: 100 },
+			{ field: 'agencia', headerName: 'Agencia', width: 100 },
+			{ field: 'conta', headerName: 'Conta', width: 100 },
+			{ field: 'tipoDeConta', headerName: 'Tipo de Conta', width: 100 },
+			{ field: 'banco', headerName: 'Banco', width: 100 },
 
 			{ field: 'dataAgendamento', headerName: 'Data de Agendamento', width: 200, type: 'date', renderCell: (params) => params.value !== null ? dayjs(params.value).format('L LTS') : "" },
 			{ field: 'dataInstalacao', headerName: 'Data de Instalação', width: 200, type: 'date', renderCell: (params) => params.value !== null ? dayjs(params.value).format('L LTS') : "" },
@@ -428,6 +440,8 @@ class VendasModule extends React.Component {
 			{ field: 'brscan', headerName: 'Biometria', width: 200 },
 			{ field: 'suporte', headerName: 'Suporte', width: 200 },
 			{ field: 'prints', headerName: 'Prints', width: 100 },
+			{ field: 'reimputado', headerName: 'Reimputado', width: 100 },
+			{ field: 'operadora', headerName: 'Operadora', width: 200 },
 
 			{ field: 'situacao', headerName: 'Situação', width: 200 },
 		];
@@ -800,12 +814,14 @@ class VendasModule extends React.Component {
 			loginVendedor: venda.loginVendedor,
 			cadastradorId: venda.cadastradorId,
 			agenteBiometriaId: venda.agenteBiometriaId,
+			agenteSuporteId: venda.agenteSuporteId,
 			sistemaId: venda.sistemaId,
 			auditorId: venda.auditorId,
 			os: venda.os,
 			custcode: venda.custcode,
 			ordem: venda.ordem,
 			origem: venda.origem,
+			infraco: venda?.infraco !== null ? VendaInfracoEnum[venda.infraco] : "",
 			vendedorId: venda.vendedorId,
 			supervisorId: venda.supervisorId,
 			vendedorExterno: venda.vendedorExterno,
@@ -813,11 +829,13 @@ class VendasModule extends React.Component {
 			auditorExterno: venda.auditorExterno,
 			cadastradorExterno: venda.cadastradorExterno,
 			agenteBiometriaExterno: venda.agenteBiometriaExterno,
+			agenteSuporteExterno: venda.agenteSuporteExterno,
 			vendedorReal: venda.vendedorId ?? venda.vendedorExterno,
 			supervisorReal: venda.supervisorId ?? venda.supervisorExterno,
 			auditorReal: venda.auditorId ?? venda.auditorExterno,
 			cadastradorReal: venda.cadastradorId ?? venda.cadastradorExterno,
 			agenteBiometriaReal: venda.agenteBiometriaId ?? venda.agenteBiometriaExterno,
+			agenteSuporteReal: venda.agenteSuporteId ?? venda.agenteSuporteExterno,
 
 			produtoList: venda.produtoList,
 			totalDeProdutos: venda.produtoList.length,
@@ -848,6 +866,10 @@ class VendasModule extends React.Component {
 
 			formaDePagamento: venda?.formaDePagamento !== null ? VendaFormaDePagamentoEnum[venda.formaDePagamento] : "",
 			vencimento: venda.vencimento,
+			agencia: venda.agencia,
+			conta: venda.conta,
+			tipoDeConta: venda?.tipoDeconta !== null ? VendaTipoDeContaEnum[venda.tipoDeConta] : "",
+			banco: venda.banco,
 
 			dataStatus: venda.dataStatus !== null ? new Date(venda.dataStatus) : null,
 			dataAtivacao: venda.dataAtivacao !== null ? new Date(venda.dataAtivacao) : null,
@@ -859,6 +881,8 @@ class VendasModule extends React.Component {
 			brscan: venda?.brscan !== null ? VendaBrscanEnum[venda.brscan] : "",
 			suporte: venda?.suporte !== null ? VendaSuporteEnum[venda.suporte] : "",
 			prints: venda.prints ? "Sim" : "Não",
+			reimputado: venda?.reimputado !== null ? VendaReimputadoEnum[venda.reimputado] : "",
+			operadora: venda.operadora,
 
 			situacao: situacao,
 

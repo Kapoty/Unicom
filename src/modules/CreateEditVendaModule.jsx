@@ -108,6 +108,7 @@ import VendaSuporteEnum from "../model/VendaSuporteEnum";
 import VendaGeneroEnum from "../model/VendaGeneroEnum";
 import VendaReimputadoEnum from "../model/VendaReimputadoEnum";
 import VendaTipoDeContaEnum from "../model/VendaTipoDeContaEnum";
+import VendaInfracoEnum from "../model/VendaInfracoEnum";
 
 import axios from "axios";
 
@@ -121,6 +122,7 @@ const ProdutoPaper = React.memo(({ produto, i, errors, calling, updateProduto, d
 
 	const updateProdutoNome = useCallback((e) => updateProduto(i, "nome", e.target.value), [i]);
 	const updateProdutoValor = useCallback((e) => updateProduto(i, "valor", e.target.value), [i]);
+	const updateProdutoValorAcordado = useCallback((e) => updateProduto(i, "valorAcordado", e.target.value), [i]);
 	//const updateProdutoAdicionais = useCallback((event, value) => updateProduto(i, "adicionais", value), [i]);
 	const updateProdutoAdicionais = useCallback((event, newValue) => updateProduto(i, "adicionais", newValue.join(",")), [i]);
 	const getProdutoAdicionaisOptionList = useCallback(() => adicionalList.filter((adicional) => adicional.tipo == tipoProduto).map((adicional) => adicional.nome), [adicionalList]);
@@ -139,7 +141,7 @@ const ProdutoPaper = React.memo(({ produto, i, errors, calling, updateProduto, d
 					<Grid item xs={12}>
 						<Divider><Chip label={i + 1} /></Divider>
 					</Grid>
-					<Grid item xs={6}>
+					<Grid item xs={4}>
 						<TextField
 							required
 							value={produto.nome}
@@ -155,7 +157,7 @@ const ProdutoPaper = React.memo(({ produto, i, errors, calling, updateProduto, d
 							}}
 						/>
 					</Grid>
-					<Grid item xs={6}>
+					<Grid item xs={4}>
 						<MoneyInput
 							required
 							value={produto.valor}
@@ -165,6 +167,19 @@ const ProdutoPaper = React.memo(({ produto, i, errors, calling, updateProduto, d
 							variant="outlined"
 							error={`produtoList[${i}].valor` in errors}
 							helperText={errors?.[`produtoList[${i}].valor`] ?? ""}
+							disabled={calling}
+						/>
+					</Grid>
+					<Grid item xs={4}>
+						<MoneyInput
+							required
+							value={produto.valorAcordado}
+							onChange={updateProdutoValorAcordado}
+							fullWidth
+							label="Valor Acordado"
+							variant="outlined"
+							error={`produtoList[${i}].valorAcordado` in errors}
+							helperText={errors?.[`produtoList[${i}].valorAcordado`] ?? ""}
 							disabled={calling}
 						/>
 					</Grid>
@@ -497,6 +512,7 @@ class CreateEditVendaModule extends React.Component {
 			sistemaId: null,
 			ordem: "",
 			origem: "",
+			infraco: null,
 			dataVenda: null,
 			safra: dayjs().date(1),
 
@@ -515,6 +531,7 @@ class CreateEditVendaModule extends React.Component {
 			brscan: null,
 			suporte: "NAO",
 			loginVendedor: "",
+			operadora: "",
 
 			// atores
 
@@ -523,11 +540,13 @@ class CreateEditVendaModule extends React.Component {
 			auditorId: null,
 			cadastradorId: null,
 			agenteBiometriaId: null,
+			agenteSuporteId: null,
 			vendedorExterno: "",
 			supervisorExterno: "",
 			auditorExterno: "",
 			cadastradorExterno: "",
 			agenteBiometriaExterno: "",
+			agenteSuporteExterno: "",
 
 			//pagamento
 			formaDePagamento: null,
@@ -567,6 +586,7 @@ class CreateEditVendaModule extends React.Component {
 		}
 
 		this.vencimentoEnum = ["7", "10", "15", "20"];
+		this.operadoraEnum = ["Oi", "TIM", "Vivo", "Claro"];
 
 		this.atualizacaoColumns = [
 			{ field: 'statusId', headerName: 'Status', valueGetter: (value, row) => this.state.vendaStatusByVendaStatusId?.[value]?.nome, minWidth: 100, flex: 1, renderCell: (params) => <VendaStatusChip
@@ -611,6 +631,7 @@ class CreateEditVendaModule extends React.Component {
 		this.updateCustcode = this.updateCustcode.bind(this);
 		this.updateSistemaId = this.updateSistemaId.bind(this);
 		this.updateOrigem = this.updateOrigem.bind(this);
+		this.updateInfraco = this.updateInfraco.bind(this);
 		this.updateSafra = this.updateSafra.bind(this);
 		this.updateDataVenda = this.updateDataVenda.bind(this);
 		this.updateReimputado = this.updateReimputado.bind(this);
@@ -623,6 +644,7 @@ class CreateEditVendaModule extends React.Component {
 		this.updateBrscan = this.updateBrscan.bind(this);
 		this.updateSuporte = this.updateSuporte.bind(this);
 		this.updateLoginVendedor = this.updateLoginVendedor.bind(this);
+		this.updateOperadora = this.updateOperadora.bind(this);
 
 		this.saveVenda = this.saveVenda.bind(this);
 		this.patchVenda = this.patchVenda.bind(this);
@@ -741,6 +763,7 @@ class CreateEditVendaModule extends React.Component {
 					sistemaId: venda.sistemaId,
 					ordem: venda.ordem,
 					origem: venda.origem,
+					infraco: venda.infraco,
 					dataVenda: venda.dataVenda !== null ? dayjs(new Date(venda.dataVenda)) : null,
 					safra: venda.safra !== null ? dayjs(venda.safra, "YYYY-MM-DD") : null,
 
@@ -759,6 +782,7 @@ class CreateEditVendaModule extends React.Component {
 					brscan: venda.brscan,
 					suporte: venda.suporte,
 					loginVendedor: venda.loginVendedor,
+					operadora: venda.operadora,
 
 					//atores
 
@@ -767,11 +791,13 @@ class CreateEditVendaModule extends React.Component {
 					auditorId: venda.auditorId,
 					cadastradorId: venda.cadastradorId,
 					agenteBiometriaId: venda.agenteBiometriaId,
+					agenteSuporteId: venda.agenteSuporteId,
 					vendedorExterno: venda.vendedorExterno,
 					supervisorExterno: venda.supervisorExterno,
 					auditorExterno: venda.auditorExterno,
 					cadastradorExterno: venda.cadastradorExterno,
 					agenteBiometriaExterno: venda.agenteBiometriaExterno,
+					agenteSuporteExterno: venda.agenteSuporteExterno,
 
 					//pagamento
 					formaDePagamento: venda.formaDePagamento,
@@ -1005,6 +1031,7 @@ class CreateEditVendaModule extends React.Component {
 			nome: nome,
 			adicionais: "",
 			valor: 0,
+			valorAcordado: 0,
 			telefoneFixo: false,
 			valorTelefoneFixo: 0,
 			numeroTelefoneFixo: "",
@@ -1138,6 +1165,8 @@ class CreateEditVendaModule extends React.Component {
 
 	updateOrigem = (event, value) => this.setState({origem: value});
 
+	updateInfraco = (e) => this.setState({infraco: e.target.value});
+
 	updateSafra = (newValue) => this.setState({safra: newValue});
 
 	updateDataVenda = (newValue) => this.setState({dataVenda: newValue});
@@ -1161,6 +1190,8 @@ class CreateEditVendaModule extends React.Component {
 	updateSuporte = (e) => this.setState({suporte: e.target.value});
 
 	updateLoginVendedor = (e) => this.setState({loginVendedor: e.target.value});
+
+	updateOperadora = (event, value) => this.setState({operadora: value});
 
 	// fim otimização
 
@@ -1197,8 +1228,8 @@ class CreateEditVendaModule extends React.Component {
 		if (keys.some(k => k.startsWith("produtoList")))
 			errors["PRODUTOS"] = "";
 
-		if (["os", "custcode", "sistemaId", "ordem", "origem", "safra", "dataVenda", "dataAtivacao", "prints",
-			"dataAgendamento", "dataInstalacao", "pdv", "reimputado", "vendaOriginal", "brscan", "suporte", "loginVendedor"].some(r => keys.includes(r)))
+		if (["os", "custcode", "sistemaId", "ordem", "origem", "infraco", "safra", "dataVenda", "dataAtivacao", "prints",
+			"dataAgendamento", "dataInstalacao", "pdv", "reimputado", "vendaOriginal", "brscan", "suporte", "loginVendedor", "operadora"].some(r => keys.includes(r)))
 			errors["DADOS_DO_CONTRATO"] = "";
 
 		if (["formaDePagamento", "vencimento", "agencia", "conta", "banco", "tipoDeConta"].some(r => keys.includes(r)))
@@ -1329,6 +1360,7 @@ class CreateEditVendaModule extends React.Component {
 			sistemaId: this.state.sistemaId,
 			ordem: this.state.ordem,
 			origem: this.state.origem,
+			infraco: this.state.infraco,
 			dataVenda: this.state.dataVenda !== null ? this.state.dataVenda.format("YYYY-MM-DDTHH:mm:ss") : null,
 			safra: this.state.safra !== null ? this.state.safra.format("YYYY-MM-DD") : null,
 
@@ -1347,6 +1379,7 @@ class CreateEditVendaModule extends React.Component {
 			brscan: this.state.brscan,
 			suporte: this.state.suporte,
 			loginVendedor: this.state.loginVendedor,
+			operadora: this.state.operadora,
 
 			//atores
 
@@ -1355,11 +1388,13 @@ class CreateEditVendaModule extends React.Component {
 			auditorId: this.state.auditorId,
 			cadastradorId: this.state.cadastradorId,
 			agenteBiometriaId: this.state.agenteBiometriaId,
+			agenteSuporteId: this.state.agenteSuporteId,
 			vendedorExterno: this.state.vendedorExterno,
 			supervisorExterno: this.state.supervisorExterno,
 			auditorExterno: this.state.auditorExterno,
 			cadastradorExterno: this.state.cadastradorExterno,
 			agenteBiometriaExterno: this.state.agenteBiometriaExterno,
+			agenteSuporteExterno: this.state.agenteSuporteExterno,
 
 			//pagamento
 			formaDePagamento: this.state.formaDePagamento,
@@ -2332,11 +2367,12 @@ class CreateEditVendaModule extends React.Component {
 													label="Suporte"
 													onChange={this.updateSuporte}
 													>
+													<MenuItem key={"nenhum"} value={null}>Nenhum</MenuItem>
 													{Object.keys(VendaSuporteEnum).map((suporte) => <MenuItem key={suporte} value={suporte}>{VendaSuporteEnum[suporte]}</MenuItem>)}
 												</Select>
 											</FormControl>
 										</Grid>
-										<Grid item xs={12}>
+										<Grid item xs={4}>
 											<TextField
 												id="login-vendedor"
 												value={this.state.loginVendedor}
@@ -2352,6 +2388,38 @@ class CreateEditVendaModule extends React.Component {
 												}}
 											/>
 										</Grid>
+										<Grid item xs={4}>
+											<Autocomplete
+												id="vencimento"
+												freeSolo
+												disableClearable
+												options={this.operadoraEnum}
+												value={this.state.operadora}
+												onInputChange={this.updateOperadora}
+												renderInput={(params) => (
+													<TextField
+														{...params}
+														variant="outlined"
+														label="Operadora"
+														error={"operadora" in this.state.errors}
+														helperText={this.state.errors?.operadora ?? ""}
+													/>
+												)}
+											/>
+										</Grid>
+										<Grid item xs={4}>
+											<FormControl fullWidth disabled={this.state.calling}>
+												<InputLabel>Infraco</InputLabel>
+												<Select
+													value={this.state.infraco}
+													label="Infraco"
+													onChange={this.updateInfraco}
+													>
+													<MenuItem key={"nenhum"} value={null}>Nenhum</MenuItem>
+													{Object.keys(VendaInfracoEnum).map((infraco) => <MenuItem key={infraco} value={infraco}>{VendaInfracoEnum[infraco]}</MenuItem>)}
+												</Select>
+											</FormControl>
+										</Grid>
 									</React.Fragment>}
 								</React.Fragment> : ""}
 
@@ -2359,7 +2427,7 @@ class CreateEditVendaModule extends React.Component {
 									<Grid item xs={12}>
 										<Divider><Chip icon={<HubIcon />} label="Interno" /></Divider>
 									</Grid>
-										<Grid item xs={2.4}>
+										<Grid item xs={2}>
 											<Stack spacing={3} justifyContent="start" height="100%">
 												<Typography align="center">Vendedor</Typography>
 												<UsuarioDisplayChip usuario={this.state.usuarioByUsuarioId?.[this.state.vendedorId]} color={this.state.vendedorId ? "primary" : "default"}/>
@@ -2383,7 +2451,7 @@ class CreateEditVendaModule extends React.Component {
 												/> : ""}
 											</Stack>
 										</Grid>
-										<Grid item xs={2.4}>
+										<Grid item xs={2}>
 											<Stack spacing={3} justifyContent="start" height="100%">
 												<Typography align="center">Supervisor</Typography>
 												<UsuarioDisplayChip usuario={this.state.usuarioByUsuarioId?.[this.state.supervisorId]} color={this.state.supervisorId ? "primary" : "default"}/>
@@ -2407,7 +2475,7 @@ class CreateEditVendaModule extends React.Component {
 												/> : ""}
 											</Stack>
 										</Grid>
-										<Grid item xs={2.4}>
+										<Grid item xs={2}>
 											<Stack spacing={3} justifyContent="start" height="100%">
 												<Typography align="center">Auditor</Typography>
 												<UsuarioDisplayChip usuario={this.state.usuarioByUsuarioId?.[this.state.auditorId]} color={this.state.auditorId ? "primary" : "default"}/>
@@ -2431,7 +2499,7 @@ class CreateEditVendaModule extends React.Component {
 												/> : ""}
 											</Stack>
 										</Grid>
-										<Grid item xs={2.4}>
+										<Grid item xs={2}>
 											<Stack spacing={3} justifyContent="start" height="100%">
 												<Typography align="center">Cadastrador</Typography>
 												<UsuarioDisplayChip usuario={this.state.usuarioByUsuarioId?.[this.state.cadastradorId]} color={this.state.cadastradorId ? "primary" : "default"}/>
@@ -2455,7 +2523,7 @@ class CreateEditVendaModule extends React.Component {
 												/> : ""}
 											</Stack>
 										</Grid>
-										<Grid item xs={2.4}>
+										<Grid item xs={2}>
 											<Stack spacing={3} justifyContent="start" height="100%">
 												<Typography align="center">Agente Biometria</Typography>
 												<UsuarioDisplayChip usuario={this.state.usuarioByUsuarioId?.[this.state.agenteBiometriaId]} color={this.state.agenteBiometriaId ? "primary" : "default"}/>
@@ -2479,10 +2547,34 @@ class CreateEditVendaModule extends React.Component {
 												/> : ""}
 											</Stack>
 										</Grid>
+										<Grid item xs={2}>
+											<Stack spacing={3} justifyContent="start" height="100%">
+												<Typography align="center">Agente Suporte</Typography>
+												<UsuarioDisplayChip usuario={this.state.usuarioByUsuarioId?.[this.state.agenteSuporteId]} color={this.state.agenteSuporteId ? "primary" : "default"}/>
+												{this.props.usuario.permissaoList.includes("ALTERAR_AUDITOR") ? <Autocomplete
+													id="agente-suporte"
+													options={Object.keys(this.state.usuarioByUsuarioId ?? {}).map(key => parseInt(key))}
+													getOptionLabel={(option) => this.state.usuarioByUsuarioId?.[option]?.nome}
+													renderOption={(props, option) => <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props} key={option}>
+																<UsuarioDisplayChip usuario={this.state.usuarioByUsuarioId?.[option]}/>
+															</Box>}
+													value={this.state.agenteSuporteId}
+													onChange={(event, value) => this.setState({agenteSuporteId: value})}
+													renderInput={(params) => (
+														<TextField
+														{...params}
+														variant="outlined"
+														label="Agente Suporte"
+														/>
+													)}
+													loading={this.state.usuarioList == null}
+												/> : ""}
+											</Stack>
+										</Grid>
 										<Grid item xs={12}>
 											<Divider><Chip icon={<PublicIcon />} label="Externo" /></Divider>
 										</Grid>
-										<Grid item xs={2.4}>
+										<Grid item xs={2}>
 											<TextField
 												id="vendedor-externo"
 												value={this.state.vendedorExterno}
@@ -2498,7 +2590,7 @@ class CreateEditVendaModule extends React.Component {
 												}}
 											/>
 										</Grid>
-										<Grid item xs={2.4}>
+										<Grid item xs={2}>
 											<TextField
 												id="supervisor-externo"
 												value={this.state.supervisorExterno}
@@ -2514,7 +2606,7 @@ class CreateEditVendaModule extends React.Component {
 												}}
 											/>
 										</Grid>
-										<Grid item xs={2.4}>
+										<Grid item xs={2}>
 											<TextField
 												id="auditor-externo"
 												value={this.state.auditorExterno}
@@ -2530,7 +2622,7 @@ class CreateEditVendaModule extends React.Component {
 												}}
 											/>
 										</Grid>
-										<Grid item xs={2.4}>
+										<Grid item xs={2}>
 											<TextField
 												id="cadastrador-externo"
 												value={this.state.cadastradorExterno}
@@ -2546,7 +2638,7 @@ class CreateEditVendaModule extends React.Component {
 												}}
 											/>
 										</Grid>
-										<Grid item xs={2.4}>
+										<Grid item xs={2}>
 											<TextField
 												id="agente-biometria-externo"
 												value={this.state.agenteBiometriaExterno}
@@ -2557,6 +2649,22 @@ class CreateEditVendaModule extends React.Component {
 												disabled={this.state.calling || !this.props.usuario.permissaoList.includes("ALTERAR_AUDITOR")}
 												error={"agenteBiometriaExterno" in this.state.errors}
 												helperText={this.state.errors?.agenteBiometriaExterno ?? ""}
+												inputProps={{
+													maxLength: 100,
+												}}
+											/>
+										</Grid>
+										<Grid item xs={2}>
+											<TextField
+												id="agente-suporte-externo"
+												value={this.state.agenteSuporteExterno}
+												onChange={(e) => this.setState({agenteSuporteExterno: e.target.value})}
+												fullWidth
+												label="Agente Suporte Externo"
+												variant="outlined"
+												disabled={this.state.calling || !this.props.usuario.permissaoList.includes("ALTERAR_AUDITOR")}
+												error={"agenteSuporteExterno" in this.state.errors}
+												helperText={this.state.errors?.agenteSuporteExterno ?? ""}
 												inputProps={{
 													maxLength: 100,
 												}}

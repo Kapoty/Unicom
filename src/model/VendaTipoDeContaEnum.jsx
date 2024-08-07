@@ -1,4 +1,4 @@
 export default {
-	"POUPANCA": "Poupanca",
+	"POUPANCA": "Poupança",
 	"CORRENTE": "Corrente"
 }
