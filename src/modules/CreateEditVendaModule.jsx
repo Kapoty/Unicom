@@ -87,6 +87,7 @@ import Pagination from '@mui/material/Pagination';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import FormHelperText from '@mui/material/FormHelperText';
 import CloseIcon from '@mui/icons-material/Close';
+import ContactSupportIcon from '@mui/icons-material/ContactSupport';
 
 import CPFInput from "../components/CPFInput";
 import CNPJInput from "../components/CNPJInput";
@@ -108,7 +109,7 @@ import VendaSuporteEnum from "../model/VendaSuporteEnum";
 import VendaGeneroEnum from "../model/VendaGeneroEnum";
 import VendaReimputadoEnum from "../model/VendaReimputadoEnum";
 import VendaTipoDeContaEnum from "../model/VendaTipoDeContaEnum";
-import VendaInfracoEnum from "../model/VendaInfracoEnum";
+import VendaInfraEnum from "../model/VendaInfraEnum";
 
 import axios from "axios";
 
@@ -424,6 +425,61 @@ const FaturaPaper = React.memo(({fatura, i, errors, calling, updateFatura, delet
 			</Paper>
 });
 
+const SuportePaper = React.memo(({suporte, i, errors, calling, updateSuporte, deleteSuporte, ALTERAR_AUDITOR}) => {
+
+	const updateSuporteMes = useCallback((newValue) => updateSuporte(i, "mes", newValue), [i]);
+	const updateSuporteObservacao = useCallback((e) => updateSuporte(i, "observacao", e.target.value), [i]);
+	const _deleteSuporte = useCallback(() => deleteSuporte(i), [i]);
+
+	return <Paper sx={{padding: 3}}>
+				<Grid container spacing={3}>
+					<Grid item xs={12}>
+						<Divider><Chip label={i + 1} /></Divider>
+					</Grid>
+					<Grid item xs={3}>
+						<DatePicker
+							label="Mês"
+							views={['month', 'year']}
+							value={suporte.mes}
+							onChange={updateSuporteMes}
+							slotProps={{
+								textField: {
+									required: true,
+									fullWidth: true,
+									error: `suporteList[${i}].mes` in errors,
+									helperText: errors?.[`suporteList[${i}].mes`] ?? ""
+								}
+							}}
+							disabled={calling || !ALTERAR_AUDITOR}
+						/>
+					</Grid>
+					<Grid item xs={9} display="flex" flexDirection="row" gap={3} alignItems="center">
+						<TextField
+							value={suporte.observacao}
+							onChange={updateSuporteObservacao}
+							fullWidth
+							label="Observação"
+							variant="outlined"
+							disabled={calling || !ALTERAR_AUDITOR}
+							error={`suporteList[${i}].observacao` in errors}
+							helperText={errors?.[`suporteList[${i}].observacao`] ?? ""}
+							inputProps={{
+								maxLength: 65536,
+							}}
+							multiline
+							rows={4}
+						/>
+						<IconButton
+							disabled={calling || !ALTERAR_AUDITOR}
+							onClick={_deleteSuporte}
+						>
+							<DeleteIcon/>
+						</IconButton>
+					</Grid>
+				</Grid>
+			</Paper>
+});
+
 class CreateEditVendaModule extends React.Component {
 
 	constructor(props) {
@@ -487,6 +543,8 @@ class CreateEditVendaModule extends React.Component {
 			contato1: "",
 			contato2: "",
 			contato3: "",
+			dataPreferenciaInstalacao1: null,
+			dataPreferenciaInstalacao2: null,
 			email: "",
 
 			// endereco
@@ -512,7 +570,7 @@ class CreateEditVendaModule extends React.Component {
 			sistemaId: null,
 			ordem: "",
 			origem: "",
-			infraco: null,
+			infra: null,
 			dataVenda: null,
 			safra: dayjs().date(1),
 
@@ -529,7 +587,7 @@ class CreateEditVendaModule extends React.Component {
 			reimputado: "NAO",
 			vendaOriginal: true,
 			brscan: null,
-			suporte: "NAO",
+			suporte: null,
 			loginVendedor: "",
 			operadora: "",
 
@@ -563,6 +621,9 @@ class CreateEditVendaModule extends React.Component {
 
 			//faturas
 			faturaList: [],
+
+			//suportes
+			suporteList: [],
 
 			//observacao
 			observacao: "",
@@ -627,11 +688,15 @@ class CreateEditVendaModule extends React.Component {
 		this.updateFatura = this.updateFatura.bind(this);
 		this.deleteFatura = this.deleteFatura.bind(this);
 
+		this.addSuporte = this.addSuporte.bind(this);
+		this.updateVendaSuporte = this.updateVendaSuporte.bind(this);
+		this.deleteSuporte = this.deleteSuporte.bind(this);
+
 		this.updateOs = this.updateOs.bind(this);
 		this.updateCustcode = this.updateCustcode.bind(this);
 		this.updateSistemaId = this.updateSistemaId.bind(this);
 		this.updateOrigem = this.updateOrigem.bind(this);
-		this.updateInfraco = this.updateInfraco.bind(this);
+		this.updateInfra = this.updateInfra.bind(this);
 		this.updateSafra = this.updateSafra.bind(this);
 		this.updateDataVenda = this.updateDataVenda.bind(this);
 		this.updateReimputado = this.updateReimputado.bind(this);
@@ -702,7 +767,11 @@ class CreateEditVendaModule extends React.Component {
 				let venda = response.data;
 
 				venda.faturaList.forEach((fatura) => {
-					fatura.mes = dayjs(fatura.mes, "YYYY-MM-DD")
+					fatura.mes = dayjs(fatura.mes, "YYYY-MM-DD");
+				})
+
+				venda.suporteList.forEach((suporte) => {
+					suporte.mes = dayjs(suporte.mes, "YYYY-MM-DD");
 				})
 
 				this.setState({
@@ -740,6 +809,8 @@ class CreateEditVendaModule extends React.Component {
 					contato1: venda.contato1,
 					contato2: venda.contato2,
 					contato3: venda.contato3,
+					dataPreferenciaInstalacao1: venda.dataPreferenciaInstalacao1 !== null ? dayjs(new Date(venda.dataPreferenciaInstalacao1)) : null,
+					dataPreferenciaInstalacao2: venda.dataPreferenciaInstalacao2 !== null ? dayjs(new Date(venda.dataPreferenciaInstalacao2)) : null,
 					email: venda.email,
 
 					// endereco
@@ -763,7 +834,7 @@ class CreateEditVendaModule extends React.Component {
 					sistemaId: venda.sistemaId,
 					ordem: venda.ordem,
 					origem: venda.origem,
-					infraco: venda.infraco,
+					infra: venda.infra,
 					dataVenda: venda.dataVenda !== null ? dayjs(new Date(venda.dataVenda)) : null,
 					safra: venda.safra !== null ? dayjs(venda.safra, "YYYY-MM-DD") : null,
 
@@ -814,6 +885,9 @@ class CreateEditVendaModule extends React.Component {
 
 					//faturas
 					faturaList: venda.faturaList,
+
+					//suportes
+					suporteList: venda.suporteList,
 
 					//observacao
 					observacao: venda.observacao,
@@ -1153,6 +1227,42 @@ class CreateEditVendaModule extends React.Component {
 
 	}
 
+	addSuporte() {
+		let suporteList = this.state.suporteList;
+
+		suporteList.push({
+			mes: dayjs().set('date', 1),
+			observacao: ""
+		})
+
+		this.setState({
+			suporteList: suporteList
+		})
+	}
+
+	updateVendaSuporte(suporteIndex, atributo, valor) {
+
+		let suporteList = this.state.suporteList;
+
+		let suporte = suporteList[suporteIndex];
+
+		suporte[atributo] = valor;
+
+		suporteList[suporteIndex] = Object.assign({}, suporte);
+
+		this.setState({suporteList: suporteList});
+	}
+
+	deleteSuporte(suporteIndex) {
+
+		let suporteList = this.state.suporteList;
+
+		suporteList.splice(suporteIndex, 1);
+
+		this.setState({suporteList: suporteList});
+
+	}
+
 	// otimização
 
 	updateOs = (e) => this.setState({os: e.target.value});
@@ -1165,7 +1275,7 @@ class CreateEditVendaModule extends React.Component {
 
 	updateOrigem = (event, value) => this.setState({origem: value});
 
-	updateInfraco = (e) => this.setState({infraco: e.target.value});
+	updateInfra = (e) => this.setState({infra: e.target.value});
 
 	updateSafra = (newValue) => this.setState({safra: newValue});
 
@@ -1219,7 +1329,7 @@ class CreateEditVendaModule extends React.Component {
 			"cnpj", "porte", "razaoSocial", "dataConstituicao", "dataEmissao", "representanteLegal", "cpfRepresentanteLegal"].some(r => keys.includes(r)))
 			errors["DADOS_DO_CLIENTE"] = "";
 
-		if (["nomeContato", "contato1", "contato2", "contato3", "email"].some(r => keys.includes(r)))
+		if (["nomeContato", "contato1", "contato2", "contato3", "dataPreferenciaInstalacao1", "dataPreferenciaInstalacao2", "email"].some(r => keys.includes(r)))
 			errors["CONTATO"] = "";
 
 		if (["cep", "logradouro", "numero", "complemento", "bairro", "referencia", "cidade", "uf"].some(r => keys.includes(r)))
@@ -1228,7 +1338,7 @@ class CreateEditVendaModule extends React.Component {
 		if (keys.some(k => k.startsWith("produtoList")))
 			errors["PRODUTOS"] = "";
 
-		if (["os", "custcode", "sistemaId", "ordem", "origem", "infraco", "safra", "dataVenda", "dataAtivacao", "prints",
+		if (["os", "custcode", "sistemaId", "ordem", "origem", "infra", "safra", "dataVenda", "dataAtivacao", "prints",
 			"dataAgendamento", "dataInstalacao", "pdv", "reimputado", "vendaOriginal", "brscan", "suporte", "loginVendedor", "operadora"].some(r => keys.includes(r)))
 			errors["DADOS_DO_CONTRATO"] = "";
 
@@ -1240,6 +1350,9 @@ class CreateEditVendaModule extends React.Component {
 
 		if (keys.some(k => k.startsWith("faturaList")))
 			errors["FATURAS"] = "";
+
+		if (keys.some(k => k.startsWith("suporteList")))
+			errors["SUPORTES"] = "";
 
 		return errors;
 	}
@@ -1304,6 +1417,15 @@ class CreateEditVendaModule extends React.Component {
 			})
 		})
 
+		let suporteList = [];
+
+		this.state.suporteList.forEach((suporte) => {
+			suporteList.push({
+				mes: suporte.mes.set('date', 1).format("YYYY-MM-DD"),
+				observacao: suporte.observacao,
+			})
+		})
+
 		let data = {
 			// tipo da venda
 
@@ -1337,6 +1459,8 @@ class CreateEditVendaModule extends React.Component {
 			contato1: this.state.contato1.replace(/\D/g, ""),
 			contato2: this.state.contato2.replace(/\D/g, ""),
 			contato3: this.state.contato3.replace(/\D/g, ""),
+			dataPreferenciaInstalacao1: this.state.dataPreferenciaInstalacao1 !== null ? this.state.dataPreferenciaInstalacao1.format("YYYY-MM-DDTHH:mm:ss") : null,
+			dataPreferenciaInstalacao2: this.state.dataPreferenciaInstalacao2 !== null ? this.state.dataPreferenciaInstalacao2.format("YYYY-MM-DDTHH:mm:ss") : null,
 			email: this.state.email,
 
 			// endereco
@@ -1360,7 +1484,7 @@ class CreateEditVendaModule extends React.Component {
 			sistemaId: this.state.sistemaId,
 			ordem: this.state.ordem,
 			origem: this.state.origem,
-			infraco: this.state.infraco,
+			infra: this.state.infra,
 			dataVenda: this.state.dataVenda !== null ? this.state.dataVenda.format("YYYY-MM-DDTHH:mm:ss") : null,
 			safra: this.state.safra !== null ? this.state.safra.format("YYYY-MM-DD") : null,
 
@@ -1410,6 +1534,9 @@ class CreateEditVendaModule extends React.Component {
 
 			//faturas
 			faturaList: faturaList,
+
+			//suportes
+			suporteList: suporteList,
 
 			//observacao
 			observacao: this.state.observacao,
@@ -1538,6 +1665,7 @@ class CreateEditVendaModule extends React.Component {
 										<Tab icon={<GroupsIcon />} value="ATORES" label="Atores" />
 										<Tab icon={<Badge color="error" variant="dot" invisible={!("PAGAMENTO" in this.state.errors)}><PaidIcon /></Badge>} value="PAGAMENTO" label="Pagamento" />
 										<Tab icon={<Badge color="error" variant="dot" invisible={!("FATURAS" in this.state.errors)}><RequestQuoteIcon /></Badge>} value="FATURAS" label="Faturas" />
+										<Tab icon={<Badge color="error" variant="dot" invisible={!("SUPORTES" in this.state.errors)}><ContactSupportIcon /></Badge>} value="SUPORTES" label="Suportes" />
 										<Tab icon={<ChatIcon />} value="OBSERVACAO" label="Observação" />
 										<Tab icon={<Badge color="error" variant="dot" invisible={!("STATUS" in this.state.errors)}><InfoIcon /></Badge>} value="STATUS" label="Status / Salvar" />
 										<Tab icon={<AttachmentIcon />} value="ANEXOS" label="Anexos" />
@@ -1915,6 +2043,38 @@ class CreateEditVendaModule extends React.Component {
 											error={"contato3" in this.state.errors}
 											helperText={this.state.errors?.contato3 ?? ""}
 											fixoDinamico
+										/>
+									</Grid>
+									<Grid item xs={6}>
+										<DateTimePicker
+												label="Data Preferência Instalação 1"
+												value={this.state.dataPreferenciaInstalacao1}
+												onChange={(newValue) => this.setState({dataPreferenciaInstalacao1: newValue})}
+												slotProps={{
+													field: { clearable: true },
+													textField: {
+														required: true,
+														fullWidth: true,
+														error: "dataPreferenciaInstalacao1" in this.state.errors,
+														helperText: this.state.errors?.dataPreferenciaInstalacao1 ?? "",
+													},
+												}}
+											/>
+									</Grid>
+									<Grid item xs={6}>
+										<DateTimePicker
+											label="Data Preferência Instalação 2"
+											value={this.state.dataPreferenciaInstalacao2}
+											onChange={(newValue) => this.setState({dataPreferenciaInstalacao2: newValue})}
+											slotProps={{
+												field: { clearable: true },
+												textField: {
+													required: true,
+													fullWidth: true,
+													error: "dataPreferenciaInstalacao2" in this.state.errors,
+													helperText: this.state.errors?.dataPreferenciaInstalacao2 ?? "",
+												},
+											}}
 										/>
 									</Grid>
 									<Grid item xs={12}>
@@ -2390,7 +2550,7 @@ class CreateEditVendaModule extends React.Component {
 										</Grid>
 										<Grid item xs={4}>
 											<Autocomplete
-												id="vencimento"
+												id="operadora"
 												freeSolo
 												disableClearable
 												options={this.operadoraEnum}
@@ -2399,6 +2559,7 @@ class CreateEditVendaModule extends React.Component {
 												renderInput={(params) => (
 													<TextField
 														{...params}
+														required
 														variant="outlined"
 														label="Operadora"
 														error={"operadora" in this.state.errors}
@@ -2408,16 +2569,17 @@ class CreateEditVendaModule extends React.Component {
 											/>
 										</Grid>
 										<Grid item xs={4}>
-											<FormControl fullWidth disabled={this.state.calling}>
-												<InputLabel>Infraco</InputLabel>
+											<FormControl fullWidth disabled={this.state.calling} required error={"infra" in this.state.errors}>
+												<InputLabel>Infra</InputLabel>
 												<Select
-													value={this.state.infraco}
-													label="Infraco"
-													onChange={this.updateInfraco}
+													value={this.state.infra}
+													label="Infra"
+													onChange={this.updateInfra}
 													>
 													<MenuItem key={"nenhum"} value={null}>Nenhum</MenuItem>
-													{Object.keys(VendaInfracoEnum).map((infraco) => <MenuItem key={infraco} value={infraco}>{VendaInfracoEnum[infraco]}</MenuItem>)}
+													{Object.keys(VendaInfraEnum).map((infra) => <MenuItem key={infra} value={infra}>{VendaInfraEnum[infra]}</MenuItem>)}
 												</Select>
+												<FormHelperText error>{this.state.errors?.infra ?? ""}</FormHelperText>
 											</FormControl>
 										</Grid>
 									</React.Fragment>}
@@ -2802,6 +2964,30 @@ class CreateEditVendaModule extends React.Component {
 									</Grid>
 								</React.Fragment> : ""}
 
+								{this.state.tab == "SUPORTES" ? <React.Fragment>
+									<Grid item xs={12}>
+										<Box display="flex" flexDirection="column" gap={3}>
+											{this.state.suporteList.length == 0 ? <Alert severity="info">Os suportes que você adicionar aparecerão aqui.</Alert> :
+												this.state.suporteList.map((suporte, i) =>
+													<SuportePaper
+														key={i}
+														suporte={suporte}
+														i={i}
+														errors={this.state.errors}
+														calling={this.state.calling}
+														updateSuporte={this.updateVendaSuporte}
+														deleteSuporte={this.deleteSuporte}
+														ALTERAR_AUDITOR={ALTERAR_AUDITOR}
+													/>
+												)
+											}
+										</Box>
+									</Grid>
+									<Grid item xs={12} container display="flex" justifyContent="flex-end">
+										<Button variant="contained" size="large" startIcon={<AddIcon />} onClick={this.addSuporte} disabled={this.state.calling || !ALTERAR_AUDITOR} >Adicionar Suporte</Button>
+									</Grid>
+								</React.Fragment> : ""}
+
 								{this.state.tab == "OBSERVACAO" ? <React.Fragment>
 									<Grid item xs={12}>
 										<TextField
@@ -2815,7 +3001,7 @@ class CreateEditVendaModule extends React.Component {
 											error={"observacao" in this.state.errors}
 											helperText={this.state.errors?.observacao ?? ""}
 											inputProps={{
-												maxLength: 200,
+												maxLength: 500,
 											}}
 											multiline
 											rows={4}
@@ -2881,7 +3067,7 @@ class CreateEditVendaModule extends React.Component {
 											error={"relato" in this.state.errors}
 											helperText={this.state.errors?.relato ?? ""}
 											inputProps={{
-												maxLength: 200,
+												maxLength: 500,
 											}}
 											multiline
 											rows={4}

@@ -36,6 +36,7 @@ import FormLabel from '@mui/material/FormLabel';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 import { DatePicker } from '@mui/x-date-pickers-pro';
+import Autocomplete from '@mui/material/Autocomplete';
 
 import CustomDataGridPremium from "./CustomDataGridPremium";
 
@@ -118,12 +119,16 @@ export default class AlterarJornadaBox extends React.Component {
 			{ field: 'prioridade', headerName: 'Prioridade', minWidth: 100, flex: 1 },
 		];
 
+		this.nomeEnum = ["Padrão", "Sábado", "Exceção", "Feriado"];
+
 		this.getJornadaListFromApi = this.getJornadaListFromApi.bind(this);
 		this.getJornadaFromApi = this.getJornadaFromApi.bind(this);
 
 		this.calculateRows = this.calculateRows.bind(this);
 
 		this.handleRowSelected = this.handleRowSelected.bind(this);
+		this.handleNenhum = this.handleNenhum.bind(this);
+		this.handleTodos = this.handleTodos.bind(this);
 
 		this.setJornadaFieldsFromJornadaSelected = this.setJornadaFieldsFromJornadaSelected.bind(this);
 
@@ -320,6 +325,30 @@ export default class AlterarJornadaBox extends React.Component {
 			});
 	}
 
+	handleNenhum() {
+		this.setState({
+			segunda: false,
+			terca: false,
+			quarta: false,
+			quinta: false,
+			sexta: false,
+			sabado: false,
+			domingo: false,
+		});
+	}
+
+	handleTodos() {
+		this.setState({
+			segunda: true,
+			terca: true,
+			quarta: true,
+			quinta: true,
+			sexta: true,
+			sabado: true,
+			domingo: true,
+		});
+	}
+
 	openAlert(severity, message) {
 		this.setState({alert: <Alert severity={severity} onClose={this.closeAlert}>{message}</Alert>, alertOpen: true});
 	}
@@ -373,17 +402,23 @@ export default class AlterarJornadaBox extends React.Component {
 									</ButtonGroup>
 								</Grid>
 								<Grid item xs={12}>
-									<TextField
+									<Autocomplete
 										id="nome"
+										freeSolo
+										disableClearable
+										options={this.nomeEnum}
 										value={this.state.nome}
-										onChange={(e) => this.setState({nome: e.target.value})}
-										fullWidth
-										label="Nome"
-										required
-										variant="outlined"
-										disabled={this.state.calling}
-										error={"nome" in this.state.errors}
-										helperText={this.state.errors?.nome ?? ""}
+										onInputChange={(event, value) => this.setState({nome: value})}
+										renderInput={(params) => (
+											<TextField
+												{...params}
+												required
+												variant="outlined"
+												label="Nome"
+												error={"nome" in this.state.errors}
+												helperText={this.state.errors?.nome ?? ""}
+											/>
+										)}
 									/>
 								</Grid>
 								<Grid item xs={3}>
@@ -460,47 +495,53 @@ export default class AlterarJornadaBox extends React.Component {
 								</Grid>
 								{(!this.state.entrada || !this.state.intervaloInicio || !this.state.intervaloFim || !this.state.saida) && <Grid item container xs={12} justifyContent="center"><Chip label="NÃO REGISTRA" color="error" size="small" /></Grid>}
 								<Grid item xs={12}>
-									<FormControl component="fieldset">
-										<FormLabel component="legend">Dias da Semana</FormLabel>
-										<FormGroup aria-label="position" row>
-											<FormControlLabel
-												control={<Checkbox checked={this.state.segunda} onChange={(e) => this.setState({segunda: e.target.checked})}/>}
-												label="SEG"
-												labelPlacement="bottom"
-											/>
-											<FormControlLabel
-												control={<Checkbox checked={this.state.terca} onChange={(e) => this.setState({terca: e.target.checked})}/>}
-												label="TER"
-												labelPlacement="bottom"
-											/>
-											<FormControlLabel
-												control={<Checkbox checked={this.state.quarta} onChange={(e) => this.setState({quarta: e.target.checked})}/>}
-												label="QUA"
-												labelPlacement="bottom"
-											/>
-											<FormControlLabel
-												control={<Checkbox checked={this.state.quinta} onChange={(e) => this.setState({quinta: e.target.checked})}/>}
-												label="QUI"
-												labelPlacement="bottom"
-											/>
-											<FormControlLabel
-												control={<Checkbox checked={this.state.sexta} onChange={(e) => this.setState({sexta: e.target.checked})}/>}
-												label="SEX"
-												labelPlacement="bottom"
-											/>
-											<FormControlLabel
-												control={<Checkbox checked={this.state.sabado} onChange={(e) => this.setState({sabado: e.target.checked})}/>}
-												label="SAB"
-												labelPlacement="bottom"
-											/>
-											<FormControlLabel
-												control={<Checkbox checked={this.state.domingo} onChange={(e) => this.setState({domingo: e.target.checked})}/>}
-												label="DOM"
-												labelPlacement="bottom"
-											/>
+									<Stack spacing={1}>
+										<FormControl component="fieldset">
+											<FormLabel component="legend">Dias da Semana</FormLabel>
+											<FormGroup aria-label="position" row>
+												<FormControlLabel
+													control={<Checkbox checked={this.state.segunda} onChange={(e) => this.setState({segunda: e.target.checked})}/>}
+													label="SEG"
+													labelPlacement="bottom"
+												/>
+												<FormControlLabel
+													control={<Checkbox checked={this.state.terca} onChange={(e) => this.setState({terca: e.target.checked})}/>}
+													label="TER"
+													labelPlacement="bottom"
+												/>
+												<FormControlLabel
+													control={<Checkbox checked={this.state.quarta} onChange={(e) => this.setState({quarta: e.target.checked})}/>}
+													label="QUA"
+													labelPlacement="bottom"
+												/>
+												<FormControlLabel
+													control={<Checkbox checked={this.state.quinta} onChange={(e) => this.setState({quinta: e.target.checked})}/>}
+													label="QUI"
+													labelPlacement="bottom"
+												/>
+												<FormControlLabel
+													control={<Checkbox checked={this.state.sexta} onChange={(e) => this.setState({sexta: e.target.checked})}/>}
+													label="SEX"
+													labelPlacement="bottom"
+												/>
+												<FormControlLabel
+													control={<Checkbox checked={this.state.sabado} onChange={(e) => this.setState({sabado: e.target.checked})}/>}
+													label="SAB"
+													labelPlacement="bottom"
+												/>
+												<FormControlLabel
+													control={<Checkbox checked={this.state.domingo} onChange={(e) => this.setState({domingo: e.target.checked})}/>}
+													label="DOM"
+													labelPlacement="bottom"
+												/>
 
-										</FormGroup>
-									</FormControl>
+											</FormGroup>
+										</FormControl>
+										<ButtonGroup variant="text" size="small">
+											<Button onClick={this.handleNenhum}>Nenhum</Button>
+											<Button onClick={this.handleTodos}>Todos</Button>
+										</ButtonGroup>
+									</Stack>
 								</Grid>
 								<Grid item xs={6}>
 									<DatePicker

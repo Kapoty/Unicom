@@ -69,7 +69,7 @@ import VendaBrscanEnum from "../model/VendaBrscanEnum";
 import VendaSuporteEnum from "../model/VendaSuporteEnum";
 import VendaReimputadoEnum from "../model/VendaReimputadoEnum";
 import VendaTipoDeContaEnum from "../model/VendaTipoDeContaEnum";
-import VendaInfracoEnum from "../model/VendaInfracoEnum";
+import VendaInfraEnum from "../model/VendaInfraEnum";
 
 
 import dayjs from 'dayjs';
@@ -386,7 +386,7 @@ class VendasModule extends React.Component {
 			{ field: 'custcode', headerName: 'Cust-Code', width: 100 },
 			{ field: 'ordem', headerName: 'Ordem', width: 100 },
 			{ field: 'origem', headerName: 'Mailing/Origem', width: 200 },
-			{ field: 'infraco', headerName: 'Infraco', width: 200 },
+			{ field: 'infra', headerName: 'Infra', width: 200 },
 			{ field: 'vendedorId', headerName: 'Vendedor', valueGetter: (value, row) => this.state.usuarioByUsuarioId?.[value]?.nome, width: 200, renderCell: (params) => <UsuarioDisplayChip usuario={this.state.usuarioByUsuarioId?.[params.row.vendedorId]}/>},
 			{ field: 'supervisorId', headerName: 'Supervisor', valueGetter: (value, row) => this.state.usuarioByUsuarioId?.[value]?.nome, width: 200, renderCell: (params) => <UsuarioDisplayChip usuario={this.state.usuarioByUsuarioId?.[params.row.supervisorId]}/>},
 			{ field: 'vendedorExterno', headerName: 'Vendedor Externo', width: 200 },
@@ -422,6 +422,8 @@ class VendasModule extends React.Component {
 			{ field: 'contato1', headerName: 'Contato 1', width: 200 },
 			{ field: 'contato2', headerName: 'Contato 2', width: 200 },
 			{ field: 'contato3', headerName: 'Contato 3', width: 200 },
+			{ field: 'dataPreferenciaInstalacao1', headerName: 'Data Preferência Instação 1', width: 200, type: 'date', renderCell: (params) => params.value !== null ? dayjs(params.value).format('L LTS') : "" },
+			{ field: 'dataPreferenciaInstalacao2', headerName: 'Data Preferência Instação 2', width: 200, type: 'date', renderCell: (params) => params.value !== null ? dayjs(params.value).format('L LTS') : "" },
 			{ field: 'email', headerName: 'Email', width: 200 },
 			{ field: 'observacao', headerName: 'Observação', width: 200 },
 
@@ -821,7 +823,7 @@ class VendasModule extends React.Component {
 			custcode: venda.custcode,
 			ordem: venda.ordem,
 			origem: venda.origem,
-			infraco: venda?.infraco !== null ? VendaInfracoEnum[venda.infraco] : "",
+			infra: venda?.infra !== null ? VendaInfraEnum[venda.infra] : "",
 			vendedorId: venda.vendedorId,
 			supervisorId: venda.supervisorId,
 			vendedorExterno: venda.vendedorExterno,
@@ -861,6 +863,8 @@ class VendasModule extends React.Component {
 			contato1: venda.contato1.length > 10 ? venda.contato1.replace(/(\d{2})(\d{1})(\d{4})(\d{4})/, "($1) $2 $3-$4") : venda.contato1.replace(/(\d{2})(\d{4})(\d{4})/, "($1) $2-$3"),
 			contato2: venda.contato2.length > 10 ? venda.contato2.replace(/(\d{2})(\d{1})(\d{4})(\d{4})/, "($1) $2 $3-$4") : venda.contato2.replace(/(\d{2})(\d{4})(\d{4})/, "($1) $2-$3"),
 			contato3: venda.contato3.length > 10 ? venda.contato3.replace(/(\d{2})(\d{1})(\d{4})(\d{4})/, "($1) $2 $3-$4") : venda.contato3.replace(/(\d{2})(\d{4})(\d{4})/, "($1) $2-$3"),
+			dataPreferenciaInstalacao1: venda.dataPreferenciaInstalacao1 !== null ? new Date(venda.dataPreferenciaInstalacao1) : null,
+			dataPreferenciaInstalacao2: venda.dataPreferenciaInstalacao1 !== null ? new Date(venda.dataPreferenciaInstalacao2) : null,
 			email: venda.email,
 			observacao: venda.observacao,	
 

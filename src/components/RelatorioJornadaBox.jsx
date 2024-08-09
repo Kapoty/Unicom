@@ -168,6 +168,11 @@ export default class RelatorioJornadaBox extends React.Component {
 				ajusteHoraExtra: false,
 			},
 			{
+				value: "FALTA_JUSTIFICADA",
+				nome: "Falta Justificada",
+				ajusteHoraExtra: false,
+			},
+			{
 				value: "FOLGA_CONCEDIDA",
 				nome: "Folga Concedida",
 				ajusteHoraExtra: true,
@@ -220,6 +225,7 @@ export default class RelatorioJornadaBox extends React.Component {
 
 	componentDidMount() {
 		this.getContratoListFromApi();
+		this.getReportFromApi();
 	}
 
 	getContratoListFromApi() {
@@ -370,6 +376,10 @@ export default class RelatorioJornadaBox extends React.Component {
 						horaExtra += day.registroJornadaCorrecao.ajusteHoraExtra;
 					break;
 					case "FALTA_NAO_JUSTIFICADA":
+						totalFaltas += 1;
+					break;
+					case "FALTA_JUSTIFICADA":
+						horaExtra = 0;
 						totalFaltas += 1;
 					break;
 					case "FOLGA_CONCEDIDA":

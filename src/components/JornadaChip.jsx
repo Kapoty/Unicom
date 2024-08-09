@@ -261,6 +261,9 @@ export default class JornadaChip extends React.Component {
 			.then((response) => {
 				this.openAlert("success", "Logado com sucesso!");
 				this.getUsuarioRegistroJornadaFromApi();
+
+				if (this.props.me)
+					this.fixar();
 			})
 			.catch((err) => {
 				this.openAlert("error", "Falha ao logar!");
@@ -329,7 +332,7 @@ export default class JornadaChip extends React.Component {
 	}
 
 	handleAlterarStatus(e) {
-		if (!window.confirm("Você deseja realmente sair?"))
+		if (!window.confirm("Você deseja realmente alterar seu status?"))
 			return;
 		
 		this.setState({alterandoStatus: true})
@@ -434,6 +437,10 @@ export default class JornadaChip extends React.Component {
 				registration.showNotification(title, options);
 			});
 		}
+	}
+
+	fixar() {
+		window.location = "jornada-unisystem://?token=" + getToken() + "&ponto-token=" + getPontoToken();
 	}
 
 	openAlert(severity, message) {
@@ -544,7 +551,7 @@ export default class JornadaChip extends React.Component {
 								Atualizar
 							</LoadingButton>
 							{this.props.showFixButton && <Tooltip title="Fixar">
-								<IconButton onClick={() => window.location = "jornada-unisystem://?token=" + getToken() + "&ponto-token=" + getPontoToken()}><PushPinIcon/></IconButton>
+								<IconButton onClick={this.fixar}><PushPinIcon/></IconButton>
 							</Tooltip>}
 						</Stack>
 						{this.state.error ?
@@ -600,7 +607,7 @@ export default class JornadaChip extends React.Component {
 							{((this.state.registroJornada.canUsuarioLogar && this.props.me) || (this.state.registroJornada.canSupervisorLogar && !this.props.me)) ? 
 								<LoadingButton loading={this.state.logando} variant="contained" color="success" loadingPosition="start" startIcon={<LoginIcon />} onClick={this.logar}>Entrada</LoadingButton> : ""}
 							{this.state.registroJornada.canUsuarioDeslogar ? <LoadingButton loading={this.state.deslogando} variant="contained" color="error" startIcon={<LogoutIcon />} onClick={this.deslogar}>Saída</LoadingButton> : ""}
-							{((!this.state.registroJornada.canUsuarioLogar && this.props.me) || (!this.state.registroJornada.canSupervisorLogar && !this.props.me)) && this.state.registroJornada.statusAtual == null ? <Alert severity="warning">Fora da jornada</Alert> : ""}
+							{((!this.state.registroJornada.canUsuarioLogar && this.props.me) || (!this.state.registroJornada.canSupervisorLogar && !this.props.me)) && this.state.registroJornada.statusAtual == null ? <Alert severity="success">Jornada Concluída</Alert> : ""}
 							{!this.props.me ? <FormGroup>
 									<FormControlLabel sx={{justifyContent: "center"}} control={<Switch checked={this.state.registroJornada.horaExtraPermitida} disabled={this.state.togglingHoraExtraPermitida} onClick={this.toggleHoraExtraPermitida} color="success"/>} label="Hora Extra Permitida" />
 								</FormGroup> : ""}
