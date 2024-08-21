@@ -308,6 +308,8 @@ class VendasModule extends React.Component {
 			sistemaBySistemaId: null,
 			pontoDeVendaList: null,
 			pontoDeVendaById: {},
+			viabilidadeList: null,
+			viabilidadeByViabilidadeId: {},
 
 			vendaRows: [],
 			vendaListDataGridApiRef: this.props.vendaListDataGridApiRef,
@@ -372,7 +374,8 @@ class VendasModule extends React.Component {
 			{ field: 'cpf', headerName: 'CPF/CNPJ', width: 200 },
 			{ field: 'nome', headerName: 'Nome/Razão Social', width: 200 },
 			{ field: 'dataCadastro', headerName: 'Data do Cadastro', width: 200, type: 'date', renderCell: (params) => params.value !== null ? dayjs(params.value).format('L LTS') : "" },
-			{ field: 'tipoProduto', headerName: 'Tipo', width: 100 },
+			{ field: 'tipoPessoa', headerName: 'Tipo Pessoa', width: 100 },
+			{ field: 'tipoProduto', headerName: 'Tipo Produto', width: 100 },
 			{ field: 'pdv', headerName: 'PDV', width: 100 },
 			{ field: 'safra', headerName: 'Safra', width: 100, valueGetter: (value, row) => value !== null ? dayjs(value).format('MMMM YYYY') : "" },
 			{ field: 'dataVenda', headerName: 'Data da Venda', width: 200, type: 'date', renderCell: (params) => params.value !== null ? dayjs(params.value).format('L LTS') : "" },
@@ -410,7 +413,7 @@ class VendasModule extends React.Component {
 			{ field: 'numeroTelefoneFixo', headerName: 'Número Telefone Fixo', width: 200 },
 			{ field: 'tipoDeLinha', headerName: 'Tipo de Linha', width: 200 },
 			{ field: 'ddd', headerName: 'DDD', width: 100 },
-			{ field: 'operadora', headerName: 'Operadora', width: 150 },
+			//{ field: 'operadora', headerName: 'Operadora', width: 150 },
 
 			{ field: 'uf', headerName: 'UF', width: 100 },
 			{ field: 'cidade', headerName: 'Cidade', width: 200 },
@@ -444,6 +447,7 @@ class VendasModule extends React.Component {
 			{ field: 'prints', headerName: 'Prints', width: 100 },
 			{ field: 'reimputado', headerName: 'Reimputado', width: 100 },
 			{ field: 'operadora', headerName: 'Operadora', width: 200 },
+			{ field: 'viabilidadeId', headerName: 'Viabilidade', valueGetter: (value, row) => this.state.viabilidadeByViabilidadeId?.[value]?.nome, width: 150 },
 
 			{ field: 'situacao', headerName: 'Situação', width: 200 },
 		];
@@ -470,6 +474,7 @@ class VendasModule extends React.Component {
 							...this.allHiddenColumnVisibilityModel,
 							statusId: true,
 							dataStatus: true,
+							tipoPessoa: true,
 							tipoProduto: true,
 							pdv: true,
 							safra: true,
@@ -493,6 +498,7 @@ class VendasModule extends React.Component {
 						orderedFields: [
 								"statusId",
 								"dataStatus",
+								"tipoPessoa",
 								"tipoProduto",
 								"pdv",
 								"safra",
@@ -553,6 +559,7 @@ class VendasModule extends React.Component {
 		this.getFiltroVendaFromApi = this.getFiltroVendaFromApi.bind(this);
 		this.getSistemaListFromApi = this.getSistemaListFromApi.bind(this);
 		this.getPontoDeVendaListFromApi = this.getPontoDeVendaListFromApi.bind(this);
+		this.getViabilidadeListFromApi = this.getViabilidadeListFromApi.bind(this);
 		this.getVendaVisaoListFromApi =  this.getVendaVisaoListFromApi.bind(this);
 		this.updateVendaVisaoAtual = this.updateVendaVisaoAtual.bind(this);
 
@@ -578,6 +585,7 @@ class VendasModule extends React.Component {
 		this.getUsuarioListFromApi();
 		this.getSistemaListFromApi();
 		this.getPontoDeVendaListFromApi();
+		this.getViabilidadeListFromApi();
 		this.getVendaVisaoListFromApi();
 	}
 
@@ -617,7 +625,7 @@ class VendasModule extends React.Component {
 				dataFim: this.state.dataFim !== null ? this.state.dataFim.format("YYYY-MM-DD") : null,
 				statusIdList: this.state.statusIdList,
 				os: this.state.os,
-				cpf: this.state.cpf,
+				cpf: this.state.cpf.replace(/\D/g, ""),
 				nome: this.state.nome,
 			})
 			.then((response) => {
@@ -696,6 +704,20 @@ class VendasModule extends React.Component {
 			.catch((err) => {
 				console.log(err);
 				setTimeout(this.getPontoDeVendaListFromApi, 3000);
+			});
+	}
+
+	getViabilidadeListFromApi() {
+		api.get("/empresa/me/viabilidade")
+			.then((response) => {
+				let viabilidadeList = response.data;
+				let viabilidadeByViabilidadeId = {};
+				viabilidadeList.forEach((viabilidade) => viabilidadeByViabilidadeId[viabilidade.viabilidadeId] = viabilidade);
+				this.setState({viabilidadeList: viabilidadeList, viabilidadeByViabilidadeId: viabilidadeByViabilidadeId});
+			})
+			.catch((err) => {
+				console.log(err);
+				setTimeout(this.getViabilidadeListFromApi, 3000);
 			});
 	}
 
@@ -809,6 +831,7 @@ class VendasModule extends React.Component {
 			vendaId: venda.vendaId,
 			statusId: venda.statusId,
 
+			tipoPessoa: venda.tipoPessoa,
 			tipoProduto: venda.tipoProduto,
 			pdv: venda.pdv,
 			safra: venda.safra !== null ? new Date(venda.safra + "T00:00:00") : null,
@@ -849,7 +872,7 @@ class VendasModule extends React.Component {
 			numeroTelefoneFixo: venda.produtoList?.[0] ? (venda.produtoList?.[0]?.numeroTelefoneFixo.replace(/(\d{4})(\d{4})/, "$1-$2") ?? "") : "",
 			tipoDeLinha: venda.produtoList?.[0] ? (venda.produtoList?.[0]?.tipoDeLinha !== null ? VendaProdutoTipoDeLinhaEnum[venda.produtoList?.[0]?.tipoDeLinha] : "") : "",
 			ddd: venda.produtoList?.[0] ? (venda.produtoList?.[0]?.ddd) : "",
-			operadora: venda.produtoList?.[0] ? (venda.produtoList?.[0]?.operadora) : "",
+			//operadora: venda.produtoList?.[0] ? (venda.produtoList?.[0]?.operadora) : "",
 
 			uf: venda.uf,
 			cidade: venda.cidade,
@@ -887,6 +910,7 @@ class VendasModule extends React.Component {
 			prints: venda.prints ? "Sim" : "Não",
 			reimputado: venda?.reimputado !== null ? VendaReimputadoEnum[venda.reimputado] : "",
 			operadora: venda.operadora,
+			viabilidadeId: venda.viabilidadeId,
 
 			situacao: situacao,
 
@@ -1106,7 +1130,7 @@ class VendasModule extends React.Component {
 									variant="outlined"
 									disabled={this.state.calling}
 									inputProps={{
-										maxLength: 14,
+										maxLength: 18,
 									}}
 									size="small"
 								/>

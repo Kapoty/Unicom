@@ -506,6 +506,8 @@ class CreateEditVendaModule extends React.Component {
 			bancoByBancoId: {},
 			adicionalList: null,
 			adicionalByAdicionalId: {},
+			viabilidadeList: null,
+			viabilidadeByViabilidadeId: {},
 
 			anexoList: null,
 
@@ -536,6 +538,7 @@ class CreateEditVendaModule extends React.Component {
 			dataEmissao: null,
 			representanteLegal: "",
 			cpfRepresentanteLegal: "",
+			dataNascimentoRepresentanteLegal: null,
 
 			// contato
 
@@ -590,6 +593,7 @@ class CreateEditVendaModule extends React.Component {
 			suporte: null,
 			loginVendedor: "",
 			operadora: "",
+			viabilidadeId: null,
 
 			// atores
 
@@ -647,7 +651,7 @@ class CreateEditVendaModule extends React.Component {
 		}
 
 		this.vencimentoEnum = ["7", "10", "15", "20"];
-		this.operadoraEnum = ["Oi", "TIM", "Vivo", "Claro"];
+		this.operadoraEnum = ["Oi", "TIM", "Vivo", "Claro", "Não possui"];
 
 		this.atualizacaoColumns = [
 			{ field: 'statusId', headerName: 'Status', valueGetter: (value, row) => this.state.vendaStatusByVendaStatusId?.[value]?.nome, minWidth: 100, flex: 1, renderCell: (params) => <VendaStatusChip
@@ -670,6 +674,7 @@ class CreateEditVendaModule extends React.Component {
 		this.getOrigemListFromApi = this.getOrigemListFromApi.bind(this);
 		this.getBancoListFromApi = this.getBancoListFromApi.bind(this);
 		this.getAdicionalListFromApi = this.getAdicionalListFromApi.bind(this);
+		this.getViabilidadeListFromApi = this.getViabilidadeListFromApi.bind(this);
 
 		this.getCepInfoFromApi = this.getCepInfoFromApi.bind(this);
 		this.updateCep = this.updateCep.bind(this);
@@ -710,6 +715,7 @@ class CreateEditVendaModule extends React.Component {
 		this.updateSuporte = this.updateSuporte.bind(this);
 		this.updateLoginVendedor = this.updateLoginVendedor.bind(this);
 		this.updateOperadora = this.updateOperadora.bind(this);
+		this.updateViabilidadeId = this.updateViabilidadeId.bind(this);
 
 		this.saveVenda = this.saveVenda.bind(this);
 		this.patchVenda = this.patchVenda.bind(this);
@@ -737,6 +743,7 @@ class CreateEditVendaModule extends React.Component {
 		this.getOrigemListFromApi();
 		this.getBancoListFromApi();
 		this.getAdicionalListFromApi();
+		this.getViabilidadeListFromApi();
 		if (this.props.searchParams.get("novo") !== null) {
 			this.openAlert("success", 'Venda criada com sucesso!');
 		}
@@ -802,6 +809,7 @@ class CreateEditVendaModule extends React.Component {
 					dataEmissao: venda.dataEmissao !== null ? dayjs(venda.dataEmissao, "YYYY-MM-DD") : null,
 					representanteLegal: venda.representanteLegal,
 					cpfRepresentanteLegal: venda.cpfRepresentanteLegal,
+					dataNascimentoRepresentanteLegal: venda.dataNascimentoRepresentanteLegal !== null ? dayjs(venda.dataNascimentoRepresentanteLegal, "YYYY-MM-DD") : null,
 
 					// contato
 
@@ -854,6 +862,7 @@ class CreateEditVendaModule extends React.Component {
 					suporte: venda.suporte,
 					loginVendedor: venda.loginVendedor,
 					operadora: venda.operadora,
+					viabilidadeId: venda.viabilidadeId,
 
 					//atores
 
@@ -1059,6 +1068,20 @@ class CreateEditVendaModule extends React.Component {
 			.catch((err) => {
 				console.log(err);
 				setTimeout(this.getAdicionalListFromApi, 3000);
+			});
+	}
+
+	getViabilidadeListFromApi() {
+		api.get("/empresa/me/viabilidade")
+			.then((response) => {
+				let viabilidadeList = response.data;
+				let viabilidadeByViabilidadeId = {};
+				viabilidadeList.forEach((viabilidade) => viabilidadeByViabilidadeId[viabilidade.viabilidadeId] = viabilidade);
+				this.setState({viabilidadeList: viabilidadeList, viabilidadeByViabilidadeId: viabilidadeByViabilidadeId});
+			})
+			.catch((err) => {
+				console.log(err);
+				setTimeout(this.getViabilidadeListFromApi, 3000);
 			});
 	}
 
@@ -1303,6 +1326,8 @@ class CreateEditVendaModule extends React.Component {
 
 	updateOperadora = (event, value) => this.setState({operadora: value});
 
+	updateViabilidadeId = (e) => this.setState({viabilidadeId: e.target.value});
+
 	// fim otimização
 
 	openAlert(severity, message) {
@@ -1326,7 +1351,7 @@ class CreateEditVendaModule extends React.Component {
 			errors["TIPO_DA_VENDA"] = "";
 
 		if (["cpf", "nome", "dataNascimento", "genero", "rg", "rgOrgaoEmissor", "rgDataEmissao", "nomeDaMae",
-			"cnpj", "porte", "razaoSocial", "dataConstituicao", "dataEmissao", "representanteLegal", "cpfRepresentanteLegal"].some(r => keys.includes(r)))
+			"cnpj", "porte", "razaoSocial", "dataConstituicao", "dataEmissao", "representanteLegal", "cpfRepresentanteLegal", "dataNascimentoRepresentanteLegal"].some(r => keys.includes(r)))
 			errors["DADOS_DO_CLIENTE"] = "";
 
 		if (["nomeContato", "contato1", "contato2", "contato3", "dataPreferenciaInstalacao1", "dataPreferenciaInstalacao2", "email"].some(r => keys.includes(r)))
@@ -1339,7 +1364,7 @@ class CreateEditVendaModule extends React.Component {
 			errors["PRODUTOS"] = "";
 
 		if (["os", "custcode", "sistemaId", "ordem", "origem", "infra", "safra", "dataVenda", "dataAtivacao", "prints",
-			"dataAgendamento", "dataInstalacao", "pdv", "reimputado", "vendaOriginal", "brscan", "suporte", "loginVendedor", "operadora"].some(r => keys.includes(r)))
+			"dataAgendamento", "dataInstalacao", "pdv", "reimputado", "vendaOriginal", "brscan", "suporte", "loginVendedor", "operadora", "viabilidadeId"].some(r => keys.includes(r)))
 			errors["DADOS_DO_CONTRATO"] = "";
 
 		if (["formaDePagamento", "vencimento", "agencia", "conta", "banco", "tipoDeConta"].some(r => keys.includes(r)))
@@ -1452,6 +1477,7 @@ class CreateEditVendaModule extends React.Component {
 			dataEmissao: this.state.dataEmissao !== null ? this.state.dataEmissao.format("YYYY-MM-DD") : null,
 			representanteLegal: this.state.representanteLegal,
 			cpfRepresentanteLegal: this.state.cpfRepresentanteLegal.replace(/\D/g, ""),
+			dataNascimentoRepresentanteLegal: this.state.dataNascimentoRepresentanteLegal !== null ? this.state.dataNascimentoRepresentanteLegal.format("YYYY-MM-DD") : null,
 
 			// contato
 
@@ -1504,6 +1530,7 @@ class CreateEditVendaModule extends React.Component {
 			suporte: this.state.suporte,
 			loginVendedor: this.state.loginVendedor,
 			operadora: this.state.operadora,
+			viabilidadeId: this.state.viabilidadeId,
 
 			//atores
 
@@ -1949,7 +1976,7 @@ class CreateEditVendaModule extends React.Component {
 												}}
 											/>
 										</Grid>
-										<Grid item xs={6}>
+										<Grid item xs={4}>
 											<TextField
 												required
 												id="representante-legal"
@@ -1966,7 +1993,7 @@ class CreateEditVendaModule extends React.Component {
 												}}
 											/>
 										</Grid>
-										<Grid item xs={6}>
+										<Grid item xs={4}>
 											<CPFInput
 												required
 												id="cpf-representante-legal"
@@ -1978,6 +2005,22 @@ class CreateEditVendaModule extends React.Component {
 												disabled={this.state.calling}
 												error={"cpfRepresentanteLegal" in this.state.errors}
 												helperText={this.state.errors?.cpfRepresentanteLegal ?? ""}
+											/>
+										</Grid>
+										<Grid item xs={4}>
+											<DatePicker
+												label="Data de Nascimento do Representante Legal"
+												value={this.state.dataNascimentoRepresentanteLegal}
+												onChange={(newValue) => this.setState({dataNascimentoRepresentanteLegal: newValue})}
+												slotProps={{
+													field: { clearable: true },
+													textField: {
+														required: true,
+														fullWidth: true,
+														error: "dataNascimentoRepresentanteLegal" in this.state.errors,
+														helperText: this.state.errors?.dataNascimentoRepresentanteLegal ?? "",
+													},
+												}}
 											/>
 										</Grid>
 									</React.Fragment> : <Grid item xs={12}><Alert severity="info">Você poderá ver os dados do cliente após definir o tipo da venda.</Alert></Grid>}
@@ -2532,7 +2575,7 @@ class CreateEditVendaModule extends React.Component {
 												</Select>
 											</FormControl>
 										</Grid>
-										<Grid item xs={4}>
+										<Grid item xs={3}>
 											<TextField
 												id="login-vendedor"
 												value={this.state.loginVendedor}
@@ -2548,7 +2591,7 @@ class CreateEditVendaModule extends React.Component {
 												}}
 											/>
 										</Grid>
-										<Grid item xs={4}>
+										<Grid item xs={3}>
 											<Autocomplete
 												id="operadora"
 												freeSolo
@@ -2568,7 +2611,22 @@ class CreateEditVendaModule extends React.Component {
 												)}
 											/>
 										</Grid>
-										<Grid item xs={4}>
+										<Grid item xs={3}>
+											<FormControl fullWidth required error={"viabilidadeId" in this.state.errors}>
+												<InputLabel>Viabilidade</InputLabel>
+												<Select
+													id="viabilidade"
+													value={this.state.viabilidadeId}
+													label="Viabilidade"
+													onChange={this.updateViabilidadeId}
+												>
+													<MenuItem key={"nenhum"} value={null}>Nenhum</MenuItem>
+													{(this.state.viabilidadeList ?? []).map((viabilidade) => <MenuItem key={viabilidade.viabilidadeId} value={viabilidade.viabilidadeId}>{viabilidade.nome}</MenuItem>)}
+												</Select>
+												<FormHelperText error>{this.state.errors?.viabilidadeId ?? ""}</FormHelperText>
+											</FormControl>
+										</Grid>
+										<Grid item xs={3}>
 											<FormControl fullWidth disabled={this.state.calling} required error={"infra" in this.state.errors}>
 												<InputLabel>Infra</InputLabel>
 												<Select
@@ -3190,7 +3248,7 @@ class CreateEditVendaModule extends React.Component {
 							<Autocomplete
 								id="add-produto"
 								loading={this.state.produtoList == null}
-								options={Object.keys(this.state.produtoByProdutoId ?? {}).map(key => parseInt(key)).filter((option) => this.state.produtoByProdutoId[option].tipo == this.state.tipoProduto)}
+								options={Object.keys(this.state.produtoByProdutoId ?? {}).map(key => parseInt(key)).filter((option) => this.state.produtoByProdutoId[option].tipo == this.state.tipoProduto).sort((a, b) => this.state.produtoByProdutoId[a].ordem - this.state.produtoByProdutoId[b].ordem)}
 								getOptionLabel={(option) => `${this.state.produtoByProdutoId[option].nome}`}
 								value={this.state.addProdutoId}
 								onChange={(event, value) => this.setState({addProdutoId: value})}

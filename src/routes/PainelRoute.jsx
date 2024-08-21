@@ -24,6 +24,7 @@ const EquipesModule = React.lazy(() => import('../modules/EquipesModule'));
 const CreateEditEquipeModule = React.lazy(() => import('../modules/CreateEditEquipeModule'));
 const VendasModule = React.lazy(() => import('../modules/VendasModule'));
 const CreateEditVendaModule = React.lazy(() => import('../modules/CreateEditVendaModule'));
+const AutomacoesFaturasModule = React.lazy(() => import('../modules/AutomacoesFaturasModule'));
 
 const RegistroPontoModule = React.lazy(() => import('../modules/RegistroPontoModule'));
 
@@ -338,6 +339,7 @@ class PainelRoute extends React.Component {
 								{this.state.usuario !== null && this.state.usuario.permissaoList.includes("CADASTRAR_EQUIPES") ? <Route path="/equipes/:equipeId" element={<CreateEditEquipeModuleWrapper/>} /> : null}
 								{this.state.usuario !== null && this.state.usuario.permissaoList.includes("CADASTRAR_VENDAS") ? <Route path="/vendas/" element={<VendasModule usuario={this.state.usuario}/>} /> : null}
 								{this.state.usuario !== null && this.state.usuario.permissaoList.includes("CADASTRAR_VENDAS") ? <Route path="/vendas/:vendaId" element={<CreateEditVendaModuleWrapper usuario={this.state.usuario}/>} /> : null}
+								{this.state.usuario !== null && this.state.usuario.permissaoList.includes("AUTOMACOES") ? <Route path="/automacoes/faturas" element={<AutomacoesFaturasModule usuario={this.state.usuario}/>} /> : null}
 							</Routes>
 					</Suspense>}
 					{/*<ModuleRoutes usuario={this.state.usuario} iframeCategoryList={this.state.iframeCategoryList} location={this.props.location} />*/}
