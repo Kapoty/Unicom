@@ -76,13 +76,19 @@ class LoginRoute extends React.Component {
 	componentDidMount() {
 		if (this.state.isAuth)
 			 setTimeout(() => this.props.navigate("/")) 
-		else
+		else {
 			this.props.updateThemePrimaryColor("");
+			this.updateFavicon("/assets/image/Icon.png");
+		}
 	}
 
 	setLogin = (e) => {
 		let login = e.target.value;
 		this.setState({login: login, showDominioInput: login == "dominio" || this.state.showDominioInput});
+	}
+
+	updateFavicon(href) {
+		document.querySelector("link[rel~='icon']").href = href;
 	}
 
 	render() {

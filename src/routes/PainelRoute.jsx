@@ -123,6 +123,8 @@ class PainelRoute extends React.Component {
 		this.getNotificationsStatus = this.getNotificationsStatus.bind(this);
 		this.requestNotificationsPermission = this.requestNotificationsPermission.bind(this);
 
+		this.loadUploadImageFromApi = this.loadUploadImageFromApi.bind(this);
+
 		this.ping = this.ping.bind(this);
 	}
 
@@ -139,6 +141,9 @@ class PainelRoute extends React.Component {
 					this.getMinhaEquipeListFromApi();
 
 				this.props.updateThemePrimaryColor("#" + usuario.empresa.themePrimaryColor);
+
+				if (usuario.empresa?.iconFilename)
+					this.loadUploadImageFromApi(usuario.empresa?.iconFilename, this.updateFavicon);
 				
 				document.title = "UniSystem - " + usuario.empresa.nome;
 			})
@@ -307,6 +312,26 @@ class PainelRoute extends React.Component {
 					});
 			}
 		}
+	}
+
+	loadUploadImageFromApi(filename, callback) {
+		api.get("/empresa/me/upload/" + filename, {responseType: "blob"})
+		.then((response) => {
+			let blob = response.data;
+			let reader = new FileReader();
+			reader.onload = () => {
+				const base64data = reader.result;
+				callback(base64data);
+			}
+			reader.readAsDataURL(blob);
+		})
+		.catch((err) => {
+			console.error(err);
+		});
+	}
+
+	updateFavicon(href) {
+		document.querySelector("link[rel~='icon']").href = href;
 	}
 
 	render() {
