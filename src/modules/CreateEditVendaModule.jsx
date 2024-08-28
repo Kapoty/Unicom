@@ -119,9 +119,10 @@ import api from "../services/api";
 
 import { useParams, useLocation, useNavigate, useHistory, useSearchParams } from 'react-router-dom';
 
-const ProdutoPaper = React.memo(({ produto, i, errors, calling, updateProduto, deleteProduto, addPortabilidade, portabilidadeList, updatePortabilidade, deletePortabilidade, tipoProduto, adicionalList }) => {
+const ProdutoPaper = React.memo(({ produto, i, errors, calling, updateProduto, deleteProduto, addPortabilidade, portabilidadeList, updatePortabilidade, deletePortabilidade, tipoProduto, adicionalList, produtoList }) => {
 
-	const updateProdutoNome = useCallback((e) => updateProduto(i, "nome", e.target.value), [i]);
+	//const updateProdutoNome = useCallback((e) => updateProduto(i, "nome", e.target.value), [i]);
+	const updateProdutoNome = useCallback((event, newValue) => updateProduto(i, "nome", newValue), [i]);
 	const updateProdutoValor = useCallback((e) => updateProduto(i, "valor", e.target.value), [i]);
 	const updateProdutoValorAcordado = useCallback((e) => updateProduto(i, "valorAcordado", e.target.value), [i]);
 	//const updateProdutoAdicionais = useCallback((event, value) => updateProduto(i, "adicionais", value), [i]);
@@ -143,7 +144,7 @@ const ProdutoPaper = React.memo(({ produto, i, errors, calling, updateProduto, d
 						<Divider><Chip label={i + 1} /></Divider>
 					</Grid>
 					<Grid item xs={4}>
-						<TextField
+						{/*<TextField
 							required
 							value={produto.nome}
 							onChange={updateProdutoNome}
@@ -155,7 +156,24 @@ const ProdutoPaper = React.memo(({ produto, i, errors, calling, updateProduto, d
 							helperText={errors?.[`produtoList[${i}].nome`] ?? ""}
 							inputProps={{
 								maxLength: 100,
-							}}
+							}}*
+						/>*/}
+						<Autocomplete
+							freeSolo
+							disableClearable
+							options={(produtoList ?? []).filter((option) => option.tipo == tipoProduto).sort((a, b) => a.ordem - b.ordem).map((option) => option.nome)}
+							value={produto.nome}
+							onInputChange={updateProdutoNome}
+							renderInput={(params) => (
+								<TextField
+									{...params}
+									required
+									variant="outlined"
+									label="Nome"
+									error={`produtoList[${i}].nome` in errors}
+									helperText={errors?.[`produtoList[${i}].nome`] ?? ""}
+								/>
+							)}
 						/>
 					</Grid>
 					<Grid item xs={4}>
@@ -2291,6 +2309,7 @@ class CreateEditVendaModule extends React.Component {
 														deletePortabilidade={this.deletePortabilidade}
 														tipoProduto={this.state.tipoProduto}
 														adicionalList={this.state.adicionalList}
+														produtoList={this.state.produtoList}
 													/>
 												)}
 											</Box>

@@ -198,11 +198,11 @@ class JornadaRoute extends React.Component {
 								>
 									{!this.state.isAuth ? <CircularProgress color="inherit" size={24}/>:
 									<JornadaChip usuario={this.state.usuario} me/>}
-									<Tooltip title="Fechar">
+									{/*<Tooltip title="Fechar">
 										<IconButton size="small" onClick={() => window?.electron?.quit?.()}>
 											<CloseIcon/>
 										</IconButton>
-									</Tooltip>
+									</Tooltip>*/}
 									{/*<DragIndicatorIcon
 										sx={{"-webkit-app-region": "drag"}}
 									/>*/}
