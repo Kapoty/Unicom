@@ -10,7 +10,7 @@ export default class VendaStatusChip extends React.Component {
 	}
 
 	render() {
-		let {vendaStatus, ...rest} = this.props; 
+		let {vendaStatus, sx, ...rest} = this.props; 
 
 		if (vendaStatus == null)
 			return "";
@@ -24,6 +24,10 @@ export default class VendaStatusChip extends React.Component {
 				variant="contained"
 				label={vendaStatus?.nome}
 				icon={<Icon>{vendaStatus?.icon}</Icon>}
+				sx={{
+		      			...sx,
+		      			overflow: "hidden"
+		      		}}
 			/>
 	}
 }

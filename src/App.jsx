@@ -34,6 +34,9 @@ dayjs.extend(customParseFormat);
 var utc = require("dayjs/plugin/utc");
 dayjs.extend(utc);
 
+var relativeTime = require("dayjs/plugin/relativeTime");
+dayjs.extend(relativeTime);
+
 import { LicenseInfo } from '@mui/x-license';
 
 LicenseInfo.setLicenseKey('e0d9bb8070ce0054c9d9ecb6e82cb58fTz0wLEU9MzI0NzIxNDQwMDAwMDAsUz1wcmVtaXVtLExNPXBlcnBldHVhbCxLVj0y');

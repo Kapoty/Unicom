@@ -36,6 +36,7 @@ import Collapse from '@mui/material/Collapse';
 import Stack from '@mui/material/Stack';
 
 import JornadaChip from './JornadaChip';
+import RegistroDeAtividadesIcon from './RegistroDeAtividadesIcon';
 import RelatorioJornadaButton from './RelatorioJornadaButton';
 import UsuarioDisplayChip from "./UsuarioDisplayChip";
 import UsuarioAvatar from "./UsuarioAvatar";
@@ -162,6 +163,8 @@ class CustomAppBar extends React.Component {
 				        	<Icon color="primary">{this.props.fullscreen ? "fullscreen_exit" : "fullscreen"}</Icon>
 			      		</IconButton></span>
 			      	</Tooltip>
+
+			      	{this.props.usuario !==null && <RegistroDeAtividadesIcon usuario={this.props.usuario}/>}
 
 			      	{this.props.usuario !==null && this.props.usuario.permissaoList.includes("REGISTRAR_JORNADA") ? <JornadaChip usuario={this.props.usuario} me showFixButton/> : ""}
 
