@@ -547,18 +547,19 @@ export default class JornadaChip extends React.Component {
 								onClick={this.getUsuarioRegistroJornadaFromApi}
 								startIcon={<RefreshIcon />}
 								loadingPosition="start"
+								size="small"
 							>
 								Atualizar
 							</LoadingButton>
 							{this.props.showFixButton && <Tooltip title="Fixar">
-								<IconButton onClick={this.fixar}><PushPinIcon/></IconButton>
+								<IconButton onClick={this.fixar} size="small"><PushPinIcon/></IconButton>
 							</Tooltip>}
 						</Stack>
 						{this.state.error ?
 						<Alert severity="error">{this.state.error}</Alert>
 						: ""}
 						{this.state.registroJornada !== null && this.state.registroJornada.completo ? <React.Fragment>
-							<Typography variant="caption" color={grey[600]} gutterBottom align="center">
+							<Typography variant="caption" color={grey[600]} align="center">
 								última atualização às {this.state.lastSuccessRefreshTime}
 							</Typography>
 							<Stack gap={0} direction="row" justifyContent="space-around">

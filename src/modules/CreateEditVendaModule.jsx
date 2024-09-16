@@ -107,7 +107,6 @@ import VendaFormaDePagamentoEnum from "../model/VendaFormaDePagamentoEnum";
 import VendaBrscanEnum from "../model/VendaBrscanEnum";
 import VendaSuporteEnum from "../model/VendaSuporteEnum";
 import VendaGeneroEnum from "../model/VendaGeneroEnum";
-import VendaReimputadoEnum from "../model/VendaReimputadoEnum";
 import VendaTipoDeContaEnum from "../model/VendaTipoDeContaEnum";
 import VendaInfraEnum from "../model/VendaInfraEnum";
 
@@ -605,7 +604,8 @@ class CreateEditVendaModule extends React.Component {
 			dataAgendamento: null,
 			dataInstalacao: null,
 			pdv: "",
-			reimputado: "NAO",
+			reimpute: false,
+			anulada: false,
 			vendaOriginal: true,
 			brscan: null,
 			suporte: null,
@@ -722,12 +722,13 @@ class CreateEditVendaModule extends React.Component {
 		this.updateInfra = this.updateInfra.bind(this);
 		this.updateSafra = this.updateSafra.bind(this);
 		this.updateDataVenda = this.updateDataVenda.bind(this);
-		this.updateReimputado = this.updateReimputado.bind(this);
 		this.updateDataAtivacao = this.updateDataAtivacao.bind(this);
 		this.updatePrints = this.updatePrints.bind(this);
 		this.updateDataAgendamento = this.updateDataAgendamento.bind(this);
 		this.updateDataInstalacao = this.updateDataInstalacao.bind(this);
 		this.updatePdv = this.updatePdv.bind(this);
+		this.updateReimpute = this.updateReimpute.bind(this);
+		this.updateAnulada = this.updateAnulada.bind(this);
 		this.updateVendaOriginal = this.updateVendaOriginal.bind(this);
 		this.updateBrscan = this.updateBrscan.bind(this);
 		this.updateSuporte = this.updateSuporte.bind(this);
@@ -874,7 +875,8 @@ class CreateEditVendaModule extends React.Component {
 					dataAgendamento: venda.dataAgendamento !== null ? dayjs(new Date(venda.dataAgendamento)) : null,
 					dataInstalacao: venda.dataInstalacao !== null ? dayjs(new Date(venda.dataInstalacao)) : null,
 					pdv: venda.pdv,
-					reimputado: venda.reimputado,
+					reimpute: venda.reimpute,
+					anulada: venda.anulada,
 					vendaOriginal: venda.vendaOriginal,
 					brscan: venda.brscan,
 					suporte: venda.suporte,
@@ -1322,8 +1324,6 @@ class CreateEditVendaModule extends React.Component {
 
 	updateDataVenda = (newValue) => this.setState({dataVenda: newValue});
 
-	updateReimputado = (e) => this.setState({reimputado: e.target.value});
-
 	updateDataAtivacao = (newValue) => this.setState({dataAtivacao: newValue});
 
 	updatePrints = (e) => this.setState({prints: e.target.value});
@@ -1333,6 +1333,10 @@ class CreateEditVendaModule extends React.Component {
 	updateDataInstalacao = (newValue) => this.setState({dataInstalacao: newValue});
 
 	updatePdv = (event, value) => this.setState({pdv: value});
+
+	updateReimpute = (e) => this.setState({reimpute: e.target.value});
+
+	updateAnulada = (e) => this.setState({anulada: e.target.value});
 
 	updateVendaOriginal = (e) => this.setState({vendaOriginal: e.target.value});
 
@@ -1382,7 +1386,7 @@ class CreateEditVendaModule extends React.Component {
 			errors["PRODUTOS"] = "";
 
 		if (["os", "custcode", "sistemaId", "ordem", "origem", "infra", "safra", "dataVenda", "dataAtivacao", "prints",
-			"dataAgendamento", "dataInstalacao", "pdv", "reimputado", "vendaOriginal", "brscan", "suporte", "loginVendedor", "operadora", "viabilidadeId"].some(r => keys.includes(r)))
+			"dataAgendamento", "dataInstalacao", "pdv", "reimpute", "anulada", "vendaOriginal", "brscan", "suporte", "loginVendedor", "operadora", "viabilidadeId"].some(r => keys.includes(r)))
 			errors["DADOS_DO_CONTRATO"] = "";
 
 		if (["formaDePagamento", "vencimento", "agencia", "conta", "banco", "tipoDeConta"].some(r => keys.includes(r)))
@@ -1542,7 +1546,8 @@ class CreateEditVendaModule extends React.Component {
 			dataAgendamento: this.state.dataAgendamento !== null ? this.state.dataAgendamento.format("YYYY-MM-DDTHH:mm:ss") : null,
 			dataInstalacao: this.state.dataInstalacao !== null ? this.state.dataInstalacao.format("YYYY-MM-DDTHH:mm:ss") : null,
 			pdv: this.state.pdv ?? "",
-			reimputado: this.state.reimputado,
+			reimpute: this.state.reimpute,
+			anulada: this.state.anulada,
 			vendaOriginal: this.state.vendaOriginal,
 			brscan: this.state.brscan,
 			suporte: this.state.suporte,
@@ -2422,18 +2427,26 @@ class CreateEditVendaModule extends React.Component {
 										/>
 									</Grid>
 									<Grid item xs={3}>
-										<FormControl fullWidth disabled={this.state.calling  || !ALTERAR_AUDITOR}>
-											<InputLabel>Reimputado</InputLabel>
-											<Select
-												value={this.state.reimputado}
-												label="Reimputado"
-												onChange={this.updateReimputado}
-												>
-												{Object.keys(VendaReimputadoEnum).map((reimputado) => <MenuItem key={reimputado} value={reimputado}>{VendaReimputadoEnum[reimputado]}</MenuItem>)}
-											</Select>
-										</FormControl>
+										<Autocomplete
+											id="pdv"
+											freeSolo
+											disableClearable
+											options={(this.state.pontoDeVendaList ?? []).map(pontoDeVenda => pontoDeVenda.nome)}
+											value={this.state.pdv}
+											onInputChange={this.updatePdv}
+											renderInput={(params) => (
+												<TextField
+													{...params}
+													required
+													variant="outlined"
+													label="PDV"
+													error={"pdv" in this.state.errors}
+													helperText={this.state.errors?.pdv ?? ""}
+												/>
+											)}
+										/>
 									</Grid>
-									<Grid item xs={this.state.tipoProduto == "MOVEL" ? 3 : 4}>
+									<Grid item xs={4}>
 										<DateTimePicker
 											label="Data da Venda"
 											value={this.state.dataVenda}
@@ -2451,27 +2464,7 @@ class CreateEditVendaModule extends React.Component {
 										/>
 									</Grid>
 									{this.state.tipoProduto == "MOVEL" ? <React.Fragment>
-										<Grid item xs={3}>
-											<Autocomplete
-												id="pdv"
-												freeSolo
-												disableClearable
-												options={(this.state.pontoDeVendaList ?? []).map(pontoDeVenda => pontoDeVenda.nome)}
-												value={this.state.pdv}
-												onInputChange={this.updatePdv}
-												renderInput={(params) => (
-													<TextField
-														{...params}
-														required
-														variant="outlined"
-														label="PDV"
-														error={"pdv" in this.state.errors}
-														helperText={this.state.errors?.pdv ?? ""}
-													/>
-												)}
-											/>
-										</Grid>
-										<Grid item xs={3}>
+										<Grid item xs={4}>
 											<DateTimePicker
 													label="Data da Ativação"
 													value={this.state.dataAtivacao}
@@ -2486,7 +2479,7 @@ class CreateEditVendaModule extends React.Component {
 													}}
 												/>
 										</Grid>
-										<Grid item xs={3}>
+										<Grid item xs={4}>
 											<FormControl>
 												<FormLabel id="prints">Prints</FormLabel>
 												<RadioGroup
@@ -2533,29 +2526,9 @@ class CreateEditVendaModule extends React.Component {
 													disabled={this.state.calling  || !ALTERAR_AUDITOR}
 												/>
 										</Grid>
-										<Grid item xs={3}>
-											<Autocomplete
-												id="pdv"
-												freeSolo
-												disableClearable
-												options={(this.state.pontoDeVendaList ?? []).map(pontoDeVenda => pontoDeVenda.nome)}
-												value={this.state.pdv}
-												onInputChange={this.updatePdv}
-												renderInput={(params) => (
-													<TextField
-														{...params}
-														required
-														variant="outlined"
-														label="PDV"
-														error={"pdv" in this.state.errors}
-														helperText={this.state.errors?.pdv ?? ""}
-													/>
-												)}
-											/>
-										</Grid>
-										<Grid item xs={3}>
+										<Grid item xs={2.4}>
 											<FormControl disabled={this.state.calling  || !ALTERAR_AUDITOR}>
-												<FormLabel id="venda-original">Venda Original</FormLabel>
+												<FormLabel id="venda-original">Original</FormLabel>
 												<RadioGroup
 													row
 													aria-labelledby="venda-original"
@@ -2568,7 +2541,37 @@ class CreateEditVendaModule extends React.Component {
 												</RadioGroup>
 											</FormControl>
 										</Grid>
-										<Grid item xs={3}>
+										<Grid item xs={2.4}>
+											<FormControl disabled={this.state.calling  || !ALTERAR_AUDITOR}>
+												<FormLabel id="reimpute">Reimpute</FormLabel>
+												<RadioGroup
+													row
+													aria-labelledby="reimpute"
+													name="controlled-radio-buttons-group"
+													value={this.state.reimpute}
+													onChange={this.updateReimpute}
+												>
+												<FormControlLabel value={true} control={<Radio />} label="Sim" />
+												<FormControlLabel value={false} control={<Radio />} label="Não" />
+												</RadioGroup>
+											</FormControl>
+										</Grid>
+										<Grid item xs={2.4}>
+											<FormControl disabled={this.state.calling  || !ALTERAR_AUDITOR}>
+												<FormLabel id="anulada">Anulada</FormLabel>
+												<RadioGroup
+													row
+													aria-labelledby="anulada"
+													name="controlled-radio-buttons-group"
+													value={this.state.anulada}
+													onChange={this.updateAnulada}
+												>
+												<FormControlLabel value={true} control={<Radio />} label="Sim" />
+												<FormControlLabel value={false} control={<Radio />} label="Não" />
+												</RadioGroup>
+											</FormControl>
+										</Grid>
+										<Grid item xs={2.4}>
 											<FormControl fullWidth disabled={this.state.calling  || !ALTERAR_AUDITOR}>
 												<InputLabel>Biometria</InputLabel>
 												<Select
@@ -2581,7 +2584,7 @@ class CreateEditVendaModule extends React.Component {
 												</Select>
 											</FormControl>
 										</Grid>
-										<Grid item xs={3}>
+										<Grid item xs={2.4}>
 											<FormControl fullWidth disabled={this.state.calling  || !ALTERAR_AUDITOR}>
 												<InputLabel>Suporte</InputLabel>
 												<Select

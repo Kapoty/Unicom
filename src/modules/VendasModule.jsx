@@ -67,7 +67,6 @@ import VendaFaturaStatusEnum from "../model/VendaFaturaStatusEnum";
 import VendaFormaDePagamentoEnum from "../model/VendaFormaDePagamentoEnum";
 import VendaBrscanEnum from "../model/VendaBrscanEnum";
 import VendaSuporteEnum from "../model/VendaSuporteEnum";
-import VendaReimputadoEnum from "../model/VendaReimputadoEnum";
 import VendaTipoDeContaEnum from "../model/VendaTipoDeContaEnum";
 import VendaInfraEnum from "../model/VendaInfraEnum";
 
@@ -441,11 +440,12 @@ class VendasModule extends React.Component {
 			{ field: 'dataInstalacao', headerName: 'Data de Instalação', width: 200, type: 'date', renderCell: (params) => params.value !== null ? dayjs(params.value).format('L LTS') : "" },
 			{ field: 'dataAtivacao', headerName: 'Data da Ativação', width: 200, type: 'date', renderCell: (params) => params.value !== null ? dayjs(params.value).format('L LTS') : "" },
 
-			{ field: 'vendaOriginal', headerName: 'Venda Original', width: 200 },
+			{ field: 'reimpute', headerName: 'Reimpute', width: 200 },
+			{ field: 'anulada', headerName: 'Anulada', width: 200 },
+			{ field: 'vendaOriginal', headerName: 'Original', width: 200 },
 			{ field: 'brscan', headerName: 'Biometria', width: 200 },
 			{ field: 'suporte', headerName: 'Suporte', width: 200 },
 			{ field: 'prints', headerName: 'Prints', width: 100 },
-			{ field: 'reimputado', headerName: 'Reimputado', width: 100 },
 			{ field: 'operadora', headerName: 'Operadora', width: 200 },
 			{ field: 'viabilidadeId', headerName: 'Viabilidade', valueGetter: (value, row) => this.state.viabilidadeByViabilidadeId?.[value]?.nome, width: 150 },
 
@@ -904,11 +904,12 @@ class VendasModule extends React.Component {
 			dataInstalacao: venda.dataInstalacao !== null ? new Date(venda.dataInstalacao) : null,
 			dataCadastro: venda.dataCadastro !== null ? new Date(venda.dataCadastro) : null,
 
+			reimpute: venda.reimpute ? "Sim" : "Não",
+			anulada: venda.anulada ? "Sim" : "Não",
 			vendaOriginal: venda.vendaOriginal ? "Sim" : "Não",
 			brscan: venda?.brscan !== null ? VendaBrscanEnum[venda.brscan] : "",
 			suporte: venda?.suporte !== null ? VendaSuporteEnum[venda.suporte] : "",
 			prints: venda.prints ? "Sim" : "Não",
-			reimputado: venda?.reimputado !== null ? VendaReimputadoEnum[venda.reimputado] : "",
 			operadora: venda.operadora,
 			viabilidadeId: venda.viabilidadeId,
 

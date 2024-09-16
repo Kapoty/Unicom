@@ -21,6 +21,10 @@ import Typography from '@mui/material/Typography';
 import Chip from '@mui/material/Chip';
 import Badge from '@mui/material/Badge';
 import Snackbar from '@mui/material/Snackbar';
+import VolumeUpIcon from '@mui/icons-material/VolumeUp';
+import VolumeOffIcon from '@mui/icons-material/VolumeOff';
+import ButtonGroup from '@mui/material/ButtonGroup';
+import Pagination from '@mui/material/Pagination';
 
 import VendaStatusChip from './VendaStatusChip';
 import UsuarioDisplayChip from "./UsuarioDisplayChip";
@@ -30,6 +34,8 @@ import { grey, green, yellow, blue, red } from '@mui/material/colors';
 import dayjs from 'dayjs';
 
 import api from "../services/api";
+
+import {isAudioEnabled, enableAudio, disableAudio} from "../utils/audio";
 
 class RegistroDeAtividadesIcon extends React.Component {
 
@@ -57,6 +63,11 @@ class RegistroDeAtividadesIcon extends React.Component {
 
 			snackbarOpen: false,
 			Snackbar: null,
+
+			isAudioEnabled: isAudioEnabled(),
+
+			page: 1,
+			rowsPerPage: 10,
 		}
 
 		this.refreshTimeoutTime = 60000;
@@ -76,6 +87,9 @@ class RegistroDeAtividadesIcon extends React.Component {
 
 		this.startRefreshTimeout = this.startRefreshTimeout.bind(this);
 		this.stopRefreshTimeout = this.stopRefreshTimeout.bind(this);
+
+		this.disableAudio = this.disableAudio.bind(this);
+		this.enableAudio = this.enableAudio.bind(this);
 
 		this.openAlert = this.openAlert.bind(this);
 		this.closeAlert = this.closeAlert.bind(this);
@@ -130,12 +144,15 @@ class RegistroDeAtividadesIcon extends React.Component {
 				let novaVendaAtualizacaoList = response.data;
 				let vendaAtualizacaoList = this.state.vendaAtualizacaoList.concat(novaVendaAtualizacaoList);
 
-				let dataInicio = dayjs(novaVendaAtualizacaoList?.[novaVendaAtualizacaoList.length - 1]?.data);
+				let dataInicio = this.state.dataInicio;
+				if (novaVendaAtualizacaoList.length > 0)
+					dataInicio = dayjs(novaVendaAtualizacaoList[novaVendaAtualizacaoList.length - 1].data);
 
 				let numeroAtualizacoesNovas = !this.state.firstRefresh ? novaVendaAtualizacaoList.filter((vendaAtualizacao) => vendaAtualizacao.usuarioId != this.props.usuario.usuarioId).length : 0;
 
 				if (numeroAtualizacoesNovas > 0) {
-					new Audio("/assets/sound/notification.wav").play();
+					if (this.state.isAudioEnabled)
+						new Audio("/assets/sound/notification.wav").play();
 					this.openSnackbar("success", `${numeroAtualizacoesNovas} atualizações novas`);
 				}
 
@@ -198,6 +215,15 @@ class RegistroDeAtividadesIcon extends React.Component {
 		this.setState({snackbarOpen: false});
 	}
 
+	enableAudio() {
+		enableAudio();
+		this.setState({isAudioEnabled: true});
+	}
+
+	disableAudio() {
+		disableAudio();
+		this.setState({isAudioEnabled: false});
+	}
 
 	renderVendaAtualizacao(vendaAtualizacao) {
 		return  <Paper>
@@ -255,23 +281,41 @@ class RegistroDeAtividadesIcon extends React.Component {
 			         }}
 				>
 					<Stack gap={1} sx={{padding: 1}}>
-						<LoadingButton
-							sx={{flexGrow: 1}}
-							loading={this.state.refreshing}
-							variant="contained"
-							onClick={this.refresh}
-							startIcon={<RefreshIcon />}
-							loadingPosition="start"
-						>
-							Atualizar
-						</LoadingButton>
-						{this.state.lastSuccessRefreshTime && <Typography variant="caption" color={grey[600]} gutterBottom align="center">
+						<Stack gap={1} direction="row">
+							<LoadingButton
+								sx={{flexGrow: 1}}
+								loading={this.state.refreshing}
+								variant="contained"
+								onClick={this.refresh}
+								startIcon={<RefreshIcon />}
+								loadingPosition="start"
+								size="small"
+							>
+								Atualizar
+							</LoadingButton>
+							{this.state.isAudioEnabled ?
+								<Tooltip title="Silenciar"><IconButton onClick={this.disableAudio} size="small"><VolumeUpIcon/></IconButton></Tooltip> :
+								<Tooltip title="Desilenciar"><IconButton onClick={this.enableAudio} size="small"><VolumeOffIcon/></IconButton></Tooltip>}
+						</Stack>
+						{this.state.lastSuccessRefreshTime && <Typography variant="caption" color={grey[600]} align="center">
 								última atualização às {this.state.lastSuccessRefreshTime}
 							</Typography>}
-						<Stack gap={1} sx={{maxHeight: 300, overflow: "auto"}} divider={<Divider variant="middle"/>}>
-							{[...this.state.vendaAtualizacaoList].reverse().map((vendaAtualizacao, i) => <React.Fragment key={i}>
+						<Stack gap={1} sx={{maxHeight: 450, overflow: "auto"}} divider={<Divider variant="middle"/>}>
+							{[...this.state.vendaAtualizacaoList].reverse().slice((this.state.page - 1) * this.state.rowsPerPage, this.state.page * this.state.rowsPerPage).map((vendaAtualizacao, i) => <React.Fragment key={vendaAtualizacao.vendaAtualizacaoId}>
 									{this.renderVendaAtualizacao(vendaAtualizacao)}
 								</React.Fragment>)}
+							{this.state.vendaAtualizacaoList.length == 0 && <Alert severity="info">Nenhuma atualização nas últimas 24 horas</Alert>}
+						</Stack>
+						<Stack alignItems="center">
+							<Pagination
+								count={Math.ceil(this.state.vendaAtualizacaoList.length / this.state.rowsPerPage)}
+								page={this.state.page}
+								onChange={(event, value) => this.setState({page: value})}
+								color="primary"
+								size="small"
+								showFirstButton
+								showLastButton
+							/>
 						</Stack>
 						<Collapse in={this.state.alertOpen}>
 							{this.state.alert}
