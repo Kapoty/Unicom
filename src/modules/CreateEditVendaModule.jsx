@@ -555,6 +555,7 @@ class CreateEditVendaModule extends React.Component {
 			dataEmissao: null,
 			representanteLegal: "",
 			cpfRepresentanteLegal: "",
+			rgRepresentanteLegal: "",
 			dataNascimentoRepresentanteLegal: null,
 
 			// contato
@@ -828,6 +829,7 @@ class CreateEditVendaModule extends React.Component {
 					dataEmissao: venda.dataEmissao !== null ? dayjs(venda.dataEmissao, "YYYY-MM-DD") : null,
 					representanteLegal: venda.representanteLegal,
 					cpfRepresentanteLegal: venda.cpfRepresentanteLegal,
+					rgRepresentanteLegal: venda.rgRepresentanteLegal,
 					dataNascimentoRepresentanteLegal: venda.dataNascimentoRepresentanteLegal !== null ? dayjs(venda.dataNascimentoRepresentanteLegal, "YYYY-MM-DD") : null,
 
 					// contato
@@ -1373,7 +1375,7 @@ class CreateEditVendaModule extends React.Component {
 			errors["TIPO_DA_VENDA"] = "";
 
 		if (["cpf", "nome", "dataNascimento", "genero", "rg", "rgOrgaoEmissor", "rgDataEmissao", "nomeDaMae",
-			"cnpj", "porte", "razaoSocial", "dataConstituicao", "dataEmissao", "representanteLegal", "cpfRepresentanteLegal", "dataNascimentoRepresentanteLegal"].some(r => keys.includes(r)))
+			"cnpj", "porte", "razaoSocial", "dataConstituicao", "dataEmissao", "representanteLegal", "cpfRepresentanteLegal", "rgRepresentanteLegal", "dataNascimentoRepresentanteLegal"].some(r => keys.includes(r)))
 			errors["DADOS_DO_CLIENTE"] = "";
 
 		if (["nomeContato", "contato1", "contato2", "contato3", "dataPreferenciaInstalacao1", "dataPreferenciaInstalacao2", "email"].some(r => keys.includes(r)))
@@ -1499,6 +1501,7 @@ class CreateEditVendaModule extends React.Component {
 			dataEmissao: this.state.dataEmissao !== null ? this.state.dataEmissao.format("YYYY-MM-DD") : null,
 			representanteLegal: this.state.representanteLegal,
 			cpfRepresentanteLegal: this.state.cpfRepresentanteLegal.replace(/\D/g, ""),
+			rgRepresentanteLegal: this.state.rgRepresentanteLegal,
 			dataNascimentoRepresentanteLegal: this.state.dataNascimentoRepresentanteLegal !== null ? this.state.dataNascimentoRepresentanteLegal.format("YYYY-MM-DD") : null,
 
 			// contato
@@ -1999,7 +2002,7 @@ class CreateEditVendaModule extends React.Component {
 												}}
 											/>
 										</Grid>
-										<Grid item xs={4}>
+										<Grid item xs={3}>
 											<TextField
 												required
 												id="representante-legal"
@@ -2016,7 +2019,7 @@ class CreateEditVendaModule extends React.Component {
 												}}
 											/>
 										</Grid>
-										<Grid item xs={4}>
+										<Grid item xs={3}>
 											<CPFInput
 												required
 												id="cpf-representante-legal"
@@ -2030,7 +2033,24 @@ class CreateEditVendaModule extends React.Component {
 												helperText={this.state.errors?.cpfRepresentanteLegal ?? ""}
 											/>
 										</Grid>
-										<Grid item xs={4}>
+										<Grid item xs={3}>
+											<TextField
+												required
+												id="rg-representante-legal"
+												value={this.state.rgRepresentanteLegal}
+												onChange={(e) => this.setState({rgRepresentanteLegal: e.target.value})}
+												fullWidth
+												label="RG do Representante Legal"
+												variant="outlined"
+												disabled={this.state.calling}
+												error={"rgRepresentanteLegal" in this.state.errors}
+												helperText={this.state.errors?.rgRepresentanteLegal ?? ""}
+												inputProps={{
+													maxLength: 20,
+												}}
+											/>
+										</Grid>
+										<Grid item xs={3}>
 											<DatePicker
 												label="Data de Nascimento do Representante Legal"
 												value={this.state.dataNascimentoRepresentanteLegal}
@@ -2111,38 +2131,40 @@ class CreateEditVendaModule extends React.Component {
 											fixoDinamico
 										/>
 									</Grid>
-									<Grid item xs={6}>
-										<DateTimePicker
-												label="Data Preferência Instalação 1"
-												value={this.state.dataPreferenciaInstalacao1}
-												onChange={(newValue) => this.setState({dataPreferenciaInstalacao1: newValue})}
+									{this.state.tipoProduto == "FIBRA" && <React.Fragment>
+										<Grid item xs={6}>
+											<DateTimePicker
+													label="Data Preferência Instalação 1"
+													value={this.state.dataPreferenciaInstalacao1}
+													onChange={(newValue) => this.setState({dataPreferenciaInstalacao1: newValue})}
+													slotProps={{
+														field: { clearable: true },
+														textField: {
+															required: true,
+															fullWidth: true,
+															error: "dataPreferenciaInstalacao1" in this.state.errors,
+															helperText: this.state.errors?.dataPreferenciaInstalacao1 ?? "",
+														},
+													}}
+												/>
+										</Grid>
+										<Grid item xs={6}>
+											<DateTimePicker
+												label="Data Preferência Instalação 2"
+												value={this.state.dataPreferenciaInstalacao2}
+												onChange={(newValue) => this.setState({dataPreferenciaInstalacao2: newValue})}
 												slotProps={{
 													field: { clearable: true },
 													textField: {
 														required: true,
 														fullWidth: true,
-														error: "dataPreferenciaInstalacao1" in this.state.errors,
-														helperText: this.state.errors?.dataPreferenciaInstalacao1 ?? "",
+														error: "dataPreferenciaInstalacao2" in this.state.errors,
+														helperText: this.state.errors?.dataPreferenciaInstalacao2 ?? "",
 													},
 												}}
 											/>
-									</Grid>
-									<Grid item xs={6}>
-										<DateTimePicker
-											label="Data Preferência Instalação 2"
-											value={this.state.dataPreferenciaInstalacao2}
-											onChange={(newValue) => this.setState({dataPreferenciaInstalacao2: newValue})}
-											slotProps={{
-												field: { clearable: true },
-												textField: {
-													required: true,
-													fullWidth: true,
-													error: "dataPreferenciaInstalacao2" in this.state.errors,
-													helperText: this.state.errors?.dataPreferenciaInstalacao2 ?? "",
-												},
-											}}
-										/>
-									</Grid>
+										</Grid>
+									</React.Fragment>}
 									<Grid item xs={12}>
 										<TextField
 											required
@@ -2448,6 +2470,7 @@ class CreateEditVendaModule extends React.Component {
 									</Grid>
 									<Grid item xs={4}>
 										<DateTimePicker
+											disabled={this.state.calling || !ALTERAR_AUDITOR}
 											label="Data da Venda"
 											value={this.state.dataVenda}
 											onChange={this.updateDataVenda}
@@ -2497,6 +2520,7 @@ class CreateEditVendaModule extends React.Component {
 									</React.Fragment> : <React.Fragment>
 										<Grid item xs={4}>
 											<DateTimePicker
+													disabled={this.state.calling || !ALTERAR_AUDITOR}
 													label="Data de Agendamento"
 													value={this.state.dataAgendamento}
 													onChange={this.updateDataAgendamento}

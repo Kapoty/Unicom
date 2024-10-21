@@ -5,9 +5,9 @@ import { getContrastRatio } from '@mui/material/styles';
 
 export default class VendaStatusChip extends React.Component {
 
-	shouldComponentUpdate(nextProps, nextState) {
-		return nextProps.vendaStatus !== this.props.vendaStatus;
-	}
+	//shouldComponentUpdate(nextProps, nextState) {
+	//	return nextProps.vendaStatus !== this.props.vendaStatus;
+	//}
 
 	render() {
 		let {vendaStatus, sx, ...rest} = this.props; 

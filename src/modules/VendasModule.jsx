@@ -757,7 +757,7 @@ class VendasModule extends React.Component {
 	getVendaVisaoListFromApi() {
 		api.get("/usuario/me/venda-visao")
 			.then((response) => {
-				let vendaVisaoList = response.data;
+				let vendaVisaoList = response.data.sort((a, b) => a.nome.localeCompare(b.nome));
 				vendaVisaoList.forEach((vendaVisao) => {
 					try {
 						vendaVisao.state = JSON.parse(vendaVisao.state);
