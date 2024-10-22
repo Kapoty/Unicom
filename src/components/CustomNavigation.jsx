@@ -123,6 +123,14 @@ class CustomNavigation extends React.Component {
 			equipeModuleOpen: false,
 			vendaModuleOpen: false,
 			automacoesModuleOpen: false,
+			produtoModuleOpen: false,
+			adicionalModuleOpen: false,
+			vendaStatusModuleOpen: false,
+			empresaModuleOpen: false,
+			pontoDeVendaModuleOpen: false,
+			origemModuleOpen: false,
+			sistemaModuleOpen: false,
+			bancoModuleOpen: false,
 		}
 
 		this.handleIframeContextMenu = this.handleIframeContextMenu.bind(this);
@@ -154,6 +162,22 @@ class CustomNavigation extends React.Component {
 			this.setState({vendaModuleOpen: true});
 		if (this.props.location.pathname.startsWith("/automacoes"))
 			this.setState({automacoesModuleOpen: true});
+		if (this.props.location.pathname.startsWith("/empresa"))
+			this.setState({empresaModuleOpen: true});
+		if (this.props.location.pathname.startsWith("/empresa/produtos"))
+			this.setState({produtoModuleOpen: true});
+		if (this.props.location.pathname.startsWith("/empresa/adicionais"))
+			this.setState({adicionalModuleOpen: true});
+		if (this.props.location.pathname.startsWith("/empresa/venda-status"))
+			this.setState({vendaStatusModuleOpen: true});
+		if (this.props.location.pathname.startsWith("/empresa/ponto-de-venda"))
+			this.setState({pontoDeVendaModuleOpen: true});
+		if (this.props.location.pathname.startsWith("/empresa/origens"))
+			this.setState({origemModuleOpen: true});
+		if (this.props.location.pathname.startsWith("/empresa/sistemas"))
+			this.setState({sistemaModuleOpen: true});
+		if (this.props.location.pathname.startsWith("/empresa/bancos"))
+			this.setState({bancoModuleOpen: true});
 	}
 
 	handleIframeContextMenu(iframe, event) {
@@ -353,6 +377,165 @@ class CustomNavigation extends React.Component {
 							</StyledListItem>
 						}
 
+						{this.props.usuario?.permissaoList?.includes("ALTERAR_EMPRESA") &&
+							<StyledListItem
+								onClick={() => this.setState({empresaModuleOpen: !this.state.empresaModuleOpen})}
+								icon="apartment"
+								primary="Empresa"
+								category
+								categoryOpen={this.state.empresaModuleOpen}
+							>
+
+								<StyledListItem
+									onClick={() => this.setState({produtoModuleOpen: !this.state.produtoModuleOpen})}
+									icon="description"
+									primary="Produtos"
+									category
+									categoryOpen={this.state.produtoModuleOpen}
+								>
+									<StyledListItem
+										onClick={() => {this.props.navigate(`empresa/produtos`)}}
+										icon="description"
+										primary="Produtos"
+										selected={this.props.location.pathname == `/empresa/produtos`}
+									/>
+									<StyledListItem
+										onClick={() => {this.props.navigate(`empresa/produtos/novo`)}}
+										icon="note_add"
+										primary="Novo Produto"
+										selected={/^\/empresa\/produtos\/(\d|(novo))+$/.test(this.props.location.pathname)}
+									/>
+								</StyledListItem>
+
+								<StyledListItem
+									onClick={() => this.setState({adicionalModuleOpen: !this.state.adicionalModuleOpen})}
+									icon="note"
+									primary="Adicionais"
+									category
+									categoryOpen={this.state.adicionalModuleOpen}
+								>
+									<StyledListItem
+										onClick={() => {this.props.navigate(`empresa/adicionais`)}}
+										icon="note"
+										primary="Adicionais"
+										selected={this.props.location.pathname == `/empresa/adicionais`}
+									/>
+									<StyledListItem
+										onClick={() => {this.props.navigate(`empresa/adicionais/novo`)}}
+										icon="note_add"
+										primary="Novo Adicional"
+										selected={/^\/empresa\/adicionais\/(\d|(novo))+$/.test(this.props.location.pathname)}
+									/>
+								</StyledListItem>
+
+								<StyledListItem
+									onClick={() => this.setState({vendaStatusModuleOpen: !this.state.vendaStatusModuleOpen})}
+									icon="info"
+									primary="Venda Status"
+									category
+									categoryOpen={this.state.vendaStatusModuleOpen}
+								>
+									<StyledListItem
+										onClick={() => {this.props.navigate(`empresa/venda-status`)}}
+										icon="info"
+										primary="Venda Status"
+										selected={this.props.location.pathname == `/empresa/venda-status`}
+									/>
+									<StyledListItem
+										onClick={() => {this.props.navigate(`empresa/venda-status/novo`)}}
+										icon="add_circle"
+										primary="Novo Venda Status"
+										selected={/^\/empresa\/venda-status\/(\d|(novo))+$/.test(this.props.location.pathname)}
+									/>
+								</StyledListItem>
+
+								<StyledListItem
+									onClick={() => this.setState({pontoDeVendaModuleOpen: !this.state.pontoDeVendaModuleOpen})}
+									icon="place"
+									primary="Ponto de Venda"
+									category
+									categoryOpen={this.state.pontoDeVendaModuleOpen}
+								>
+									<StyledListItem
+										onClick={() => {this.props.navigate(`empresa/ponto-de-venda`)}}
+										icon="place"
+										primary="Ponto de Venda"
+										selected={this.props.location.pathname == `/empresa/ponto-de-venda`}
+									/>
+									<StyledListItem
+										onClick={() => {this.props.navigate(`empresa/ponto-de-venda/novo`)}}
+										icon="add_location"
+										primary="Novo Ponto de Venda"
+										selected={/^\/empresa\/ponto-de-venda\/(\d|(novo))+$/.test(this.props.location.pathname)}
+									/>
+								</StyledListItem>
+
+								<StyledListItem
+									onClick={() => this.setState({origemModuleOpen: !this.state.origemModuleOpen})}
+									icon="airline_stops"
+									primary="Origens"
+									category
+									categoryOpen={this.state.origemModuleOpen}
+								>
+									<StyledListItem
+										onClick={() => {this.props.navigate(`empresa/origens`)}}
+										icon="airline_stops"
+										primary="Origens"
+										selected={this.props.location.pathname == `/empresa/origens`}
+									/>
+									<StyledListItem
+										onClick={() => {this.props.navigate(`empresa/origens/novo`)}}
+										icon="add_circle"
+										primary="Nova Origem"
+										selected={/^\/empresa\/origens\/(\d|(novo))+$/.test(this.props.location.pathname)}
+									/>
+								</StyledListItem>
+
+								<StyledListItem
+									onClick={() => this.setState({sistemaModuleOpen: !this.state.sistemaModuleOpen})}
+									icon="computer"
+									primary="Sistemas"
+									category
+									categoryOpen={this.state.sistemaModuleOpen}
+								>
+									<StyledListItem
+										onClick={() => {this.props.navigate(`empresa/sistemas`)}}
+										icon="computer"
+										primary="Sistemas"
+										selected={this.props.location.pathname == `/empresa/sistemas`}
+									/>
+									<StyledListItem
+										onClick={() => {this.props.navigate(`empresa/sistemas/novo`)}}
+										icon="add_circle"
+										primary="Novo Sistema"
+										selected={/^\/empresa\/sistemas\/(\d|(novo))+$/.test(this.props.location.pathname)}
+									/>
+								</StyledListItem>
+
+								<StyledListItem
+									onClick={() => this.setState({bancoModuleOpen: !this.state.bancoModuleOpen})}
+									icon="account_balance"
+									primary="Bancos"
+									category
+									categoryOpen={this.state.bancoModuleOpen}
+								>
+									<StyledListItem
+										onClick={() => {this.props.navigate(`empresa/bancos`)}}
+										icon="account_balance"
+										primary="Bancos"
+										selected={this.props.location.pathname == `/empresa/bancos`}
+									/>
+									<StyledListItem
+										onClick={() => {this.props.navigate(`empresa/bancos/novo`)}}
+										icon="add_circle"
+										primary="Novo Banco"
+										selected={/^\/empresa\/bancos\/(\d|(novo))+$/.test(this.props.location.pathname)}
+									/>
+								</StyledListItem>
+
+							</StyledListItem>
+							
+						}
 					</StyledList>
 				</Box>
 			</Drawer>

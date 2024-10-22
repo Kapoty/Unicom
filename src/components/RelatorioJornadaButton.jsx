@@ -75,12 +75,12 @@ export default class RelatorioJornadaButton extends React.Component {
 	}
 
 	getNumeroCorrecoesNaoAprovadas() {
-		api.get("/registro-jornada/" + this.props.usuarioId + "/numero-correcoes-nao-aprovadas")
+		api.get("/registro-jornada/" + this.props.usuarioId + "/numero-correcoes-nao-aprovadas", {redirect403: false})
 			.then((response) => {
 				this.setState({numeroCorrecoesNaoAprovadas: response.data});
 			})
 			.catch((err) => {
-				if (err?.response?.status != 400)
+				if (err?.response?.status != 400 && err?.response?.status != 403)
 					setTimeout(this.getNumeroCorrecoesNaoAprovadas, 3000);
 			});
 	}

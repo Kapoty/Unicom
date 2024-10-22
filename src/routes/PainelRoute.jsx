@@ -17,14 +17,40 @@ import Backdrop from '@mui/material/Backdrop';
 import CircularProgress from '@mui/material/CircularProgress';
 
 const IframesModule = React.lazy(() => import('../modules/IframesModule'));
+
 const UsuariosModule = React.lazy(() => import('../modules/UsuariosModule'));
 const CreateEditUsuarioModule = React.lazy(() => import('../modules/CreateEditUsuarioModule'));
+
 const MinhaEquipeModule = React.lazy(() => import('../modules/MinhaEquipeModule'));
+
 const EquipesModule = React.lazy(() => import('../modules/EquipesModule'));
 const CreateEditEquipeModule = React.lazy(() => import('../modules/CreateEditEquipeModule'));
+
 const VendasModule = React.lazy(() => import('../modules/VendasModule'));
 const CreateEditVendaModule = React.lazy(() => import('../modules/CreateEditVendaModule'));
+
 const AutomacoesFaturasModule = React.lazy(() => import('../modules/AutomacoesFaturasModule'));
+
+const ProdutosModule = React.lazy(() => import('../modules/ProdutosModule'));
+const CreateEditProdutoModule = React.lazy(() => import('../modules/CreateEditProdutoModule'));
+
+const AdicionaisModule = React.lazy(() => import('../modules/AdicionaisModule'));
+const CreateEditAdicionalModule = React.lazy(() => import('../modules/CreateEditAdicionalModule'));
+
+const VendaStatusModule = React.lazy(() => import('../modules/VendaStatusModule'));
+const CreateEditVendaStatusModule = React.lazy(() => import('../modules/CreateEditVendaStatusModule'));
+
+const PontoDeVendaModule = React.lazy(() => import('../modules/PontoDeVendaModule'));
+const CreateEditPontoDeVendaModule = React.lazy(() => import('../modules/CreateEditPontoDeVendaModule'));
+
+const OrigensModule = React.lazy(() => import('../modules/OrigensModule'));
+const CreateEditOrigemModule = React.lazy(() => import('../modules/CreateEditOrigemModule'));
+
+const SistemasModule = React.lazy(() => import('../modules/SistemasModule'));
+const CreateEditSistemaModule = React.lazy(() => import('../modules/CreateEditSistemaModule'));
+
+const BancosModule = React.lazy(() => import('../modules/BancosModule'));
+const CreateEditBancoModule = React.lazy(() => import('../modules/CreateEditBancoModule'));
 
 const RegistroPontoModule = React.lazy(() => import('../modules/RegistroPontoModule'));
 
@@ -54,6 +80,48 @@ const MinhaEquipeModuleWrapper = (props) => {
   const {equipeId} = useParams();
 
   return <MinhaEquipeModule key={equipeId} {...props} />
+};
+
+const CreateEditProdutoModuleWrapper = () => {
+  const {produtoId} = useParams();
+
+  return <CreateEditProdutoModule key={produtoId} />
+};
+
+const CreateEditAdicionalModuleWrapper = () => {
+  const {adicionalId} = useParams();
+
+  return <CreateEditAdicionalModule key={adicionalId} />
+};
+
+const CreateEditVendaStatusModuleWrapper = () => {
+  const {vendaStatusId} = useParams();
+
+  return <CreateEditVendaStatusModule key={vendaStatusId} />
+};
+
+const CreateEditPontoDeVendaModuleWrapper = () => {
+  const {pontoDeVendaId} = useParams();
+
+  return <CreateEditPontoDeVendaModule key={pontoDeVendaId} />
+};
+
+const CreateEditOrigemModuleWrapper = () => {
+  const {origemId} = useParams();
+
+  return <CreateEditOrigemModule key={origemId} />
+};
+
+const CreateEditSistemaModuleWrapper = () => {
+  const {sistemaId} = useParams();
+
+  return <CreateEditSistemaModule key={sistemaId} />
+};
+
+const CreateEditBancoModuleWrapper = () => {
+  const {bancoId} = useParams();
+
+  return <CreateEditBancoModule key={bancoId} />
 };
 
 const ModuleRoutes = memo(function ModuleRoutes({ usuario, iframeCategoryList, location}) {
@@ -358,13 +426,39 @@ class PainelRoute extends React.Component {
 								<Route path="/" element={<Box></Box>}/>
 								{this.state.usuario !== null && this.state.usuario.permissaoList.includes("CADASTRAR_USUARIOS") ? <Route path="/usuarios/" element={<UsuariosModule usuario={this.state.usuario}/>} /> : null}
 								{this.state.usuario !== null && this.state.usuario.permissaoList.includes("CADASTRAR_USUARIOS") ? <Route path="/usuarios/:usuarioId" element={<CreateEditUsuarioModuleWrapper/>} /> : null}
+								
 								{this.state.usuario !== null && this.state.usuario.permissaoList.includes("Ponto.Read.All") ? <Route path="/registro-ponto/" element={<RegistroPontoModule usuario={this.state.usuario}/>} /> : null}
+								
 								{this.state.usuario !== null && this.state.usuario.permissaoList.includes("VER_MODULO_MINHA_EQUIPE") ? <Route path="/minhas-equipes/:equipeId" element={<MinhaEquipeModuleWrapper usuario={this.state.usuario}/>} /> : null}
+								
 								{this.state.usuario !== null && this.state.usuario.permissaoList.includes("CADASTRAR_EQUIPES") ? <Route path="/equipes/" element={<EquipesModule usuario={this.state.usuario}/>} /> : null}
 								{this.state.usuario !== null && this.state.usuario.permissaoList.includes("CADASTRAR_EQUIPES") ? <Route path="/equipes/:equipeId" element={<CreateEditEquipeModuleWrapper/>} /> : null}
+								
 								{this.state.usuario !== null && this.state.usuario.permissaoList.includes("CADASTRAR_VENDAS") ? <Route path="/vendas/" element={<VendasModule usuario={this.state.usuario}/>} /> : null}
 								{this.state.usuario !== null && this.state.usuario.permissaoList.includes("CADASTRAR_VENDAS") ? <Route path="/vendas/:vendaId" element={<CreateEditVendaModuleWrapper usuario={this.state.usuario}/>} /> : null}
+								
 								{this.state.usuario !== null && this.state.usuario.permissaoList.includes("AUTOMACOES") ? <Route path="/automacoes/faturas" element={<AutomacoesFaturasModule usuario={this.state.usuario}/>} /> : null}
+								
+								{this.state.usuario !== null && this.state.usuario.permissaoList.includes("ALTERAR_EMPRESA") ? <Route path="/empresa/produtos/" element={<ProdutosModule usuario={this.state.usuario}/>} /> : null}
+								{this.state.usuario !== null && this.state.usuario.permissaoList.includes("ALTERAR_EMPRESA") ? <Route path="/empresa/produtos/:produtoId" element={<CreateEditProdutoModuleWrapper/>} /> : null}
+							
+								{this.state.usuario !== null && this.state.usuario.permissaoList.includes("ALTERAR_EMPRESA") ? <Route path="/empresa/adicionais/" element={<AdicionaisModule usuario={this.state.usuario}/>} /> : null}
+								{this.state.usuario !== null && this.state.usuario.permissaoList.includes("ALTERAR_EMPRESA") ? <Route path="/empresa/adicionais/:adicionalId" element={<CreateEditAdicionalModuleWrapper/>} /> : null}
+
+								{this.state.usuario !== null && this.state.usuario.permissaoList.includes("ALTERAR_EMPRESA") ? <Route path="/empresa/venda-status/" element={<VendaStatusModule usuario={this.state.usuario}/>} /> : null}
+								{this.state.usuario !== null && this.state.usuario.permissaoList.includes("ALTERAR_EMPRESA") ? <Route path="/empresa/venda-status/:vendaStatusId" element={<CreateEditVendaStatusModuleWrapper/>} /> : null}
+
+								{this.state.usuario !== null && this.state.usuario.permissaoList.includes("ALTERAR_EMPRESA") ? <Route path="/empresa/ponto-de-venda/" element={<PontoDeVendaModule usuario={this.state.usuario}/>} /> : null}
+								{this.state.usuario !== null && this.state.usuario.permissaoList.includes("ALTERAR_EMPRESA") ? <Route path="/empresa/ponto-de-venda/:pontoDeVendaId" element={<CreateEditPontoDeVendaModuleWrapper/>} /> : null}
+
+								{this.state.usuario !== null && this.state.usuario.permissaoList.includes("ALTERAR_EMPRESA") ? <Route path="/empresa/origens/" element={<OrigensModule usuario={this.state.usuario}/>} /> : null}
+								{this.state.usuario !== null && this.state.usuario.permissaoList.includes("ALTERAR_EMPRESA") ? <Route path="/empresa/origens/:origemId" element={<CreateEditOrigemModuleWrapper/>} /> : null}
+
+								{this.state.usuario !== null && this.state.usuario.permissaoList.includes("ALTERAR_EMPRESA") ? <Route path="/empresa/sistemas/" element={<SistemasModule usuario={this.state.usuario}/>} /> : null}
+								{this.state.usuario !== null && this.state.usuario.permissaoList.includes("ALTERAR_EMPRESA") ? <Route path="/empresa/sistemas/:sistemaId" element={<CreateEditSistemaModuleWrapper/>} /> : null}
+
+								{this.state.usuario !== null && this.state.usuario.permissaoList.includes("ALTERAR_EMPRESA") ? <Route path="/empresa/bancos/" element={<BancosModule usuario={this.state.usuario}/>} /> : null}
+								{this.state.usuario !== null && this.state.usuario.permissaoList.includes("ALTERAR_EMPRESA") ? <Route path="/empresa/bancos/:bancoId" element={<CreateEditBancoModuleWrapper/>} /> : null}
 							</Routes>
 					</Suspense>}
 					{/*<ModuleRoutes usuario={this.state.usuario} iframeCategoryList={this.state.iframeCategoryList} location={this.props.location} />*/}
