@@ -1,37 +1,24 @@
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const {CleanWebpackPlugin} = require('clean-webpack-plugin');
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const CopyPlugin = require('copy-webpack-plugin');
 const path = require('path');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
 module.exports = {
-    //"mode": "development",//"production",//
     "entry": {
-    	"app": "./src/App.jsx"
+        "app": "./src/index.tsx"
     },
     "output": {
-        "path": __dirname+'/docs',
+        "path": __dirname + '/docs',
         "filename": "assets/js/[name].[chunkhash:8].js",
         "publicPath": "/",
     },
     "module": {
         "rules": [
             {
-                "test": /\.(js|jsx)$/,
-                "exclude": /node_modules/,
-                "use": {
-                    "loader": "babel-loader",
-                    "options": {
-                        "presets": [
-                            "@babel/env",
-                            "@babel/react"
-                        ],
-                        plugins: [
-                            ['@babel/plugin-transform-nullish-coalescing-operator'],
-                            ['@babel/plugin-transform-optional-chaining']
-                        ]
-                    }
-                }
+                test: /\.tsx?$/,
+                use: 'ts-loader',
+                exclude: /node_modules/
             },
             {
                 "test": /\.(scss|css)$/,
@@ -53,28 +40,30 @@ module.exports = {
         ]
     },
     "plugins": [
-    	new CleanWebpackPlugin(),
+        new CleanWebpackPlugin(),
         new HtmlWebpackPlugin({
-        	"template": 'src/index.html',
-        	"title": "UniSystem",
+            "template": 'src/index.html',
+            "title": "UniSystem",
             "hash": true,
             "chunks": ["app"],
-            "path": __dirname+'/docs',
-            "filename": 'index.html' //relative to root of the application
+            "path": __dirname + '/docs',
+            "filename": 'index.html'
         }),
-        new CopyPlugin({"patterns": [
-            {
-        		"from": "src/assets",
-        		"to":  "assets"
-        	},
-            { from: 'src/manifest', to: 'manifest' },
-            { from: 'src/service-worker.js', to: 'service-worker.js' },
-        ]}),
+        new CopyPlugin({
+            "patterns": [
+                {
+                    "from": "src/assets",
+                    "to": "assets"
+                },
+                { from: 'src/manifest', to: 'manifest' },
+                { from: 'src/service-worker.js', to: 'service-worker.js' },
+            ]
+        }),
         //new BundleAnalyzerPlugin()
     ],
     "resolve": {
         "modules": [path.resolve(__dirname, "src"), "node_modules"],
-        "extensions": [".js", ".json", ".jsx", ".scss", "css"]
+        "extensions": [".js", ".json", ".jsx", ".scss", ".css", ".ts", ".tsx"]
     },
     "target": "web",
     "devServer": {
@@ -84,8 +73,8 @@ module.exports = {
         server: {
             type: 'https',
             options: {
-                key: __dirname+'/cert/private.key',
-                cert: __dirname+'/cert/private.pem',
+                key: __dirname + '/cert/private.key',
+                cert: __dirname + '/cert/private.pem',
             }
         },
     },
