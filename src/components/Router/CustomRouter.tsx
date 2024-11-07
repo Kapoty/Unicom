@@ -4,7 +4,7 @@ import { Router, Navigator } from "react-router-dom";
 
 type CustomRouterProps = {
     basename?: string;
-    children: React.ReactNode;
+    children?: React.ReactNode;
     history: BrowserHistory;
 }
 
