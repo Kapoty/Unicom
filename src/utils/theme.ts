@@ -1,7 +1,9 @@
-import { Color, PaletteColorOptions, Theme } from '@mui/material';
-import { red, green, grey } from '@mui/material/colors';
+import { Theme } from '@mui/material';
+import { green, red } from '@mui/material/colors';
 import { createTheme } from '@mui/material/styles';
 import { ptBR } from '@mui/x-data-grid-premium/locales';
+
+import { PaletteColorOptions } from "@mui/material/styles";
 
 declare module '@mui/material/styles' {
 	interface TypeBackground {
@@ -44,6 +46,13 @@ const createCustomTheme = (props?: ThemeProps): Theme => createTheme({
 			green: green
 		},
 		components: {
+			MuiCssBaseline: {
+				styleOverrides: {
+					body: {
+						backgroundColor: "#111215",
+					}
+				}
+			},
 			MuiAccordionSummary: {
 				styleOverrides: {
 					root: {

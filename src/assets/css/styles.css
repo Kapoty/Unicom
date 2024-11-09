@@ -8,7 +8,6 @@ body {
 	margin: 0;
 	padding: 0;
 	overflow: auto;
-	background: #111215;
 }
 
 :fullscreen, ::backdrop {
