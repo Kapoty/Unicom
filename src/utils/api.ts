@@ -62,7 +62,7 @@ api.interceptors.response.use(
 				return api(originalRequest);
 			} catch (refreshError) {
 				console.error("Falha ao renovar accessToken!", error);
-				useAuthStore.getState().logout();
+				useAuthStore.getState().logout(true);
 			}
 
 		}

@@ -11,7 +11,8 @@
       "forceConsistentCasingInFileNames": true,
       "allowJs": true,
       "allowSyntheticDefaultImports": true,
+	  "isolatedModules": true,
     },
-    "include": ["src"],
+    "include": ["src/**/*.ts", "src/**/*.tsx"],
     "exclude": ["build", "node_modules", "src/service-worker.js"]
   } 

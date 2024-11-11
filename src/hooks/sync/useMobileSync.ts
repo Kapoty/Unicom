@@ -1,6 +1,6 @@
 import {useEffect} from 'react';
 import { useMediaQuery } from '@mui/material';
-import useAppStore from '../state/useAppStore';
+import useAppStore from '../../state/useAppStore';
 
 const useMobileSync = () => {
 	const isMobile = useMediaQuery('(max-width: 600px)');
@@ -8,7 +8,7 @@ const useMobileSync = () => {
 	
 	useEffect(() => {
 		setMobile(isMobile);
-	}, [isMobile, setMobile]);
+	}, [isMobile]);
 };
 
 export default useMobileSync;
