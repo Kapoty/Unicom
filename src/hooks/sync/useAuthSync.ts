@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import {getAccessToken} from '../../utils/auth';
+import {getAccessToken} from '../../utils/authUtil';
 import useAuthStore from '../../state/useAuthStore';
 
 const useAuthSync = () => {

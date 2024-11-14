@@ -3,7 +3,7 @@ import { getEmpresaByDominio, getEmpresaById } from '../services/empresaService'
 
 export const useEmpresaByDominioQuery = (dominio: string) => {
   return useQuery({
-    queryKey: ['empresa', 'dominio', dominio],
+    queryKey: ['empresas', 'dominios', dominio],
     queryFn: async () => getEmpresaByDominio(dominio),
     retry: 3,
   });
@@ -11,7 +11,7 @@ export const useEmpresaByDominioQuery = (dominio: string) => {
 
 export const useEmpresaQuery = (empresaId?: number) => {
   return useQuery({
-    queryKey: ['empresa', empresaId],
+    queryKey: ['empresas', empresaId],
     queryFn: async () => getEmpresaById(empresaId!),
     enabled: !!empresaId
   });

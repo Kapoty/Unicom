@@ -1,53 +1,43 @@
-import { Backdrop, CircularProgress, Fade, Stack } from "@mui/material";
+import { Fade, Stack } from "@mui/material";
 import { useEffect } from "react";
 import CustomAppBar from "../components/AppBar/CustomAppBar";
 import CustomBottomNavigation from "../components/BottomNavigation/CustomBottomNavigation";
-import DashboardContent from "../components/Dashboard/DashboardContent";
 import CustomDrawer from "../components/Drawer/CustomDrawer";
+import CustomBackdrop from "../components/Backdrop/CustomBackdrop";
 import useEmpresaIdParam from "../hooks/params/useEmpresaIdParam";
 import { useEmpresaQuery } from "../queries/useEmpresaQueries";
 import useAppStore from "../state/useAppStore";
 import useAuthStore from "../state/useAuthStore";
+import { Outlet } from "react-router-dom";
 
 const DashBoardPage = () => {
-
-	const isAuth = useAuthStore(s => s.isAuth);
-	const logout = useAuthStore(s => s.logout);
 
 	const setEmpresa = useAppStore(s => s.setEmpresa);
 	const isMobile = useAppStore(s => s.isMobile);
 	const setDrawerOpen = useAppStore(s => s.setDrawerOpen);
 
 	const empresaId = useEmpresaIdParam();
-	const {data: empresa, isLoading: isEmpresaLoading, error: empresaError} = useEmpresaQuery(empresaId);
-
-	useEffect(() => {
-		if (isAuth !== undefined && !isAuth)
-			logout(true);
-	}, [isAuth]);
+	const {data: empresa} = useEmpresaQuery(empresaId);
 
 	useEffect(() => {
 		setEmpresa(empresa);
-	}, [empresa])
+	}, [empresa]);
 
 	useEffect(() => {
 		if (isMobile)
 			setDrawerOpen(false);
 		else
 			setDrawerOpen(true);
-	}, [isMobile])
-
-	if (!isAuth)
-		return <Backdrop open>
-			<CircularProgress color="inherit"></CircularProgress>
-		</Backdrop>
+	}, [isMobile]);
 
 	return <Fade in timeout={500}>
 		<Stack height={"100dvh"}>
 			<CustomAppBar/>
 			<Stack direction="row" flexGrow={1} justifyContent="space-between">
 				<CustomDrawer/>
-				<DashboardContent/>
+				<Stack p={1} flexGrow={1} overflow='hidden' sx={{ position: 'relative' }}>
+					<Outlet/>
+				</Stack>
 			</Stack>
 			{isMobile && <CustomBottomNavigation/>}
 		</Stack>

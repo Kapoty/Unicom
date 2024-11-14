@@ -2,12 +2,15 @@ import { Alert, CircularProgress, FormControl, MenuItem, Select } from "@mui/mat
 import useEmpresaIdParam from "../../hooks/params/useEmpresaIdParam";
 import { useEmpresasByUsuarioQuery } from "../../queries/useEmpresasQueries";
 import { useUsuarioLogadoQuery } from "../../queries/useUsuarioQueries";
-import history from "../../utils/history";
+import browserHistory from "../../utils/browserHistory";
 import EmpresaChip from "../Empresa/EmpresaChip";
+import useAppStore from "../../state/useAppStore";
 
 const EmpresaSelect = () => {
 
 	const { data: usuarioLogado } = useUsuarioLogadoQuery();
+
+	const empresa = useAppStore(s => s.empresa);
 
 	const { data: empresas, isLoading: isEmpresasLoading, error: empresasError } = useEmpresasByUsuarioQuery(usuarioLogado?.usuarioId);
 
@@ -30,20 +33,17 @@ const EmpresaSelect = () => {
 
 	return <FormControl error={!!empresasError}>
 		<Select
-			value={empresaId ?? ""}
+			value={empresaId ?? 0}
 			onChange={() => { }}
-			//sx={{ width: 150 }}
 			variant="standard"
 			displayEmpty
 			autoWidth
+			renderValue={(value) => value ? <EmpresaChip empresaId={value}/> : <em>Empresa</em>}
 		>
-			{usuarioLogado?.papelSistema == 'ADMIN' && <MenuItem onClick={() => history.push("/")} value="">
-				<em>Empresa</em>
-			</MenuItem>}
 			{empresas ? empresas.map(empresa => <MenuItem
 				key={empresa.empresaId}
 				value={empresa.empresaId}
-				onClick={() => history.push(`/e/${empresa.empresaId}`)}
+				onClick={() => browserHistory.push(`/e/${empresa.empresaId}`)}
 			>
 				<EmpresaChip empresa={empresa} />
 			</MenuItem>) :

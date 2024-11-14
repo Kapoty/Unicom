@@ -6,7 +6,7 @@ import { usePerfilAtualQuery } from './usePerfilQueries';
 export const usePapelQuery = (papelId?: number) => {
 
 	return useQuery({
-		queryKey: ['papel', papelId],
+		queryKey: ['papeis', papelId],
 		queryFn: async () => getPapelById(papelId!),
 		enabled: !!papelId
 	});
@@ -17,7 +17,7 @@ export const usePapelAtualQuery = () => {
 	const {data: perfil} = usePerfilAtualQuery();
 
 	return useQuery({
-		queryKey: ['papel', 'perfis', perfil?.perfilId],
+		queryKey: ['papeis', 'perfis', perfil?.perfilId],
 		queryFn: async () => getPapelById(perfil?.papelId!),
 		enabled: !!perfil
 	});

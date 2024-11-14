@@ -4,21 +4,20 @@ import { LocalizationProvider } from '@mui/x-date-pickers-pro';
 import { AdapterDayjs } from '@mui/x-date-pickers-pro/AdapterDayjs';
 import { LicenseInfo } from '@mui/x-license';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import dayjs from 'dayjs';
 import 'dayjs/locale/pt';
 import localizedFormat from 'dayjs/plugin/localizedFormat';
 import relativeTime from 'dayjs/plugin/relativeTime';
-import { Route, Routes } from 'react-router-dom';
 import "./assets/css/styles.css";
+import AppRouter from './components/Router/AppRouter';
 import CustomRouter from './components/Router/CustomRouter';
 import CustomSnackbarProvider from './components/Snackbar/CustomSnackbarProvider';
 import useAuthSync from './hooks/sync/useAuthSync';
 import useEmpresaSync from './hooks/sync/useEmpresaSync';
 import useMobileSync from './hooks/sync/useMobileSync';
-import DashBoardPage from './pages/DashboardPage';
-import LoginPage from './pages/LoginPage';
 import useAppStore from './state/useAppStore';
-import history from './utils/history';
+import browserHistory from './utils/browserHistory';
 
 dayjs.locale('pt')
 dayjs.extend(localizedFormat)
@@ -35,19 +34,16 @@ const App = () => {
 	useEmpresaSync();
 
 	const theme = useAppStore(s => s.theme);
-	const isMobile = useAppStore(s => s.isMobile);
 
 	return (
 		<QueryClientProvider client={queryClient}>
+			{<ReactQueryDevtools/>}
 			<ThemeProvider theme={theme}>
 				<LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="pt">
 					<CustomSnackbarProvider>
 						<CssBaseline />
-						<CustomRouter history={history}>
-							<Routes>
-								<Route path="/login" element={<LoginPage/>}></Route>
-								<Route path="/*" element={<DashBoardPage/>}></Route>
-							</Routes>
+						<CustomRouter history={browserHistory}>
+							<AppRouter/>
 						</CustomRouter>
 					</CustomSnackbarProvider>
 				</LocalizationProvider>

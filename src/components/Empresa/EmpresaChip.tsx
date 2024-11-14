@@ -18,7 +18,7 @@ const EmpresaChip = ({ empresaId, empresa, isLoading, error }: EmpresaChipProps)
 
 	const empresaData = empresa || data;
 	const empresaLoading = isLoading || isDataLoading;
-	const empresaError = error || dataError;
+	const empresaError = (error || dataError) && !empresaLoading;
 
 	if (empresaData)
 		return <Chip
@@ -32,7 +32,7 @@ const EmpresaChip = ({ empresaId, empresa, isLoading, error }: EmpresaChipProps)
 			label={empresaData.nome}
 		/>
 	
-	if (empresaError && !empresaLoading)
+	if (empresaError)
 		return <Chip color="error" avatar={<Avatar><ErrorIcon /></Avatar>} label="Empresa não identificada!" />
 	
 	return <Chip avatar={<Avatar><MoreHoriz /></Avatar>} label="..." />

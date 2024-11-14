@@ -1,5 +1,5 @@
-import axios from 'axios';
-import { getAccessToken, setAccessToken, getRefreshToken } from './auth';
+import axios, { AxiosError } from 'axios';
+import { getAccessToken, setAccessToken, getRefreshToken } from './authUtil';
 import {refreshTokens} from '../services/authService';
 import useAuthStore from '../state/useAuthStore';
 
@@ -9,17 +9,36 @@ declare module 'axios' {
 	}
 
 	interface AxiosRequestConfig {
-		_retry?: boolean
+		_retry?: boolean,
 	}
 }
 
-const refreshAccessToken = async (): Promise<void> => {
-    try {
-        var newAccessToken = (await refreshTokens(getRefreshToken()!)).accessToken;
+let isRefreshing = false;
+let refreshSubscribers: Array<(token: string) => void> = [];
+let refreshErrorSubscribers: Array<(error: AxiosError) => void> = [];
+
+const onRefreshed = (accessToken: string) => {
+	refreshSubscribers.forEach(callback => callback(accessToken));
+	refreshSubscribers = [];
+}
+
+const onRefreshFailed = (error: AxiosError) => {
+    refreshErrorSubscribers.forEach(callback => callback(error));
+    refreshErrorSubscribers = [];
+}
+
+const addRefreshSubscriber = (callback: (token: string) => void) => refreshSubscribers.push(callback);
+
+const addRefreshErrorSubscriber = (callback: (error: AxiosError) => void) => refreshErrorSubscribers.push(callback);
+
+const refreshAccessToken = async (): Promise<string> => {
+	try {
+		var newAccessToken = (await refreshTokens(getRefreshToken()!)).accessToken;
 		setAccessToken(newAccessToken);
-    } catch (error) {
-        throw error;
-    }
+		return newAccessToken;
+	} catch (error) {
+		throw error;
+	}
 }
 
 const api = axios.create({
@@ -52,18 +71,38 @@ api.interceptors.response.use(
 		if (error?.response?.status === 401 && !originalRequest._retry) {
 			originalRequest._retry = true;
 
+			if (isRefreshing) {
+				return new Promise((resolve, reject) => {
+					addRefreshSubscriber(newAccessToken => {
+						originalRequest.headers['Authorization'] =  `Bearer ${newAccessToken}`
+						resolve(axios(originalRequest));
+					});
+					addRefreshErrorSubscriber(reject);
+				});
+			} else if (`Bearer ${getAccessToken()}` !== originalRequest.headers['Authorization']) {
+				originalRequest.headers["Authorization"] = `Bearer ${getAccessToken()}`;
+				return api(originalRequest);
+			}
+
+			isRefreshing = true;
+
 			try {
 
 				console.log("Renovando accessToken...");
 				const newAccessToken = await refreshAccessToken();
 				console.log("accessToken renovado com sucesso!")
 
+				onRefreshed(newAccessToken);
+
 				originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;
 				return api(originalRequest);
 			} catch (refreshError) {
 				console.error("Falha ao renovar accessToken!", error);
 				useAuthStore.getState().logout(true);
-			}
+				onRefreshFailed(refreshError as AxiosError);
+			} finally {
+				isRefreshing = false;
+            }
 
 		}
 

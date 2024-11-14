@@ -7,12 +7,15 @@ import { Logout, ManageAccounts } from "@mui/icons-material";
 import useAuthStore from "../../state/useAuthStore";
 import { getFotoUrl } from "../../services/perfilService";
 import { usePapelAtualQuery } from "../../queries/usePapelQueries";
+import { useUsuarioLogadoQuery } from "../../queries/useUsuarioQueries";
 
 const UsuarioLogadoChip = () => {
 
 	const isMobile = useAppStore(s => s.isMobile);
 	
 	const logout = useAuthStore(s => s.logout);
+
+	const {data: usuarioLogado} = useUsuarioLogadoQuery();
 
 	const [menuOpen, setMenuOpen] = useState(false);
 	const menuRef = useRef<HTMLDivElement | null>(null);
@@ -25,10 +28,9 @@ const UsuarioLogadoChip = () => {
 			perfil={perfil}
 			isLoading={isPerfilLoading}
 			error={!!perfilError}
-			hideNome={isMobile}
+			avatarOnly={isMobile}
 			ref={menuRef}
 			onClick={() => setMenuOpen(!menuOpen)}
-			disabled={!perfil}
 		/>
 		<Menu
 			anchorEl={menuRef.current}

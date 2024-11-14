@@ -8,5 +8,5 @@ export const login = async (loginRequest: LoginRequest): Promise<AuthTokenRespon
 export const refreshTokens = async (refreshToken: string): Promise<AuthTokenResponse> => (await api.post("/auth/refresh-token", {
     refreshToken: refreshToken
 }, {
-    _retry: true
+    _retry: true,
 })).data;

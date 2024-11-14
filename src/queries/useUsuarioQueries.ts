@@ -9,6 +9,6 @@ export const useUsuarioLogadoQuery = () => {
 	return useQuery({
 		queryKey: ['usuario', 'me'],
 		queryFn: async () => getMe(),
-		enabled: isAuth
+		enabled: !!isAuth
 	});
 };

@@ -1,6 +1,6 @@
 import { Theme } from '@mui/material';
 import { green, red } from '@mui/material/colors';
-import { createTheme } from '@mui/material/styles';
+import { createTheme, responsiveFontSizes } from '@mui/material/styles';
 import { ptBR } from '@mui/x-data-grid-premium/locales';
 import { deepmerge } from '@mui/utils';
 import { PaletteColorOptions } from "@mui/material/styles";
@@ -83,9 +83,7 @@ const createCustomTheme = (props?: ThemeProps): Theme => {
 			},
 		},
 	}, ptBR);
-
-	console.log(theme?.components?.MuiSelect?.defaultProps);
-
+	
 	theme = createTheme(deepmerge(theme, {
 		components: {
 			MuiIcon: {
@@ -98,20 +96,11 @@ const createCustomTheme = (props?: ThemeProps): Theme => {
 					disableInteractive: true,
 				},
 				styleOverrides: {
-					/*arrow: {
-						color: theme.palette.primary.main,
-					},
-					tooltip: {
-						backgroundColor: theme.palette.common.black,
-						border: `1px solid ${theme.palette.primary.main}`,
-						fontSize: '12pt',
-					}*/
 					arrow: {
 						color: theme.palette.common.white,
 					},
 					tooltip: {
 						backgroundColor: theme.palette.common.white,
-						//border: `1px solid ${theme.palette.primary.main}`,
 						fontSize: '12pt',
 						color: theme.palette.common.black,
 					}
@@ -142,6 +131,7 @@ const createCustomTheme = (props?: ThemeProps): Theme => {
 					slotProps: {
 						paper: {
 							variant: "outlined",
+							elevation: 0,
 						}
 					}
 				},
@@ -149,8 +139,7 @@ const createCustomTheme = (props?: ThemeProps): Theme => {
 		}
 	}));
 
-	console.log(theme?.components?.MuiSelect?.defaultProps);
-
+	theme = responsiveFontSizes(theme);
 
 	return theme;
 }

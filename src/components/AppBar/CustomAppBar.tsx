@@ -3,10 +3,14 @@ import { Link } from "react-router-dom";
 import useAppStore from "../../state/useAppStore";
 import EmpresaSelect from "./EmpresaSelect";
 import UsuarioLogadoChip from "./UsuarioLogadoChip";
-import {Fullscreen, FullscreenExit, Menu as MenuIcon, MenuOpen as MenuOpenIcon, Notifications} from "@mui/icons-material";
+import {Fullscreen, FullscreenExit, Menu as MenuIcon, MenuOpen as MenuOpenIcon, Notifications, AdminPanelSettings} from "@mui/icons-material";
+import { useUsuarioLogadoQuery } from "../../queries/useUsuarioQueries";
+import browserHistory from "../../utils/browserHistory";
 
 
 const CustomAppBar = () => {
+
+	const { data: usuarioLogado } = useUsuarioLogadoQuery();
 
 	const isMobile = useAppStore(s => s.isMobile);
 	
@@ -25,7 +29,7 @@ const CustomAppBar = () => {
 						</IconButton>
 					</Tooltip>
 
-					<Link to="/" style={{height: 24}}>
+					<Link to={usuarioLogado ? `/e/${usuarioLogado?.empresaPrincipalId}` : '/'} style={{height: 24}}>
 						{!isMobile ? <img style={{ width: "auto", height: "24px" }} src='/assets/image/logo.png' /> :
 							<img style={{ width: "auto", height: "24px" }} src='/assets/image/icon.png' />
 						}
@@ -34,6 +38,12 @@ const CustomAppBar = () => {
 					<Divider orientation="vertical" variant="middle" flexItem />
 
 					<EmpresaSelect/>
+
+					{usuarioLogado?.isAdmin && <Tooltip arrow title="Área Restrita">
+						<IconButton color="error" onClick={() => browserHistory.push('/admin')}>
+							<AdminPanelSettings/>
+						</IconButton>
+					</Tooltip>}
 
 					<Box flexGrow={1}></Box>
 

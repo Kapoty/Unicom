@@ -1,6 +1,7 @@
 export interface AuthState {
     isAuth?: boolean;
-    setIsAuth: (isAuth?: boolean) => void;
+	setIsAuth: (isAuth?: boolean) => void;
+    login: (redirect?: string) => void;
     logout: (redirect?: boolean) => void;
 }
 

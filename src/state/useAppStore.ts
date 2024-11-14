@@ -1,5 +1,5 @@
 import {create} from 'zustand'
-import createCustomTheme from '../utils/theme';
+import createCustomTheme from '../utils/customTheme';
 import { AppState } from '../ts/types/appTypes';
 
 const useAppStore = create<AppState>()((set, get) => ({
@@ -13,11 +13,16 @@ const useAppStore = create<AppState>()((set, get) => ({
     setDrawerOpen: (drawerOpen) => set({drawerOpen}),
 	fullscreen: false,
     setFullscreen: (fullscreen) => {
-		if (fullscreen)
-			document.body.requestFullscreen();
-		else
-			document.exitFullscreen();
-		set({fullscreen});
+		try {
+			if (fullscreen)
+				document.body.requestFullscreen();
+			else
+				document.exitFullscreen();
+
+			set({fullscreen});
+		} catch (error) {
+			console.error(error);
+		}
 	},
 }));
 
