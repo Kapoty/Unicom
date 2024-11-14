@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { getEmpresasByUsuario } from '../services/empresaService';
-import { queryClient } from '../App';
-import { Empresa } from '../ts/types/empresaTypes';
+import { Empresa } from '../models/Empresa';
+import queryClient from '../utils/queryClient';
 
 export const useEmpresasByUsuarioQuery = (usuarioId?: number) => {
   return useQuery({

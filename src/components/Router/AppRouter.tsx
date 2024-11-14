@@ -1,162 +1,190 @@
-import { Stack } from "@mui/material";
-import React, { lazy, LazyExoticComponent, PropsWithChildren, ReactNode, Suspense, useCallback, useMemo } from "react";
-import { Navigate, Outlet, Params, redirect, Route, Routes, useMatch, useMatches, useParams } from "react-router-dom";
-import DashboardContent from "../Dashboard/DashboardContent";
+import React, { PropsWithChildren, Suspense, useMemo } from "react";
+import { Navigate, Outlet, Route, Routes, useParams } from "react-router-dom";
+import { IEmpresaPublic } from "../../models/Empresa";
+import { Permissao, PermissaoSchema } from "../../models/enums";
+import { Papel } from "../../models/Papel";
+import Carregando from "../../pages/Dashboard/Carregando";
+import EditarVenda from "../../pages/Dashboard/Empresa/EditarVenda";
+import ListaVendas from "../../pages/Dashboard/Empresa/ListaVendas";
+import DashBoardPage from "../../pages/DashboardPage";
+import LoginPage from "../../pages/LoginPage";
 import { usePapelAtualQuery } from "../../queries/usePapelQueries";
 import { useUsuarioLogadoQuery } from "../../queries/useUsuarioQueries";
 import useAppStore from "../../state/useAppStore";
-import { Permissoes } from "../../ts/enums/apiEnums";
-import { EmpresaPublic } from "../../ts/types/empresaTypes";
-import { Papel } from "../../ts/types/papelTypes";
-import { UsuarioMe } from "../../ts/types/usuarioTypes";
-import Carregando from "../../pages/Dashboard/Carregando";
-import ListaVendas from "../../pages/Dashboard/Empresa/ListaVendas";
-import EditarVenda from "../../pages/Dashboard/Empresa/EditarVenda";
-import DashBoardPage from "../../pages/DashboardPage";
-import LoginPage from "../../pages/LoginPage";
-import CustomBackdrop from "../Backdrop/CustomBackdrop";
 import useAuthStore from "../../state/useAuthStore";
-import { BrowserHistory } from "history";
+import { IUsuarioMe } from "../../models/Usuario";
 import browserHistory from "../../utils/browserHistory";
+import CustomBackdrop from "../Backdrop/CustomBackdrop";
+import DashboardContent from "../Dashboard/DashboardContent";
+import { TransitionGroup } from "react-transition-group";
+import { Fade } from "@mui/material";
 
-interface Context {
+export interface Context {
 	auth?: boolean,
-	usuarioLogado?: UsuarioMe,
-	empresa?: EmpresaPublic,
+	usuarioLogado?: IUsuarioMe,
+	empresa?: IEmpresaPublic,
 	papel?: Papel,
-	browserHistory: BrowserHistory,
 }
 
 export interface IRoute {
 	path: string;
 	element?: JSX.Element | ((context: Context) => JSX.Element) | React.LazyExoticComponent<() => JSX.Element>
-	id: string;
+	id?: string;
 	keys?: string[];
-	auth?: boolean,
-	usuarioLogado?: boolean;
-	admin?: boolean;
-	empresa?: boolean;
-	papel?: boolean;
-	permissao?: Permissoes;
+	condicoes?: {
+		auth?: boolean,
+		usuarioLogado?: boolean;
+		admin?: boolean;
+		empresa?: boolean;
+		papel?: boolean;
+		permissao?: Permissao;
+	},
 	routes?: IRoute[];
 }
 
-export const indexRoute: IRoute = {
+const indexRouteWithoutIds: IRoute = {
 	path: '*',
-	id: "1",
 	routes: [
 		{
 			path: 'login',
-			id: "-1",
-			auth: false,
+			condicoes: {
+				auth: false,
+			},
 			element: <LoginPage />
 		},
 		{
 			path: '*',
-			id: "-2",
-			auth: true,
+			condicoes: {
+				auth: true,
+			},
 			element: <DashBoardPage />,
 			routes: [
 				{
 					path: '*',
-					id: "2",
-					usuarioLogado: true,
+					condicoes: {
+						usuarioLogado: true,
+					},
 					routes: [
 						{
 							path: 'e/:empresaId',
-							id: "3",
 							keys: ['empresaId'],
 							routes: [
 								{
 									path: '',
-									id: "4",
-									empresa: true,
+									condicoes: {
+										empresa: true,
+									},
+									element: <DashboardContent titulo="Início"/>,
+								},
+								{
+									path: 'vendas',
+									condicoes: {
+										empresa: true,
+									},
 									element: <ListaVendas />,
 								},
 								{
 									path: 'vendas/:vendaId',
-									id: "5",
-									empresa: true,
+									condicoes: {
+										empresa: true,
+									},
 									element: <EditarVenda />,
 									keys: ['vendaId'],
 								},
 								{
 									path: 'usuarios',
-									id: "6",
-									empresa: true,
+									condicoes: {
+										empresa: true,
+										permissao: PermissaoSchema.enum.CADASTRAR_USUARIOS
+									},
 									element: <DashboardContent titulo='Usuários' />,
-									permissao: Permissoes.CADASTRAR_USUARIOS
 
 								},
 								{
 									path: '*',
-									id: "7",
-									empresa: true,
-									papel: true,
+									condicoes: {
+										empresa: true,
+										papel: true,
+									},
 									element: <Navigate to='' />,
 
 								},
 								{
 									path: '*',
-									id: "8",
-									papel: false,
+									condicoes: {
+										papel: false,
+									},
 									element: <Carregando />,
 								}
 							]
 						},
 						{
 							path: 'admin',
-							id: "9",
-							admin: true,
+							condicoes: {
+								admin: true,
+							},
 							routes: [
 								{
 									path: '',
-									id: "10",
 									element: <DashboardContent titulo='Admin' />
 								},
 								{
 									path: 'empresas',
-									id: "11",
 									element: <DashboardContent titulo='Empresas' />,
 								},
 								{
 									path: '*',
-									id: "12",
 									element: <Navigate to='' />
 								}
 							]
 						},
 						{
 							path: '*',
-							id: "13",
 							element: ({ usuarioLogado }: Context) => <Navigate to={`/e/${usuarioLogado?.empresaPrincipalId}`} />
 						},
 					]
 				},
 				{
 					path: '*',
-					id: "14",
-					usuarioLogado: false,
+					condicoes: {
+						usuarioLogado: false,
+					},
 					element: <Carregando />
 				},
 			]
 		},
 		{
 			path: '*',
-			id: "-4",
-			auth: false,
-			element: ({ browserHistory }: Context) => {
+			condicoes: {
+				auth: false,
+			},
+			element: () => {
 				const pathname = browserHistory.location.pathname;
 				return <Navigate to={`/login${pathname !== '/' ? `?redirect=${pathname}` : ''}`} />
 			},
 		},
 		{
 			path: '*',
-			id: "-3",
 			element: <CustomBackdrop />
 		},
 	]
 };
+
+const setIds = (route: IRoute, currentId = 1) => {
+
+	const {id, routes} = route;
+
+	route.id = currentId.toString();
+	currentId++;
+
+	routes?.forEach(r => currentId = setIds(r, currentId));
+
+	return currentId;
+}
+
+setIds(indexRouteWithoutIds);
+
+export const indexRoute = indexRouteWithoutIds;
 
 interface WrapperProps {
 	keys?: string[];
@@ -172,7 +200,9 @@ const Wrapper = ({ keys, children }: PropsWithChildren<WrapperProps>) => {
 
 const renderRoute = (dashboardRoute: IRoute, context: Context) => {
 
-	const { path, element, id, keys, auth, usuarioLogado, admin, empresa, papel, permissao, routes } = dashboardRoute;
+	const { path, element, id, keys, condicoes, routes } = dashboardRoute;
+
+	const { auth, usuarioLogado, admin, empresa, papel, permissao } = condicoes ?? {};
 
 	const shouldRender = (
 		(auth == undefined || auth == context.auth)
@@ -180,7 +210,7 @@ const renderRoute = (dashboardRoute: IRoute, context: Context) => {
 		&& (admin == undefined || admin == context?.usuarioLogado?.isAdmin)
 		&& (empresa == undefined || empresa == !!context.empresa)
 		&& (papel == undefined || papel == !!context.papel)
-		&& (admin || permissao == undefined || context?.papel?.permissoes.includes(permissao))
+		&& (admin || permissao == undefined || context?.papel?.contemPermissao(permissao))
 	)
 
 	if (shouldRender) {
@@ -200,7 +230,7 @@ const renderRoute = (dashboardRoute: IRoute, context: Context) => {
 			id={id}
 			key={id}
 		>
-			{routes && routes.map(route => renderRoute(route, context))}
+			{routes?.map(route => renderRoute(route, context))}
 		</Route>
 		)
 	}
@@ -216,18 +246,17 @@ const DashboardRouter = () => {
 	const routes = useMemo(() => {
 		//console.log('---')
 		return <Routes>
-			{renderRoute(indexRoute, {
+			{renderRoute(indexRouteWithoutIds, {
 				usuarioLogado: usuarioLogado,
 				empresa: empresa,
 				papel: papel,
-				auth: isAuth,
-				browserHistory: browserHistory,
+				auth: isAuth
 			})}
 		</Routes>
 	}, [isAuth, usuarioLogado, empresa, papel]);
 
 	return <Suspense fallback={<Carregando />}>
-		{routes}
+			{routes}
 	</Suspense>
 }
 

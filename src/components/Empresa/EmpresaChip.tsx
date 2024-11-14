@@ -1,13 +1,13 @@
 import { Chip, Avatar, Badge } from "@mui/material";
 import { getArquivoUrl } from "../../services/empresaService";
-import { EmpresaPublic } from "../../ts/types/empresaTypes";
 import { MoreHoriz, Error as ErrorIcon } from "@mui/icons-material";
 import { useEmpresaQuery } from "../../queries/useEmpresaQueries";
 import { ReactNode } from "react";
+import { IEmpresaPublic } from "../../models/Empresa";
 
 export interface EmpresaChipProps {
 	empresaId?: number,
-	empresa?: EmpresaPublic,
+	empresa?: IEmpresaPublic,
 	isLoading?: boolean,
 	error?: boolean,
 }

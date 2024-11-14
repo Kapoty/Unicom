@@ -83,7 +83,7 @@ const createCustomTheme = (props?: ThemeProps): Theme => {
 			},
 		},
 	}, ptBR);
-	
+
 	theme = createTheme(deepmerge(theme, {
 		components: {
 			MuiIcon: {
@@ -127,6 +127,16 @@ const createCustomTheme = (props?: ThemeProps): Theme => {
 				}
 			},
 			MuiPopover: {
+				defaultProps: {
+					slotProps: {
+						paper: {
+							variant: "outlined",
+							elevation: 0,
+						}
+					}
+				},
+			},
+			MuiDrawer: {
 				defaultProps: {
 					slotProps: {
 						paper: {

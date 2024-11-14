@@ -1,5 +1,5 @@
-import { UsuarioMe, UsuarioMeSchema } from '../ts/types/usuarioTypes';
+import { IUsuarioMe, IUsuarioMeAPI, UsuarioMeSchema } from '../models/Usuario';
 import api from '../utils/api';
 
-export const getMe = async (): Promise<UsuarioMe> =>
-    UsuarioMeSchema.parse((await api.get("/usuarios/me")).data);
+export const getMe = async (): Promise<IUsuarioMe> =>
+    UsuarioMeSchema.parse((await api.get<IUsuarioMeAPI>("/usuarios/me")).data);

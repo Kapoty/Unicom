@@ -1,5 +1,5 @@
 import { Box, Divider, Fab, Fade, Stack, Typography } from "@mui/material";
-import { ReactNode } from "react";
+import { forwardRef, ReactNode } from "react";
 import useAppStore from "../../state/useAppStore";
 import { useTheme } from "@emotion/react";
 import { Add } from "@mui/icons-material";
@@ -9,13 +9,15 @@ export interface DashboardContentProps {
 	children?: ReactNode
 }
 
-const DashboardContent = ({titulo, children}: DashboardContentProps) => {
+const DashboardContent = forwardRef<HTMLDivElement, DashboardContentProps>((props, ref) => {
+
+	const {titulo, children} = props;
 
 	const isMobile = useAppStore(s => s.isMobile);
 	const theme = useTheme();
 
-	return <Fade in>
-			<Stack gap={1}>
+	return <Fade in ref={ref}>
+			<Stack ref={ref} gap={1}>
 				{titulo && <Typography variant="h3">
 					{titulo}
 				</Typography>}
@@ -29,6 +31,6 @@ const DashboardContent = ({titulo, children}: DashboardContentProps) => {
 					}} color="primary"><Add/></Fab>}
 		</Stack>
 	</Fade>
-}
+});
 
 export default DashboardContent;

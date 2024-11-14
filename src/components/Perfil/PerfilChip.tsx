@@ -2,7 +2,7 @@ import { Error as ErrorIcon, MoreHoriz } from "@mui/icons-material";
 import { Avatar, Box, Chip, ChipProps, ChipPropsColorOverrides, CircularProgress, IconButton, Tooltip } from "@mui/material";
 import { usePerfilQuery } from "../../queries/usePerfilQueries";
 import { getFotoUrl } from "../../services/perfilService";
-import { Perfil } from "../../ts/types/perfilTypes";
+import { Perfil } from "../../models/Perfil";
 import { forwardRef, ReactNode } from "react";
 
 export interface PerfilChipProps extends ChipProps {

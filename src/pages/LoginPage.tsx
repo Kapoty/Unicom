@@ -3,7 +3,7 @@ import { AccountCircle, Key, Login, Visibility, VisibilityOff } from "@mui/icons
 import { LoadingButton } from '@mui/lab';
 import { Alert, Container, Grow, IconButton, InputAdornment, Stack, TextField, Typography } from "@mui/material";
 import { useSnackbar } from 'notistack';
-import { useEffect, useState } from "react";
+import { MutableRefObject, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSearchParams } from 'react-router-dom';
 import { z } from "zod";
@@ -13,8 +13,6 @@ import { login } from "../services/authService";
 import useAppStore from "../state/useAppStore";
 import useAuthStore from "../state/useAuthStore";
 import { setTokens } from "../utils/authUtil";
-import browserHistory from "../utils/browserHistory";
-import CustomBackdrop from '../components/Backdrop/CustomBackdrop';
 
 const AuthFormSchema = z.object({
 	login: z.string().min(1, {message: "Obrigatório"}).email("Email ou matrícula inválido").or(z.string().regex(/^\d+$/)),
@@ -26,6 +24,7 @@ type AuthFormData = z.infer<typeof AuthFormSchema>;
 const LoginPage = () => {
 
 	const dominio = location.hostname;
+
 	const { data: empresa, isLoading: isEmpresaLoading, error: empresaError } = useEmpresaByDominioQuery(dominio);
 
 	const authLogin = useAuthStore(s => s.login);
@@ -52,7 +51,11 @@ const LoginPage = () => {
 
 	useEffect(() => {
 		setEmpresa(empresa);
+		if (empresa)
+			loginRef?.current?.focus();
 	}, [empresa]);
+
+	const loginRef = useRef<HTMLInputElement>(null);
 
 	const onSubmit = async (data: AuthFormData) => {
 		try {
@@ -108,13 +111,13 @@ const LoginPage = () => {
 											<InputAdornment position="start">
 												<AccountCircle />
 											</InputAdornment>
-										)
+										),
 									}
 								}}
 								variant="filled"
 								error={!!(errors?.login)}
 								helperText={errors?.login?.message}
-								autoFocus
+								inputRef={loginRef}
 							/>
 							<TextField
 								{...register('senha')}
@@ -153,7 +156,7 @@ const LoginPage = () => {
 								variant="contained"
 								size="large"
 								endIcon={<Login />}
-								disabled={!empresa || !isValid}
+								disabled={!empresa}
 							>
 								Acessar
 							</LoadingButton>

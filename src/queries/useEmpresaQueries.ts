@@ -5,7 +5,7 @@ export const useEmpresaByDominioQuery = (dominio: string) => {
   return useQuery({
     queryKey: ['empresas', 'dominios', dominio],
     queryFn: async () => getEmpresaByDominio(dominio),
-    retry: 3,
+    retry: 3
   });
 };
 

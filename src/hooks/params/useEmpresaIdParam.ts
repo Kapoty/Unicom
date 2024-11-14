@@ -2,7 +2,9 @@ import { useMatch } from "react-router-dom";
 
 const useEmpresaIdParam = () => {
     const empresaIdParam = useMatch("/e/:empresaId/*")?.params?.empresaId;
-    const empresaId = empresaIdParam ? parseInt(empresaIdParam) : undefined;
+    let empresaId: number | undefined = parseInt(empresaIdParam ?? '');
+	if (isNaN(empresaId))
+		empresaId = undefined;
 
     return empresaId;
 }

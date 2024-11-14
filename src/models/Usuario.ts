@@ -1,13 +1,13 @@
 import { z } from "zod";
-import { PapelSistemaSchema } from "../enums/apiEnums";
-import { parseDate } from "../../utils/dateUtil";
+import { parseDate } from "../utils/dateUtil";
+import { PapelSistemaSchema } from "./enums";
 
 export const AceiteTermosSchema = z.object ({
     data: z.nullable(z.string().transform(data => parseDate(data))),
     versao: z.nullable(z.number()),
 })
 
-export const UsuarioMeSchema = z.object({
+export const UsuarioMeAPISchema = z.object({
     usuarioId: z.number(),
     nomeCompleto: z.string(),
     email: z.string(),
@@ -16,9 +16,13 @@ export const UsuarioMeSchema = z.object({
     papelSistema: PapelSistemaSchema,
     empresaPrincipalId: z.number(),
     aceiteTermos: z.nullable(AceiteTermosSchema),
-}).transform((data) => ({
+});
+
+export type IUsuarioMeAPI = z.infer<typeof UsuarioMeAPISchema>;
+
+export const UsuarioMeSchema = UsuarioMeAPISchema.transform((data) => ({
 	...data,
 	isAdmin: data.papelSistema == 'ADMIN'
 }));
 
-export type UsuarioMe = z.infer<typeof UsuarioMeSchema>;
+export type IUsuarioMe = z.infer<typeof UsuarioMeSchema>;

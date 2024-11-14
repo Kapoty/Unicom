@@ -1,6 +1,14 @@
-openssl genrsa -out private.key 4096
-openssl req -new -sha256 -out private.csr -key private.key -config ssl.conf
-openssl x509 -req -days 3650 -in private.csr -signkey private.key -out private.crt -extensions req_ext -extfile ssl.conf
-openssl x509 -in private.crt -out private.pem -outform PEM
+openssl genpkey -algorithm RSA -out rootCA.key -aes256 -pass pass:12345678
+openssl req -key rootCA.key -new -out rootCA.csr -passin pass:12345678
+openssl x509 -req -in rootCA.csr -signkey rootCA.key -out rootCA.crt -days 3650 -passin pass:12345678 -reqexts v3_req -extensions v3_ca
 
-openssl pkcs12 -export -legacy -in private.crt -inkey private.key -out COMBINED_OUTPUT.p12
+openssl genpkey -algorithm RSA -out server.key -pass pass:12345678
+openssl req -new -key server.key -out server.csr -config ssl.conf -passin pass:12345678
+openssl x509 -req -in server.csr -CA rootCA.crt -CAkey rootCA.key -CAcreateserial -out server.crt -days 365 -passin pass:12345678 -extensions req_ext -extfile ssl.conf
+
+openssl verify -CAfile rootCA.crt server.crt
+
+openssl x509 -in server.crt -out server.pem -outform PEM
+
+openssl pkcs12 -export -in server.crt -inkey server.key -out server.p12
+openssl pkcs12 -export -in rootCA.crt -inkey rootCA.key -out rootCA.p12

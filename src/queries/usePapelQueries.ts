@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { getPapelById, getPapeis } from '../services/papelService';
-import useAppStore from '../state/useAppStore';
+import { getPapelById } from '../services/papelService';
 import { usePerfilAtualQuery } from './usePerfilQueries';
 
 export const usePapelQuery = (papelId?: number) => {

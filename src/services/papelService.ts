@@ -1,8 +1,8 @@
-import { Papel, PapelSchema } from '../ts/types/papelTypes';
+import { IPapel, IPapelAPI, Papel } from '../models/Papel';
 import api from '../utils/api';
 
 export const getPapelById = async (papelId: number): Promise<Papel> =>
-    PapelSchema.parse((await api.get(`/papeis/${papelId}`)).data);
+    Papel.create((await api.get<IPapelAPI>(`/papeis/${papelId}`)).data);
 
 export const getPapeis = async (): Promise<Papel[]> =>
-    (await api.get(`/papeis`)).data.map((p: Papel) => PapelSchema.parse(p));
+    (await api.get<IPapelAPI[]>(`/papeis`)).data.map((p: IPapelAPI) => Papel.create(p));

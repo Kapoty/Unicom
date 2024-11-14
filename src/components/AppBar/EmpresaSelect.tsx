@@ -4,13 +4,10 @@ import { useEmpresasByUsuarioQuery } from "../../queries/useEmpresasQueries";
 import { useUsuarioLogadoQuery } from "../../queries/useUsuarioQueries";
 import browserHistory from "../../utils/browserHistory";
 import EmpresaChip from "../Empresa/EmpresaChip";
-import useAppStore from "../../state/useAppStore";
 
 const EmpresaSelect = () => {
 
 	const { data: usuarioLogado } = useUsuarioLogadoQuery();
-
-	const empresa = useAppStore(s => s.empresa);
 
 	const { data: empresas, isLoading: isEmpresasLoading, error: empresasError } = useEmpresasByUsuarioQuery(usuarioLogado?.usuarioId);
 
@@ -33,8 +30,7 @@ const EmpresaSelect = () => {
 
 	return <FormControl error={!!empresasError}>
 		<Select
-			value={empresaId ?? 0}
-			onChange={() => { }}
+			value={empresaId ?? ''}
 			variant="standard"
 			displayEmpty
 			autoWidth

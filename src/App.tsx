@@ -18,6 +18,8 @@ import useEmpresaSync from './hooks/sync/useEmpresaSync';
 import useMobileSync from './hooks/sync/useMobileSync';
 import useAppStore from './state/useAppStore';
 import browserHistory from './utils/browserHistory';
+import queryClient from './utils/queryClient';
+import useOnlineSync from './hooks/sync/useOnlineSync';
 
 dayjs.locale('pt')
 dayjs.extend(localizedFormat)
@@ -25,19 +27,18 @@ dayjs.extend(relativeTime);
 
 LicenseInfo.setLicenseKey('e0d9bb8070ce0054c9d9ecb6e82cb58fTz0wLEU9MzI0NzIxNDQwMDAwMDAsUz1wcmVtaXVtLExNPXBlcnBldHVhbCxLVj0y');
 
-export const queryClient = new QueryClient();
-
 const App = () => {
 	
 	useMobileSync();
 	useAuthSync();
 	useEmpresaSync();
+	useOnlineSync();
 
 	const theme = useAppStore(s => s.theme);
 
 	return (
 		<QueryClientProvider client={queryClient}>
-			{<ReactQueryDevtools/>}
+			{/*<ReactQueryDevtools/>*/}
 			<ThemeProvider theme={theme}>
 				<LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="pt">
 					<CustomSnackbarProvider>
