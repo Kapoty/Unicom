@@ -16,8 +16,8 @@ import { IUsuarioMe } from "../../models/Usuario";
 import browserHistory from "../../utils/browserHistory";
 import CustomBackdrop from "../Backdrop/CustomBackdrop";
 import DashboardContent from "../Dashboard/DashboardContent";
-import { TransitionGroup } from "react-transition-group";
-import { Fade } from "@mui/material";
+import ListaEmpresas from "../../pages/Dashboard/Admin/ListaEmpresas";
+import EditarEmpresa from "../../pages/Dashboard/Admin/EditarEmpresa";
 
 export interface Context {
 	auth?: boolean,
@@ -130,7 +130,12 @@ const indexRouteWithoutIds: IRoute = {
 								},
 								{
 									path: 'empresas',
-									element: <DashboardContent titulo='Empresas' />,
+									element: <ListaEmpresas/>,
+								},
+								{
+									path: 'empresas/:empresaId',
+									element: <EditarEmpresa/>,
+									keys: ['empresaId'],
 								},
 								{
 									path: '*',

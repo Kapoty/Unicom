@@ -2,7 +2,7 @@ import { Collapse, Grow, List, Stack } from "@mui/material";
 import { TransitionGroup } from "react-transition-group"
 import DrawerMenuItem from "./DrawerMenuItem";
 import { Permissao } from "../../models/enums";
-import {Home as HomeIcon, CreditCard, AddCard, Lock, Settings, HeartBroken, Star, Apartment, Groups} from "@mui/icons-material";
+import {Home as HomeIcon, CreditCard, AddCard, Lock, Settings, HeartBroken, Star, Apartment, Groups, Add} from "@mui/icons-material";
 import { IUsuarioMe } from "../../models/Usuario";
 import { IEmpresaPublic } from "../../models/Empresa";
 import { useUsuarioLogadoQuery } from "../../queries/useUsuarioQueries";
@@ -12,10 +12,12 @@ import { Context, useMemo } from "react";
 import { Papel } from "../../models/Papel";
 import { usePapelAtualQuery } from "../../queries/usePapelQueries";
 import { Location } from "react-router-dom";
+import useEmpresaIdParam from "../../hooks/params/useEmpresaIdParam";
 
 export interface DrawerMenuItemContext {
 	usuarioLogado?: IUsuarioMe,
 	empresa?: IEmpresaPublic,
+	empresaId?: number | undefined,
 	papel?: Papel,
 	location: Location,
 }
@@ -28,6 +30,7 @@ export interface IDrawerMenuItem {
 	condicoes?: {
 		admin?: boolean;
 		empresa?: boolean;
+		empresaId?: boolean;
 		permissao?: Permissao;
 	},
 	submenu?: IDrawerMenuItem[];
@@ -41,18 +44,39 @@ const menuItems: IDrawerMenuItem[] = [
 		match: /^\/admin$/,
 		condicoes: {
 			admin: true,
-			empresa: false,
+			empresaId: false,
 		}
 	},
 	{
 		titulo: "Empresas",
 		icone: <Apartment/>,
-		to: `/admin/empresas`,
-		match: /^\/admin\/empresas$/,
+		match: /^\/admin\/empresas/,
 		condicoes: {
 			admin: true,
-			empresa: false,
-		}
+			empresaId: false,
+		},
+		submenu: [
+			{
+				titulo: "Empresas",
+				icone: <CreditCard/>,
+				match: /^\/admin\/empresas$/,
+				to: '/admin/empresas',
+				condicoes: {
+					admin: true,
+					empresaId: false,
+				},
+			},
+			{
+				titulo: "Nova Empresa",
+				icone: <Add/>,
+				match: /^\/admin\/empresas\/\w+/,
+				to: '/admin/empresas/add',
+				condicoes: {
+					admin: true,
+					empresaId: false,
+				},
+			}
+		]
 	},
 	{
 		titulo: "Início",
@@ -100,36 +124,7 @@ const menuItems: IDrawerMenuItem[] = [
 			empresa: true,
 			permissao: "CADASTRAR_USUARIOS"
 		}
-	},
-	{
-		titulo: "Configurações",
-		icone: <Settings/>,
-		match: /^\/e\/\d+\/configuracoes\/\w+/,
-		to: (context) => `/e/${context?.empresa?.empresaId}/configuracoes`,
-		condicoes: {
-			empresa: true,
-			permissao: "CONFIGURAR_EMPRESA",
-		}
-	},
-	{
-		titulo: "Estrela",
-		icone: <Star/>,
-		match: /^\/e\/\d+\/configuracoes\/\w+/,
-		to: (context) => `/e/${context?.empresa?.empresaId}/configuracoes`,
-		condicoes: {
-			empresa: true,
-		}
-	},
-	{
-		titulo: "Coração",
-		icone: <HeartBroken/>,
-		match: /^\/e\/\d+\/configuracoes\/\w+/,
-		to: (context) => `/e/${context?.empresa?.empresaId}/configuracoes`,
-		condicoes: {
-			empresa: true,
-			permissao: "CONFIGURAR_EMPRESA",
-		}
-	},
+	}
 ];
 
 const renderMenuItems = (items: IDrawerMenuItem[], context: DrawerMenuItemContext, depth = 1) => {
@@ -137,16 +132,17 @@ const renderMenuItems = (items: IDrawerMenuItem[], context: DrawerMenuItemContex
 
 		const { titulo, icone, to, match, condicoes, submenu } = menuItem;
 
-		const { admin, empresa, permissao } = condicoes ?? {};
+		const { admin, empresa, empresaId, permissao } = condicoes ?? {};
 
 		const shouldRender = (
 			(admin == undefined || admin == context?.usuarioLogado?.isAdmin)
 			&& (empresa == undefined || empresa == !!context.empresa)
+			&& (empresaId == undefined || empresaId == !!context.empresaId)
 			&& (admin || permissao == undefined || context?.papel?.contemPermissao(permissao))
 		)
 
 		if (shouldRender) {
-			return <Collapse key={i} >
+			return <Collapse in={depth !== 1} key={i} >
 				<DrawerMenuItem
 					key={i}
 					to={(typeof to === 'function') ? to(context) : to}
@@ -168,13 +164,15 @@ const DrawerMenu = () => {
 	const empresa = useAppStore(s => s.empresa);
 	const location = useLocation();
 	const {data: papel} = usePapelAtualQuery();
+	const empresaId = useEmpresaIdParam();
 
 	const items = useMemo(() => renderMenuItems(menuItems, {
 			usuarioLogado: usuarioLogado,
 			empresa: empresa,
+			empresaId: empresaId,
 			location: location,
 			papel: papel,
-	}	), [usuarioLogado, empresa, location, papel]);
+	}	), [usuarioLogado, empresa, empresaId, location, papel]);
 
 	return <List disablePadding>
 		{usuarioLogado &&

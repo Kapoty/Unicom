@@ -8,7 +8,7 @@ const EditarVenda = () => {
 	const {vendaId} = useParams();
 
 	return <DashboardContent
-		titulo={vendaId == 'nova' ? 'Nova Venda' : 'Editar Venda'}
+		titulo={vendaId == 'add' ? 'Nova Venda' : 'Editar Venda'}
 	>
 		<Button onClick={() => browserHistory.push(`${parseInt(vendaId!) + 1}`)}>Próxima</Button>
 	</DashboardContent>

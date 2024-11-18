@@ -14,7 +14,6 @@ const useAuthStore = create<AuthState>()((set) => ({
 	isAuth: undefined,
 	setIsAuth: (isAuth) => set({isAuth}),
 	login: (redirect = '/') => {
-		console.log(redirect)
 		set({isAuth: true});
 		queryClient.removeQueries({ queryKey: ['usuario', 'me'] });
 		browserHistory.push(redirect);

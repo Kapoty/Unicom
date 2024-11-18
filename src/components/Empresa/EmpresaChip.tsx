@@ -1,6 +1,6 @@
-import { Chip, Avatar, Badge } from "@mui/material";
+import { Chip, Avatar, Badge, Skeleton } from "@mui/material";
 import { getArquivoUrl } from "../../services/empresaService";
-import { MoreHoriz, Error as ErrorIcon } from "@mui/icons-material";
+import { Error as ErrorIcon } from "@mui/icons-material";
 import { useEmpresaQuery } from "../../queries/useEmpresaQueries";
 import { ReactNode } from "react";
 import { IEmpresaPublic } from "../../models/Empresa";
@@ -33,9 +33,9 @@ const EmpresaChip = ({ empresaId, empresa, isLoading, error }: EmpresaChipProps)
 		/>
 	
 	if (empresaError)
-		return <Chip color="error" avatar={<Avatar><ErrorIcon /></Avatar>} label="Empresa não identificada!" />
+		return <Chip color="error" avatar={<Avatar><ErrorIcon color="error" /></Avatar>} label="Empresa não identificada!" />
 	
-	return <Chip avatar={<Avatar><MoreHoriz /></Avatar>} label="..." />
+	return <Chip avatar={<Avatar><Skeleton variant="circular"/></Avatar>} label={<Skeleton variant="text" width={50}/>} />
 }
 
 export default EmpresaChip;

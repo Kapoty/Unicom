@@ -1,6 +1,6 @@
 import { Theme } from '@mui/material';
 import { green, red } from '@mui/material/colors';
-import { createTheme, responsiveFontSizes } from '@mui/material/styles';
+import { alpha, createTheme, responsiveFontSizes } from '@mui/material/styles';
 import { ptBR } from '@mui/x-data-grid-premium/locales';
 import { deepmerge } from '@mui/utils';
 import { PaletteColorOptions } from "@mui/material/styles";
@@ -54,13 +54,6 @@ const createCustomTheme = (props?: ThemeProps): Theme => {
 					}
 				}
 			},
-			MuiButton: {
-				styleOverrides: {
-					root: {
-						borderRadius: 28,
-					}
-				}
-			},
 			MuiAccordionSummary: {
 				styleOverrides: {
 					root: {
@@ -86,9 +79,16 @@ const createCustomTheme = (props?: ThemeProps): Theme => {
 
 	theme = createTheme(deepmerge(theme, {
 		components: {
+			MuiButton: {
+				styleOverrides: {
+					root: {
+						borderRadius: 28,
+					}
+				}
+			},
 			MuiIcon: {
 				defaultProps: {
-					size: "large"
+					//size: "large"
 				}
 			},
 			MuiTooltip: {
@@ -109,10 +109,10 @@ const createCustomTheme = (props?: ThemeProps): Theme => {
 			MuiMenu: {
 				styleOverrides: {
 					list: {
-						padding: theme.spacing(1),
+						//padding: theme.spacing(1),
 					},
 					paper: {
-						borderRadius: 14,
+						//borderRadius: 14,
 					},
 				}
 			},
@@ -132,20 +132,38 @@ const createCustomTheme = (props?: ThemeProps): Theme => {
 						paper: {
 							variant: "outlined",
 							elevation: 0,
+							sx: {
+								padding: theme.spacing(1),
+								borderRadius: '14px',
+							}
 						}
 					}
 				},
+				styleOverrides: {
+					root: {
+						'& .MuiBackdrop-root': {
+							backgroundColor: 'rgba(0, 0, 0, 0.25)'
+						},
+					},
+				}
 			},
-			MuiDrawer: {
+			MuiPaper: {
 				defaultProps: {
-					slotProps: {
-						paper: {
-							variant: "outlined",
-							elevation: 0,
-						}
-					}
+					//variant: "outlined",
+					//elevation: 0,
 				},
-			}
+				styleOverrides: {
+					root: {
+						//borderRadius: 14,
+						//padding: theme.spacing(1)
+					}
+				}
+			},
+			MuiList: {
+				defaultProps: {
+					disablePadding: true
+				}
+			},
 		}
 	}));
 

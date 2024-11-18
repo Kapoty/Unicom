@@ -36,11 +36,11 @@ const DashBoardPage = () => {
 			<CustomAppBar/>
 			<Stack direction="row" flexGrow={1} justifyContent="space-between">
 				<CustomDrawer/>
-				<Stack p={1} flexGrow={1} overflow='hidden' sx={{ position: 'relative' }}>
+				<Stack p={1} flexGrow={1} overflow='hidden'>
 					<Outlet/>
 				</Stack>
 			</Stack>
-			{isMobile && <CustomBottomNavigation/>}
+			{isMobile && false && <CustomBottomNavigation/>}
 		</Stack>
 	</Fade>
 }

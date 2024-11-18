@@ -1,5 +1,5 @@
 import { Error as ErrorIcon, MoreHoriz } from "@mui/icons-material";
-import { Avatar, Box, Chip, ChipProps, ChipPropsColorOverrides, CircularProgress, IconButton, Tooltip } from "@mui/material";
+import { Avatar, Box, Chip, ChipProps, ChipPropsColorOverrides, CircularProgress, IconButton, Skeleton, Tooltip } from "@mui/material";
 import { usePerfilQuery } from "../../queries/usePerfilQueries";
 import { getFotoUrl } from "../../services/perfilService";
 import { Perfil } from "../../models/Perfil";
@@ -35,13 +35,13 @@ const PerfilChip = forwardRef<HTMLDivElement, PerfilChipProps>(
 		label = title;
 		color = 'error';
 		avatarSrc = undefined;
-		avatarIcon = <ErrorIcon />;
+		avatarIcon = <ErrorIcon color="error" />;
 	} else {
-		title = '...';
+		title = <Skeleton variant="text" width={50}/>;
 		label = title;
 		color = 'default';
 		avatarSrc = undefined;
-		avatarIcon = <MoreHoriz />;
+		avatarIcon = <Skeleton variant="circular"/>;
 	}
 
 	return <Tooltip arrow title={title}>

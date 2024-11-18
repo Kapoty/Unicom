@@ -29,20 +29,15 @@ const useAppStore = create<AppState>()((set, get) => ({
     setTheme: (props) => set({theme: createCustomTheme(props)}),
     empresa: undefined,
     setEmpresa: (empresa) => set({empresa}),
-    drawerOpen: false,
+    drawerOpen: true,
     setDrawerOpen: (drawerOpen) => set({drawerOpen}),
 	fullscreen: false,
     setFullscreen: (fullscreen) => {
-		try {
-			if (fullscreen)
-				document.body.requestFullscreen();
-			else
-				document.exitFullscreen();
-
-			set({fullscreen});
-		} catch (error) {
-			console.error(error);
-		}
+		if (fullscreen)
+			document.body.requestFullscreen().catch(error => console.error(error));
+		else
+			document.exitFullscreen().catch(error => console.error(error));
+		set({fullscreen});
 	},
 }));
 

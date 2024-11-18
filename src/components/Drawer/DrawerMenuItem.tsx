@@ -1,11 +1,7 @@
-import { AddCard, CreditCard } from "@mui/icons-material"
-import { Tooltip, Box, IconButton, alpha, Grow, Icon, useTheme, Menu, ListItemIcon, MenuItem, ListItem, ListItemButton, Backdrop } from "@mui/material"
-import { ForwardedRef, forwardRef, PropsWithChildren, useRef, useState } from "react";
-import browserHistory from "../../utils/browserHistory";
-import { IDrawerMenuItem } from "./DrawerMenu";
-import { DrawerMenuItemContext } from "./DrawerMenu";
+import { Backdrop, Box, Icon, List, ListItemButton, ListItemIcon, Menu, MenuItem, Tooltip, useTheme } from "@mui/material";
+import { forwardRef, PropsWithChildren, useRef, useState } from "react";
 import { TransitionGroup } from "react-transition-group";
-import useAppStore from "../../state/useAppStore";
+import browserHistory from "../../utils/browserHistory";
 
 export interface DrawerMenuItemProps {
 	titulo: string;
@@ -27,18 +23,31 @@ const DrawerMenuItem = forwardRef<HTMLDivElement, PropsWithChildren<DrawerMenuIt
 
 	const handleOnClick = () => to ? browserHistory.push(to) : setMenuOpen(true);
 
-	/*sx={selected ? {
-		bgcolor: alpha(theme.palette.action.hover, theme.palette.action.hoverOpacity)
-	} : {}}*/
-
 	return <Box ref={ref}>
 			<Box ref={menuRef} >
 				{depth == 1 ? <Tooltip title={titulo} arrow placement="right">
 				<ListItemButton
 					onClick={handleOnClick}
-					sx={selected ? {
+					sx={{
 						position: 'relative',
+						height: 48,
+						//transition: 'height 0.25s',
 						'&::before': {
+							display: 'block',
+							content: '""',
+							position: 'absolute',
+							right: '0',
+							top: '0',
+							width: '0px',
+							height: '100%',
+							bgcolor: theme.palette.primary.main,
+							//transition: 'all 0.25s',
+						},
+						'&.Mui-selected': {
+							height: 48,
+							//transition: 'height 0.25s',
+						},
+						'&.Mui-selected::before': {
 							display: 'block',
 							content: '""',
 							position: 'absolute',
@@ -46,9 +55,10 @@ const DrawerMenuItem = forwardRef<HTMLDivElement, PropsWithChildren<DrawerMenuIt
 							top: '0',
 							width: '2px',
 							height: '100%',
-							bgcolor: theme.palette.primary.main
+							bgcolor: theme.palette.primary.main,
+							//transition: 'all 0.25s',
 						}
-					} : {}}
+					}}
 					selected={selected}
 				>
 					
@@ -65,7 +75,7 @@ const DrawerMenuItem = forwardRef<HTMLDivElement, PropsWithChildren<DrawerMenuIt
 						{titulo}
 					</MenuItem>}
 			</Box>
-		<Backdrop open={menuOpen} onClick={() => setMenuOpen(false)}>
+		<Backdrop invisible open={menuOpen} onClick={() => setMenuOpen(false)}>
 			<Menu
 				anchorEl={menuRef.current}
 				open={menuOpen}
@@ -79,9 +89,7 @@ const DrawerMenuItem = forwardRef<HTMLDivElement, PropsWithChildren<DrawerMenuIt
 					horizontal: 'left',
 				}}
 			>
-				<TransitionGroup>
-					{props.children}
-				</TransitionGroup>
+				{props.children}
 			</Menu>
 		</Backdrop>
 	</Box>
