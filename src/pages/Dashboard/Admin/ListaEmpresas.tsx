@@ -53,19 +53,19 @@ const columnGroupingModel: GridColumnGroupingModel = [
 		children: [{field: 'aparencia.cor'}, {field: 'aparencia.icone'}],
 		freeReordering: true,
 	},
+	{
+		groupId: 'actions',
+		headerName: "Ações",
+		children: [{field: 'actions'}],
+		freeReordering: true,
+	},
 ]
 
 const ListaEmpresas = () => {
 
 	const { data: empresas, isFetching: isFetching, error: error, refetch: refetch } = useEmpresasQuery(false);
 
-	const setDataGridState = useDataGridStore(s => s.setState);
-
 	const apiRef = useGridApiRef();
-
-	const handleStateChange = useCallback<GridEventListener<"stateChange">>(() => {
-		setDataGridState('empresas', apiRef.current.exportState());
-	}, []);
 
 	const rows = useMemo(() => {
 		return empresas?.map(empresa => {
@@ -78,17 +78,8 @@ const ListaEmpresas = () => {
 	}, [empresas]);
 
 	useEffect(() => {
-
-		const dataGridState = useDataGridStore.getState().getState('empresas');
-
-		if (!dataGridState)
+		if (!empresas)
 			refetch();
-		else
-			apiRef.current.restoreState(dataGridState);
-
-		const unsubscribe = apiRef.current.subscribeEvent('stateChange', handleStateChange);
-		
-		return () => unsubscribe();
 	}, []);
 
 	return <DashboardContent

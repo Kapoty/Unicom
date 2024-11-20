@@ -1,26 +1,14 @@
-import { DataGridPremium, DataGridPremiumProps, GRID_CHECKBOX_SELECTION_COL_DEF, GRID_CHECKBOX_SELECTION_FIELD, gridClasses, GridColumnGroupingModel, useGridApiRef } from "@mui/x-data-grid-premium"
+import { DataGridPremium, DataGridPremiumProps, GRID_CHECKBOX_SELECTION_COL_DEF, GRID_CHECKBOX_SELECTION_FIELD, gridClasses, GridColumnGroupingModel, GridEventListener, useGridApiRef } from "@mui/x-data-grid-premium"
 import useAppStore from "../../state/useAppStore";
 import { darken, Input, lighten, styled, TextField } from "@mui/material";
 import { Padding } from "@mui/icons-material";
-import CustomToolbar from "./CustomToobar";
-import { forwardRef, LegacyRef, useCallback, useEffect, useRef, useState } from "react";
+import CustomToolbar from "./CustomToolbar";
+import { forwardRef, LegacyRef, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { GridInitialStatePremium } from "@mui/x-data-grid-premium/models/gridStatePremium";
 import CustomColumnSelector from "./CustomColumnSelector";
 import CustomPanel from "./CustomPanel";
-
-declare module '@mui/x-data-grid' {
-	interface ToolbarPropsOverrides {
-		titulo: string;
-		rowSelection: boolean;
-		toggleRowSelection: () => void;
-		fullscreen: boolean;
-		toggleFullscreen: () => void;
-	}
-
-	interface ColumnsPanelPropsOverrides {
-		columnGroupingModel: GridColumnGroupingModel;
-	}
-}
+import { DataGridContext, IDataGridContext } from "./DataGridContext";
+import useDataGridStore from "../../state/useDataGridStore";
 
 const StyledDataGrid = styled(DataGridPremium)(({ theme }) => ({
 	borderRadius: 14,
@@ -51,14 +39,16 @@ const StyledDataGrid = styled(DataGridPremium)(({ theme }) => ({
 }));
 
 interface CustomDataGridProps extends DataGridPremiumProps {
-	titulo?: string
+	titulo?: string;
+	stateKey?: any[];
 }
 
-const CustomDataGrid = ({ titulo, apiRef, ...props }: CustomDataGridProps) => {
+const CustomDataGrid = ({ titulo, apiRef, stateKey, columnGroupingModel, ...props }: CustomDataGridProps) => {
 
 	apiRef = apiRef ?? useGridApiRef();
 
 	const isMobile = useAppStore(s => s.isMobile);
+
 	const [rowSelection, setRowSelection] = useState(false);
 	const [fullscreen, setFullscreen] = useState(false);
 
@@ -74,71 +64,98 @@ const CustomDataGrid = ({ titulo, apiRef, ...props }: CustomDataGridProps) => {
 		setRowSelection(!rowSelection);
 	}, [rowSelection]);
 
-	return <StyledDataGrid
+	const dataGridContext: IDataGridContext = useMemo(() => ({
+		titulo: titulo,
+		rowSelection: rowSelection,
+		toggleRowSelection: toggleRowSelection,
+		fullscreen: fullscreen,
+		toggleFullscreen: toggleFullscreen,
+		stateKey: stateKey,
+		columnGroupingModel: columnGroupingModel,
+	}), [titulo, rowSelection, setRowSelection, fullscreen, setFullscreen, columnGroupingModel]);
 
-		showCellVerticalBorder
+	const setDataGridState = useDataGridStore(s => s.setState);
 
-		{...props}
+	const handleStateChange = useCallback<GridEventListener<"stateChange">>(() => {
+		setDataGridState(stateKey!, apiRef.current.exportState());
+	}, []);
 
-		pagination
-		headerFilters
-		headerFilterHeight={56}
-		columnHeaderHeight={56}
-		ignoreDiacritics
+	useEffect(() => {
 
-		initialState={{
-			density: isMobile ? "standard" : "compact",
-			...props.initialState,
-		}}
+		if (stateKey) {
 
-		slots={{
-			toolbar: CustomToolbar,
-			headerFilterMenu: null,
-			columnsPanel: CustomColumnSelector,
-			panel: CustomPanel,
-		}}
+			const dataGridState = useDataGridStore.getState().getState(stateKey);
 
-		slotProps={{
-			toolbar: {
-				rowSelection: rowSelection,
-				toggleRowSelection: toggleRowSelection,
-				fullscreen: fullscreen,
-				toggleFullscreen: toggleFullscreen,
-				titulo: titulo,
-			},
-			loadingOverlay: {
-				variant: 'circular-progress',
-				noRowsVariant: 'skeleton',
-			},
-			headerFilterCell: {
-				InputComponentProps: {
-					label: ""
-				}
-			},
-			panel: {
-				sx: {
-					"& .MuiDataGrid-panelWrapper": {
-						maxWidth: "calc(100vw - 4rem)",
+			if (dataGridState)
+				apiRef.current.restoreState(dataGridState);
+
+			const unsubscribe = apiRef.current.subscribeEvent('stateChange', handleStateChange);
+
+			return () => unsubscribe();
+
+		}
+
+	}, []);
+
+	return <DataGridContext.Provider value={dataGridContext}>
+		<StyledDataGrid
+
+			showCellVerticalBorder
+
+			{...props}
+
+			pagination
+			headerFilters
+			headerFilterHeight={56}
+			columnHeaderHeight={56}
+			ignoreDiacritics
+
+			initialState={{
+				density: isMobile ? "standard" : "compact",
+				...props.initialState,
+			}}
+
+			slots={{
+				toolbar: CustomToolbar,
+				headerFilterMenu: null,
+				columnsPanel: CustomColumnSelector,
+				panel: CustomPanel,
+			}}
+
+			slotProps={{
+				loadingOverlay: {
+					variant: 'circular-progress',
+					noRowsVariant: 'skeleton',
+				},
+				headerFilterCell: {
+					InputComponentProps: {
+						label: ""
+					}
+				},
+				panel: {
+					sx: {
+						"& .MuiDataGrid-panelWrapper": {
+							maxWidth: "calc(100vw - 4rem)",
+						},
 					},
 				},
-			},
-			columnsPanel: {
-				columnGroupingModel: props.columnGroupingModel
-			}
-		}}
+			}}
 
-		rowSelection={rowSelection}
-		cellSelection={!rowSelection}
-		checkboxSelection={rowSelection}
+			rowSelection={rowSelection}
+			cellSelection={!rowSelection}
+			checkboxSelection={rowSelection}
 
-		getRowClassName={(params) => params.indexRelativeToCurrentPage % 2 === 0 ? 'even' : 'odd'}
+			columnGroupingModel={columnGroupingModel}
 
-		pageSizeOptions={[1, 10, 50, 100]}
+			getRowClassName={(params) => params.indexRelativeToCurrentPage % 2 === 0 ? 'even' : 'odd'}
 
-		apiRef={apiRef}
-	>
+			pageSizeOptions={[1, 10, 50, 100]}
 
-	</StyledDataGrid>
+			apiRef={apiRef}
+		>
+
+		</StyledDataGrid>
+	</DataGridContext.Provider>
 }
 
 export default CustomDataGrid;

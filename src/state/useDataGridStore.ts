@@ -7,9 +7,11 @@ export interface DataGridStates {
 
 export interface DataGridState {
 	states: DataGridStates;
-	setState: (key: string, state?: GridInitialStatePremium) => void;
-	getState: (key: string) => GridInitialStatePremium | undefined;
+	setState: (key: any[], state?: GridInitialStatePremium) => void;
+	getState: (key: any[]) => GridInitialStatePremium | undefined;
 }
+
+const arrayToKey = (array: any[]) => array.join(',');
 
 const useDataGridStore = create<DataGridState>()((set, get) => ({
 	states: {},
@@ -18,11 +20,11 @@ const useDataGridStore = create<DataGridState>()((set, get) => ({
 			...state,
 			states: {
 				...state.states,
-				[key]: {...(state.states[key] || {}), ...newState},
+				[arrayToKey(key)]: {...(state.states[arrayToKey(key)] || {}), ...newState},
 			}
 		}
 	}),
-	getState: (key) => get().states[key],
+	getState: (key) => get().states[arrayToKey(key)],
 }));
 
 export default useDataGridStore;

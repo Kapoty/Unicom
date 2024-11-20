@@ -1,97 +1,112 @@
-import { ColumnsPanelPropsOverrides, GridColDef, GridColumnGroup, GridColumnGroupingModel, GridColumnNode, GridColumnsGroupingState, GridColumnsPanelProps, GridColumnVisibilityModel, GridEventListener, GridFilterModel, GridLeafColumn, useGridApiContext, useGridApiEventHandler, useGridSelector } from "@mui/x-data-grid-premium";
-import { useState, useCallback, useMemo, MutableRefObject } from "react";
-import { ExpandMore, ChevronRight } from '@mui/icons-material';
+import { useTheme } from "@mui/material";
+import { ColumnsPanelPropsOverrides, GridColDef, GridColumnGroup, GridColumnGroupingModel, GridColumnNode, GridColumnsPanelProps, GridColumnVisibilityModel, GridEventListener, GridLeafColumn, useGridApiContext, useGridApiEventHandler } from "@mui/x-data-grid-premium";
+import { TreeItem, TreeViewBaseItem, useTreeViewApiRef } from "@mui/x-tree-view";
 import { SimpleTreeView } from '@mui/x-tree-view/SimpleTreeView';
+import { MutableRefObject, useCallback, useContext, useMemo, useState } from "react";
+import { DataGridContext } from "./DataGridContext";
+import { RichTreeViewPro } from "@mui/x-tree-view-pro";
 import { GridApiPremium } from "@mui/x-data-grid-premium/models/gridApiPremium";
-import { TreeItem } from "@mui/x-tree-view";
 
-const renderTreeItems = (columnGroupingModel: GridColumnNode[]) => {
-	return columnGroupingModel.map((groupOrField: GridColumnGroup | GridLeafColumn) => {
-		if ('field' in groupOrField) {
-			return (
-				<TreeItem
-					key={groupOrField.field}
-					itemId={groupOrField.field}
-					label={groupOrField.field}
-				/>
-			);
+const calculateGroupOrFieldItems = (groupOrField: GridColumnGroup | GridLeafColumn, columnsByField: Record<string, GridColDef>): TreeViewBaseItem => {
+	if ('field' in groupOrField) {
+		return {
+			id: groupOrField.field,
+			label: columnsByField?.[groupOrField.field]?.headerName || groupOrField.field,
 		}
-
-		// Nó de grupo
-		return (
-			<TreeItem
-				key={groupOrField.groupId}
-				itemId={groupOrField.groupId}
-				label={groupOrField.headerName || groupOrField.groupId}
-			>
-				{renderTreeItems(groupOrField.children!)}
-			</TreeItem>
-		);
-	});
-}
-
-const calculateSelectedChildren = (groupOrField: GridColumnGroup | GridLeafColumn, columnVisibilityModel: GridColumnVisibilityModel) => {
-	if ('field' in groupOrField)
-		return {[groupOrField.field]: (columnVisibilityModel[groupOrField.field!] ?? true)}
-
-	let selectedItems: {[key: string]: boolean} = {};
-	let selected = true;
-	
-	for (let i=0; i < groupOrField.children.length; i++)
-		selectedItems = {...selectedItems, ...calculateSelectedChildren(groupOrField.children[i], columnVisibilityModel)};
-
-	Object.keys(selectedItems).forEach(k => {if (!selectedItems[k]) selected = false});
-
-	if (selected)
-		selectedItems[groupOrField.groupId] = true;
-
-	return selectedItems;
-}
-
-const calculateSelectedItems = (columnGroupingModel: GridColumnGroupingModel, columnVisibilityModel: GridColumnVisibilityModel): string[] => {
-	let selectedItems: string[] = [];
-	let selectedChildren: {[key: string]: boolean};
-
-	for (let i=0; i < columnGroupingModel.length; i++) {
-		selectedChildren = calculateSelectedChildren(columnGroupingModel[i], columnVisibilityModel);
-		selectedItems = [...selectedItems, ...Object.keys(selectedChildren).filter(k => selectedChildren[k])];
 	}
 
+	return {
+		id: `__group__${groupOrField.groupId}`,
+		label: groupOrField.headerName || groupOrField.groupId,
+		children: groupOrField?.children?.map(child => calculateGroupOrFieldItems(child, columnsByField)) ?? undefined, 
+	}
+}
+
+const calculateItems = (columnGroupingModel: GridColumnGroupingModel, columns: GridColDef[]): TreeViewBaseItem[] => {
+	let items: TreeViewBaseItem[];
+	const columnsByField: Record<string, GridColDef> = columns.reduce((acc, column) => {
+		acc[column.field] = column;
+		return acc;
+	}, {} as Record<string, GridColDef>);
+	items = columnGroupingModel.map(columnGroup => calculateGroupOrFieldItems(columnGroup, columnsByField));
+	return items;
+}
+
+const calculateSelectedItems = (items: TreeViewBaseItem[], columnVisibilityModel: GridColumnVisibilityModel): string[] => {
+	let selectedItems: string[] = [];
+	items.forEach(item => {
+		if (item.id.startsWith('__group__')) {
+			let selectedChildren = calculateSelectedItems(item.children!, columnVisibilityModel);
+			selectedItems = [...selectedItems, ...selectedChildren];
+			if (selectedChildren.length == item.children?.length)
+				selectedItems.push(item.id);
+		} else {
+			if (columnVisibilityModel?.[item.id] ?? true)
+				selectedItems.push(item.id);
+		}
+	})
 	return selectedItems;
 }
 
-const CustomColumnSelector = ({ columnGroupingModel, ...props }: GridColumnsPanelProps & ColumnsPanelPropsOverrides) => {
-	const apiRef = useGridApiContext();
+const setItemSelected = (itemId: string, isSelected: boolean, selectedItems: string[], treeViewApiRef: any, gridApiRef: MutableRefObject<GridApiPremium>) => {
+	if (itemId.startsWith('__group__'))
+		treeViewApiRef.current?.
+			getItemOrderedChildrenIds(itemId).
+			forEach((childItemId: string) => setItemSelected(childItemId, isSelected, selectedItems, treeViewApiRef, gridApiRef));
+	else
+		gridApiRef.current.setColumnVisibility(itemId, isSelected);
+}
 
-	const columns = useMemo<GridColDef[]>(() => apiRef.current.getAllColumns(), []);
+const CustomColumnSelector = ( props: GridColumnsPanelProps & ColumnsPanelPropsOverrides) => {
+	const gridApiRef = useGridApiContext();
 
-	const [columnVisibilityModel, setColumnVisibilityModel] = useState<GridColumnVisibilityModel>(apiRef.current.state.columns.columnVisibilityModel);
+	const columns = useMemo<GridColDef[]>(() => gridApiRef.current.getAllColumns(), []);
+
+	const columnGroupingModel = useContext(DataGridContext)?.columnGroupingModel ?? [];
+
+	const [columnVisibilityModel, setColumnVisibilityModel] = useState<GridColumnVisibilityModel>(gridApiRef.current.state.columns.columnVisibilityModel);
 
 	const handleColumnVisibilityModelChange = useCallback<GridEventListener<"columnVisibilityModelChange">>((params: GridColumnVisibilityModel) => {
 		setColumnVisibilityModel(params);
 	}, []);
 
-	useGridApiEventHandler(apiRef, 'columnVisibilityModelChange', handleColumnVisibilityModelChange);
+	useGridApiEventHandler(gridApiRef, 'columnVisibilityModelChange', handleColumnVisibilityModelChange);
 
-	const selectedItems = useMemo(() => calculateSelectedItems(columnGroupingModel, columnVisibilityModel), [columnVisibilityModel]);
+	const treeViewApiRef = useTreeViewApiRef();
+	
+	const items: TreeViewBaseItem[] = useMemo(() => calculateItems(columnGroupingModel, columns), [columns, columnGroupingModel]);
 
-	const handleSelectedItemsChange = useCallback((event: React.SyntheticEvent, itemIds: string[]) => {
-		apiRef.current.setColumnVisibilityModel({
-			...columns.reduce((acc, column) => {
-				acc[column.field] = itemIds.includes(column.field);
-				return acc;
-			}, {} as { [key: string]: boolean })
-		})
-	}, []);
+	const selectedItems: string[] = useMemo(() => calculateSelectedItems(items, columnVisibilityModel),
+		[items, columnVisibilityModel, treeViewApiRef]);
 
-	return <SimpleTreeView
+	const handleItemSelectionToggle = useCallback((event: React.SyntheticEvent, itemId: string, isSelected: boolean) => {
+		setItemSelected(itemId, isSelected, selectedItems, treeViewApiRef, gridApiRef);
+	}, [items, selectedItems, gridApiRef]);
+
+	const theme = useTheme();
+
+	return <RichTreeViewPro
 		checkboxSelection
+		items={items}
 		selectedItems={selectedItems}
-		onSelectedItemsChange={handleSelectedItemsChange}
 		multiSelect
+		onItemSelectionToggle={handleItemSelectionToggle}
+		sx={{
+			'&.MuiRichTreeViewPro-root': {
+				display: 'flex',
+				flexDirection: 'column',
+				gap: theme.spacing(1),
+				maxHeight: 444,
+				overflow: 'auto',
+			},
+			'& .MuiTreeItem-content': {
+				height: 36,
+				borderRadius: 14,
+			}
+		}}
+		apiRef={treeViewApiRef}
 	>
-		{renderTreeItems(columnGroupingModel)}
-	</SimpleTreeView>
+	</RichTreeViewPro>
 }
 
 export default CustomColumnSelector;
