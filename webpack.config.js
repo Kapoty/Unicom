@@ -84,8 +84,8 @@ module.exports = {
         server: {
             type: 'https',
             options: {
-                key: __dirname+'/cert/private.key',
-                cert: __dirname+'/cert/private.pem',
+                key: __dirname+'/cert/server.key',
+                cert: __dirname+'/cert/server.pem',
             }
         },
     },

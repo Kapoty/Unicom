@@ -342,6 +342,7 @@ class VendasModule extends React.Component {
 
 			// editar venda inline
 			editingVendaId: -1,
+			vendaEditada: false,
 		}
 
 		this.state = {...this.state, ...this.getCleanFilters()};
@@ -362,7 +363,7 @@ class VendasModule extends React.Component {
 					<VendaStatusChip
 						sx={{flexGrow: 1, overflow: "hidden"}}
 						vendaStatus={this.state.vendaStatusByVendaStatusId?.[params.row.statusId]}
-						onClick={() => this.setState({editingVendaId: params.row.vendaId})}
+						onClick={() => this.setState({editingVendaId: params.row.vendaId, vendaEditada: false})}
 					/>
 				 	<IconButton onClick={() => this.props.navigate("/vendas/" + params.row.vendaId)} /*sx={{position: "absolute", right: 3, top: "50%", transform: "translate(0, -50%)"}}*/>
 						<KeyboardArrowRightIcon />
@@ -569,6 +570,7 @@ class VendasModule extends React.Component {
 		this.calculateRow = this.calculateRow.bind(this);
 		this.updateVendaRow = this.updateVendaRow.bind(this);
 		this.closeEditingVenda = this.closeEditingVenda.bind(this);
+		this.setVendaEditada = this.setVendaEditada.bind(this);
 
 		this.resetFilters = this.resetFilters.bind(this);
 
@@ -933,8 +935,17 @@ class VendasModule extends React.Component {
 	closeEditingVenda() {
 		if (this.state.editingVendaId == -1)
 			return;
-		this.getVendaFromApi(this.state.editingVendaId);
+
+		if (this.state.vendaEditada) {
+			this.getVendaFromApi(this.state.editingVendaId);
+			this.setState({editingVendaId: -1});
+		}
+		//else if (window.confirm("Alterações não salvas serão perdidas, deseja realmente fechar?"))
 		this.setState({editingVendaId: -1});
+	}
+
+	setVendaEditada(vendaEditada) {
+		this.setState({vendaEditada: vendaEditada});
 	}
 
 	maximizeDataGrid() {
@@ -1200,7 +1211,7 @@ class VendasModule extends React.Component {
 						</IconButton>
 						<DialogContent dividers>
 							<Box>
-								<CreateEditVendaModule usuario={this.props.usuario} vendaId={this.state.editingVendaId} inlineMode/>
+								<CreateEditVendaModule usuario={this.props.usuario} vendaId={this.state.editingVendaId} inlineMode setVendaEditada={this.setVendaEditada}/>
 							</Box>
 						</DialogContent>
 					</Dialog>

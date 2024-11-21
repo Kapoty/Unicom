@@ -1430,6 +1430,8 @@ class CreateEditVendaModule extends React.Component {
 				this.openAlert("success", `Venda salva com sucesso!`);
 				this.getVendaFromApi();
 				this.setState({calling: false, saving: false, errors: {}});
+				if (this.props.inlineMode)
+					this.props.setVendaEditada(true);
 			})
 			.catch((err) => {
 				let errors = err?.response?.data?.errors ?? {};
