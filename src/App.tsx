@@ -10,16 +10,17 @@ import 'dayjs/locale/pt';
 import localizedFormat from 'dayjs/plugin/localizedFormat';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import "./assets/css/styles.css";
-import AppRouter from './components/Router/AppRouter';
-import CustomRouter from './components/Router/CustomRouter';
-import CustomSnackbarProvider from './components/Snackbar/CustomSnackbarProvider';
-import useAuthSync from './hooks/sync/useAuthSync';
-import useEmpresaSync from './hooks/sync/useEmpresaSync';
-import useMobileSync from './hooks/sync/useMobileSync';
-import useAppStore from './state/useAppStore';
-import browserHistory from './utils/browserHistory';
-import queryClient from './utils/queryClient';
-import useOnlineSync from './hooks/sync/useOnlineSync';
+import AppRouter from './shared/components/Router/AppRouter';
+import CustomRouter from './shared/components/Router/CustomRouter';
+import CustomSnackbarProvider from './shared/components/Snackbar/CustomSnackbarProvider';
+import useAuthSync from './domains/auth/useAuthSync';
+import useEmpresaSync from './shared/hooks/useEmpresaSync';
+import useMobileSync from './shared/hooks/useMobileSync';
+import browserHistory from './shared/utils/browserHistory';
+import queryClient from './shared/utils/queryClient';
+import useOnlineSync from './shared/hooks/useOnlineSync';
+import useAppStore from './shared/state/useAppStore';
+import { ConfirmProvider } from './shared/components/ConfirmDialog/ConfirmProvider';
 
 dayjs.locale('pt')
 dayjs.extend(localizedFormat)
@@ -38,14 +39,16 @@ const App = () => {
 
 	return (
 		<QueryClientProvider client={queryClient}>
-			{/*<ReactQueryDevtools/>*/}
+			{false && <ReactQueryDevtools/>}
 			<ThemeProvider theme={theme}>
 				<LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="pt">
 					<CustomSnackbarProvider>
-						<CssBaseline />
-						<CustomRouter history={browserHistory}>
-							<AppRouter/>
-						</CustomRouter>
+						<ConfirmProvider>
+							<CssBaseline />
+							<CustomRouter history={browserHistory}>
+								<AppRouter/>
+							</CustomRouter>
+						</ConfirmProvider>
 					</CustomSnackbarProvider>
 				</LocalizationProvider>
 			</ThemeProvider>

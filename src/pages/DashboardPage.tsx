@@ -1,15 +1,16 @@
 import { Fade, Stack } from "@mui/material";
-import { useEffect } from "react";
-import CustomAppBar from "../components/AppBar/CustomAppBar";
-import CustomBottomNavigation from "../components/BottomNavigation/CustomBottomNavigation";
-import CustomDrawer from "../components/Drawer/CustomDrawer";
-import CustomBackdrop from "../components/Backdrop/CustomBackdrop";
-import useEmpresaIdParam from "../hooks/params/useEmpresaIdParam";
-import { useEmpresaQuery } from "../queries/useEmpresaQueries";
-import useAppStore from "../state/useAppStore";
-import useAuthStore from "../state/useAuthStore";
+import { Suspense, useEffect } from "react";
+import CustomAppBar from "../shared/components/AppBar/CustomAppBar";
+import CustomBottomNavigation from "../shared/components/BottomNavigation/CustomBottomNavigation";
+import CustomDrawer from "../shared/components/Drawer/CustomDrawer";
+import CustomBackdrop from "../shared/components/Backdrop/CustomBackdrop";
+import useEmpresaIdParam from "../shared/hooks/useEmpresaIdParam";
+import { useEmpresaQuery } from "../domains/empresa/EmpresaQueries";
+import useAuthStore from "../domains/auth/useAuthStore";
 import { Outlet } from "react-router-dom";
 import { TransitionGroup } from "react-transition-group";
+import Carregando from "./Dashboard/Carregando";
+import useAppStore from "../shared/state/useAppStore";
 
 const DashBoardPage = () => {
 
@@ -37,7 +38,9 @@ const DashBoardPage = () => {
 			<Stack direction="row" flexGrow={1} justifyContent="space-between">
 				<CustomDrawer/>
 				<Stack p={1} flexGrow={1} overflow='hidden'>
-					<Outlet/>
+					<Suspense fallback={<Carregando />}>
+						<Outlet/>
+					</Suspense>
 				</Stack>
 			</Stack>
 			{isMobile && false && <CustomBottomNavigation/>}

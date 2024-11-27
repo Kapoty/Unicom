@@ -7,12 +7,12 @@ import { MutableRefObject, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSearchParams } from 'react-router-dom';
 import { z } from "zod";
-import EmpresaChip from '../components/Empresa/EmpresaChip';
-import { useEmpresaByDominioQuery } from "../queries/useEmpresaQueries";
-import { login } from "../services/authService";
-import useAppStore from "../state/useAppStore";
-import useAuthStore from "../state/useAuthStore";
-import { setTokens } from "../utils/authUtil";
+import EmpresaChip from '../domains/empresa/EmpresaChip';
+import { useEmpresaByDominioQuery } from "../domains/empresa/EmpresaQueries";
+import { login } from "../domains/auth/AuthService";
+import useAuthStore from "../domains/auth/useAuthStore";
+import { setTokens } from "../shared/utils/authUtil";
+import useAppStore from '../shared/state/useAppStore';
 
 const AuthFormSchema = z.object({
 	login: z.string().min(1, {message: "Obrigatório"}).email("Email ou matrícula inválido").or(z.string().regex(/^\d+$/)),
