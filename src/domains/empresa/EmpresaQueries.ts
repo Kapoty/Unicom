@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { getEmpresaAdminById, getEmpresaByDominio, getEmpresaById, getEmpresaPublicById, getEmpresasAdmin, getEmpresasByUsuario } from './EmpresaService';
-import { delay } from '../../shared/utils/timingUtil';
+import { delay } from '../../shared/utils/timingUtils';
 import queryClient from '../../shared/utils/queryClient';
 import { IEmpresa } from './Empresa';
 

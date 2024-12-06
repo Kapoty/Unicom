@@ -51,6 +51,9 @@ const createCustomTheme = (props?: ThemeProps): Theme => {
 				styleOverrides: {
 					body: {
 						backgroundColor: "#111215",
+					},
+					'.dirtyField': {
+						paddingBottom: '5px !important',
 					}
 				}
 			},
@@ -94,6 +97,11 @@ const createCustomTheme = (props?: ThemeProps): Theme => {
 			MuiIcon: {
 				defaultProps: {
 					//size: "large"
+				}
+			},
+			MuiFab: {
+				defaultProps: {
+					size: 'medium',
 				}
 			},
 			MuiTooltip: {
@@ -175,6 +183,16 @@ const createCustomTheme = (props?: ThemeProps): Theme => {
 			MuiList: {
 				defaultProps: {
 					disablePadding: true
+				}
+			},
+			MuiTextField: {
+				defaultProps: {
+					variant: 'filled',
+				}
+			},
+			MuiSelect: {
+				defaultProps: {
+					//variant: 'outlined',
 				}
 			},
 		}

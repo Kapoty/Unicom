@@ -11,8 +11,6 @@ import { DataGridContextProvider, IDataGridContext } from "./DataGridContext";
 import CustomColumnsPanel from "./Panel/CustomColumnsPanel";
 import CustomPanel from "./Panel/CustomPanel";
 import CustomToolbar from "./Toolbar/CustomToolbar";
-import { useMarcarDatagridVisaoAtualMutation } from "../../../domains/datagridVisaoAtual/DatagridVisaoAtualMutations";
-import { MarcarDatagridVisaoAtualRequestSchema } from "../../../domains/datagridVisaoAtual/DatagridVisaoAtual";
 
 const StyledDataGrid = styled(DataGridPremium)(({ theme }) => ({
 	borderRadius: 14,

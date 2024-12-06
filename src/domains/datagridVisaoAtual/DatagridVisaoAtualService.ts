@@ -1,5 +1,6 @@
-import { DatagridVisaoAtualSchema, IDatagridVisaoAtual, MarcarDatagridVisaoAtualRequest } from './DatagridVisaoAtual';
+import { DatagridVisaoAtualSchema, IDatagridVisaoAtual } from './DatagridVisaoAtual';
 import api from '../../shared/utils/api';
+import { MarcarDatagridVisaoAtualRequest } from './DatagridVisaoAtualPayloads';
 
 export const getDatagridVisaoAtualByDatagrid = async (datagrid: string): Promise<IDatagridVisaoAtual> =>
 	(DatagridVisaoAtualSchema.parse((await api.get<IDatagridVisaoAtual>(`/datagrids-visoes-atuais/datagrid/${datagrid}`)).data));

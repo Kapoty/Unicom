@@ -6,13 +6,17 @@ import {
 	DialogContentText,
 	DialogTitle,
 	Button,
+	ButtonOwnProps,
 } from "@mui/material";
 
 type ConfirmOptions = {
 	title?: string;
 	message?: ReactNode;
+	confirmColor?: ButtonOwnProps["color"];
 	confirmText?: ReactNode;
+	confirmIcon?: ReactNode;
 	cancelText?: ReactNode;
+	cancelIcon?: ReactNode;
 };
 
 type ConfirmContextType = {
@@ -43,14 +47,14 @@ export const ConfirmProvider: React.FC<{ children: ReactNode }> = ({ children })
 			{children}
 			<Dialog open={open} onClose={() => handleClose(false)}>
 				<DialogTitle>{options.title || "Confirmação"}</DialogTitle>
-				<DialogContent>
-					<DialogContentText>{options.message || "Tem certeza?"}</DialogContentText>
-				</DialogContent>
+				{!!(options?.message) && <DialogContent>
+					<DialogContentText>{options.message}</DialogContentText>
+				</DialogContent>}
 				<DialogActions>
-					<Button onClick={() => handleClose(false)} color="error">
+					<Button onClick={() => handleClose(false)} color="error" autoFocus endIcon={options.cancelIcon}>
 						{options.cancelText || "Cancelar"}
 					</Button>
-					<Button onClick={() => handleClose(true)} color="primary" variant="contained">
+					<Button onClick={() => handleClose(true)} color={options.confirmColor || "primary"} variant="contained" endIcon={options.confirmIcon}>
 						{options.confirmText || "Confirmar"}
 					</Button>
 				</DialogActions>

@@ -14,11 +14,3 @@ export const DatagridVisaoAtualSchema = z.object({
 });
 
 export type IDatagridVisaoAtual = z.infer<typeof DatagridVisaoAtualSchema>;
-
-export const MarcarDatagridVisaoAtualRequestSchema = z.object({
-	tipo: DatagridVisaoTipoSchema,
-    nome: z.optional(z.string()),
-	datagridVisaoId: z.optional(z.nullable(z.number())),
-});
-
-export type MarcarDatagridVisaoAtualRequest = z.infer<typeof MarcarDatagridVisaoAtualRequestSchema>;

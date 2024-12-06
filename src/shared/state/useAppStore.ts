@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { Theme } from '@mui/material/styles';
 import { IEmpresaPublic } from '../../domains/empresa/Empresa';
-import createCustomTheme, { ThemeProps } from '../utils/customTheme';
+import createCustomTheme, { ThemeProps } from '../utils/themeUtils';
 
 export interface AppState {
 	online: boolean;

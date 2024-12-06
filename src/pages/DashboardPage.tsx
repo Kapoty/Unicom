@@ -9,7 +9,7 @@ import { useEmpresaQuery } from "../domains/empresa/EmpresaQueries";
 import useAuthStore from "../domains/auth/useAuthStore";
 import { Outlet } from "react-router-dom";
 import { TransitionGroup } from "react-transition-group";
-import Carregando from "./Dashboard/Carregando";
+import Carregando from "../shared/components/Feedback/Carregando";
 import useAppStore from "../shared/state/useAppStore";
 
 const DashBoardPage = () => {

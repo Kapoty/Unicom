@@ -9,7 +9,7 @@ import { IUsuarioMe } from "../../../domains/usuario/Usuario";
 import browserHistory from "../../utils/browserHistory";
 import CustomBackdrop from "../Backdrop/CustomBackdrop";
 
-import Carregando from "../../../pages/Dashboard/Carregando";
+import Carregando from "../Feedback/Carregando";
 import { Box } from "@mui/material";
 import useAppStore from "../../state/useAppStore";
 
@@ -22,7 +22,7 @@ const ListaEmpresasPage = lazy(() => import("../../../domains/empresa/ListaEmpre
 const EmpresaFormPage = lazy(() => import("../../../domains/empresa/EmpresaFormPage"));
 
 /* Empresa */
-const Home = lazy(() => import('../../../pages/Dashboard/Home'));
+const HomePage = lazy(() => import('../../../pages/Dashboard/HomePage'));
 const VendaFormPage = lazy(() => import('../../../domains/venda/VendaFormPage'));
 const ListaVendasPage = lazy(() => import('../../../domains/venda/ListaVendasPage'));
 
@@ -81,7 +81,7 @@ const indexRouteWithoutIds: IRoute = {
 									condicoes: {
 										empresa: true,
 									},
-									element: <Home/>,
+									element: <HomePage/>,
 								},
 								{
 									path: 'vendas',
@@ -133,7 +133,7 @@ const indexRouteWithoutIds: IRoute = {
 							routes: [
 								{
 									path: '',
-									element: <Home/>
+									element: <HomePage/>
 								},
 								{
 									path: 'empresas',

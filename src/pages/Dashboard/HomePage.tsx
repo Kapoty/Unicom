@@ -66,7 +66,7 @@ const renderShortcutItems = (items: IDrawerMenuItem[], context: DrawerMenuItemCo
 	});
 }
 
-const Home = () => {
+const HomePage = () => {
 
 	const isMobile = useAppStore(s => s.isMobile);
 
@@ -133,4 +133,4 @@ const Home = () => {
 	</DashboardContent>
 }
 
-export default Home;
+export default HomePage;

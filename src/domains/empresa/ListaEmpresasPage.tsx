@@ -1,15 +1,17 @@
 import { GridActionsCellItem, GridColDef, GridColumnGroupingModel, GridColumnVisibilityModel, useGridApiRef } from "@mui/x-data-grid-premium"
 import { Add, Edit, FileCopy, Refresh, Search } from "@mui/icons-material"
 import { flatten } from "flat"
-import { useEffect, useMemo } from "react"
-import { Fab } from "@mui/material"
+import { useCallback, useEffect, useMemo, useState } from "react"
+import { Fab, Tooltip } from "@mui/material"
 import DashboardContent from "../../shared/components/Dashboard/DashboardContent"
 import CustomDataGrid from "../../shared/components/DataGrid/CustomDataGrid"
 import browserHistory from "../../shared/utils/browserHistory"
 import { IDatagridVisao } from "../datagridVisao/DatagridVisao"
 import { useEmpresasAdminQuery } from "./EmpresaQueries"
-import { IEmpresa, IEmpresaAdmin } from "./Empresa"
+import { IEmpresaAdmin } from "./Empresa"
 import EmpresaChip from "./EmpresaChip"
+import { useSnackbar } from "notistack"
+import CustomFab from "../../shared/components/Fab/CustomFab"
 
 const columns: GridColDef<IEmpresaAdmin>[] = [
 	{ field: 'empresaId', headerName: 'ID', type: 'number', width: 100 },
@@ -106,7 +108,12 @@ const visoesPadrao: IDatagridVisao[] = [
 
 const ListaEmpresasPage = () => {
 
-	const { data: empresas, isFetching: isFetching, error: error, refetch: refetch } = useEmpresasAdminQuery(false);
+	const [empresas, setEmpresas] = useState< IEmpresaAdmin[] | undefined>();
+	const [isUpdating, setIsUpdating] = useState(false);
+	
+	const { data, isFetching, error, refetch } = useEmpresasAdminQuery(false);
+
+	const { enqueueSnackbar } = useSnackbar();
 
 	const apiRef = useGridApiRef();
 
@@ -121,17 +128,30 @@ const ListaEmpresasPage = () => {
 		) ?? []
 	}, [empresas]);
 
+	const update = useCallback(async () => {
+		setIsUpdating(true);
+		try {
+			const result = await refetch();
+			if (result.error)
+				throw error;
+			setEmpresas(result.data);
+		} catch (error) {
+			enqueueSnackbar('Falha ao atualizar!', {variant: 'error'});
+		} finally {
+			setIsUpdating(false);
+		}
+	}, []);
+
 	useEffect(() => {
-		if (!empresas)
-			refetch();
+		update();
 	}, []);
 
 	return <DashboardContent
 		titulo="Empresas"
 		fabs={[
-			<Fab onClick={() => browserHistory.push("/admin/empresas/add")}><Add /></Fab>,
-			<Fab onClick={() => refetch()} disabled={isFetching}><Refresh /></Fab>,
-			<Fab><Search /></Fab>,
+			<CustomFab tooltip={{title: 'Atualizar'}} key={0} onClick={() => update()} disabled={isUpdating} loading={isUpdating}><Refresh /></CustomFab>,
+			<CustomFab tooltip={{title: 'Nova Empresa'}} key={1} onClick={() => browserHistory.push("/admin/empresas/add")} color="primary"><Add /></CustomFab>,
+			//<Fab><Search /></Fab>,
 		]}
 	>
 		<CustomDataGrid
@@ -141,7 +161,7 @@ const ListaEmpresasPage = () => {
 					//right: ['actions']
 				},
 			}}
-			loading={isFetching}
+			loading={isUpdating}
 			rows={rows}
 			columnGroupingModel={columnGroupingModel}
 			apiRef={apiRef}

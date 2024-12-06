@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { parseDate } from "../../shared/utils/dateUtil";
+import { parseDate } from "../../shared/utils/dateUtils";
 
 export const PapelSistemaSchema = z.enum(["ADMIN", "USUARIO"]);
 

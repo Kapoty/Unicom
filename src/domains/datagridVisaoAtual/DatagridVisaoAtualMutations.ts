@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import queryClient from "../../shared/utils/queryClient";
-import { MarcarDatagridVisaoAtualRequest } from "./DatagridVisaoAtual";
+import { MarcarDatagridVisaoAtualRequest } from "./DatagridVisaoAtualPayloads";
 import { marcarDatagridVisaoAtualByDatagrid } from "./DatagridVisaoAtualService";
 
 export const useMarcarDatagridVisaoAtualMutation = () => {

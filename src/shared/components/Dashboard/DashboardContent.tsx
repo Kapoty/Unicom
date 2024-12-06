@@ -7,19 +7,20 @@ import useAppStore from "../../state/useAppStore";
 
 export interface DashboardContentProps {
 	titulo?: string;
+	subtitulo?: string;
 	children?: ReactNode;
-	fabs?: ReactElement<FabProps>[];
+	fabs?: ReactElement[];
 	hideHomeShortcut?: boolean;
 }
 
 const DashboardContent = forwardRef<HTMLDivElement, DashboardContentProps>((props, ref) => {
 
-	const { titulo, children, fabs, hideHomeShortcut } = props;
+	const { titulo, subtitulo, children, fabs, hideHomeShortcut } = props;
 
 	const isMobile = useAppStore(s => s.isMobile);
 	const theme = useTheme();
 
-	const fabsAdapted = useMemo<ReactElement<FabProps>[] | undefined>(() => {
+	/*const fabsAdapted = useMemo<ReactElement<FabProps>[] | undefined>(() => {
 		if (isMobile) {
 
 			if ((fabs?.length ?? 1) % 2 == 0)
@@ -32,7 +33,7 @@ const DashboardContent = forwardRef<HTMLDivElement, DashboardContentProps>((prop
 					props: {
 						...fab.props,
 						size: i == 0 ? 'large' : 'medium',
-						color: i == 0 ? 'primary' : 'default',
+						//...(i == 0 ? {color: 'primary'} : {}),
 						sx: {
 							...fab.props.sx,
 							order: i == 0 ? 0 : i + 10 * (i < fabs.length! / 2 ? -1 : 1)
@@ -48,7 +49,7 @@ const DashboardContent = forwardRef<HTMLDivElement, DashboardContentProps>((prop
 					props: {
 						...fab.props,
 						size: i == 0 ? 'medium' : 'small',
-						color: i == 0 ? 'primary' : 'default',
+						//...(i == 0 ? {color: 'primary'} : {}),
 						sx: {
 							...fab.props.sx,
 							order: i == 0 ? 100 : i
@@ -57,7 +58,7 @@ const DashboardContent = forwardRef<HTMLDivElement, DashboardContentProps>((prop
 				}
 			});
 		}
-	}, [fabs, isMobile]);
+	}, [fabs, isMobile]);*/
 
 	const empresa = useAppStore(s => s.empresa);
 
@@ -70,16 +71,19 @@ const DashboardContent = forwardRef<HTMLDivElement, DashboardContentProps>((prop
 			{(titulo || (isMobile && fabs)) && <Stack direction="row" gap={1} alignItems="center">
 				{!isMobile && <>
 					<Stack direction="row" gap={1} alignItems="center">
-						{fabsAdapted?.map(fab => <Slide in direction='down' key={fab.key}>{fab}</Slide>)}
+						{fabs?.map(fab => <Slide in direction='down' key={fab.key}>{fab}</Slide>)}
 					</Stack>
 				</>}
-				{titulo && <Typography variant="h3" align={isMobile ? 'center' : 'left'}>
+				{titulo && <Typography variant="h3" align={isMobile ? 'center' : 'left'} flexGrow={1}>
 					{titulo}
 				</Typography>}
 			</Stack>}
-			<Box gap={1} flexGrow={1}>
+			{subtitulo && <Typography variant="caption" color='textSecondary' align={isMobile ? 'center' : 'left'}>
+				{subtitulo}
+			</Typography>}
+			<Stack direction='column' gap={1} flexGrow={1} overflow='auto' height='1px'>
 				{children}
-			</Box>
+			</Stack>
 			{isMobile && <TransitionGroup
 				style={{
 					display: 'flex',
@@ -90,8 +94,8 @@ const DashboardContent = forwardRef<HTMLDivElement, DashboardContentProps>((prop
 					position: 'relative',
 				}}
 			>
-				{fabsAdapted?.map(fab => <Slide in direction='up' key={fab.key}>{fab}</Slide>)}
-				{!hideHomeShortcut && isMobile &&  <Slide in direction='right'>
+				{fabs?.map(fab => <Slide in direction='up' key={fab.key}>{fab}</Slide>)}
+				{!hideHomeShortcut && isMobile && <Slide in direction='right'>
 					<Fab
 						onClick={goHome}
 						color="error"
@@ -99,7 +103,7 @@ const DashboardContent = forwardRef<HTMLDivElement, DashboardContentProps>((prop
 						sx={{
 							position: 'absolute',
 							left: theme.spacing(1),
-							bottom: theme.spacing(1),
+							bottom: theme.spacing(0.5),
 						}}>
 						<Home />
 					</Fab>

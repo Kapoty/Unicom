@@ -6,7 +6,7 @@ import { deleteDatagridVisaoByDatagridVisaoId, patchDatagridVisaoByDatagridVisao
 
 export const usePostDatagridVisaoMutation = () => {
 
-	const { mutateAsync: marcarDatagridVisaoAtual } = useMarcarDatagridVisaoAtualMutation();
+	const { mutate: marcarDatagridVisaoAtual } = useMarcarDatagridVisaoAtualMutation();
 
 	return useMutation({
 		mutationFn: async (variables: { datagrid: string, payload: DatagridVisaoPostRequest }) =>
@@ -22,7 +22,7 @@ export const usePostDatagridVisaoMutation = () => {
 					tipo: 'PERSONALIZADA',
 					datagridVisaoId: data.datagridVisaoId
 				}
-			})
+			});
 		}
 	})
 }

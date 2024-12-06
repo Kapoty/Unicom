@@ -5,13 +5,13 @@ import { GridInitialStatePremium } from "@mui/x-data-grid-premium/models/gridSta
 import { useSnackbar } from "notistack";
 import { useCallback, useState } from "react";
 import { IDatagridVisao } from "../../../../../domains/datagridVisao/DatagridVisao";
-import { useDeleteDatagridVisaoMutation, usePatchDatagridVisaoMutation } from "../../../../../domains/datagridVisao/DatagridVisaoMutations";
 import DatagridVisaoFormDialog from "../../../../../domains/datagridVisao/DatagridVisaoFormDialog";
-import { MarcarDatagridVisaoAtualRequestSchema } from "../../../../../domains/datagridVisaoAtual/DatagridVisaoAtual";
+import { useDeleteDatagridVisaoMutation, usePatchDatagridVisaoMutation } from "../../../../../domains/datagridVisao/DatagridVisaoMutations";
 import { useMarcarDatagridVisaoAtualMutation } from "../../../../../domains/datagridVisaoAtual/DatagridVisaoAtualMutations";
 import { useDatagridVisaoAtualByDatagridQuery } from "../../../../../domains/datagridVisaoAtual/DatagridVisaoAtualQueries";
 import { useConfirm } from "../../../ConfirmDialog/ConfirmProvider";
 import { useDataGridContext } from "../../DataGridContext";
+import { MarcarDatagridVisaoAtualRequestSchema } from "../../../../../domains/datagridVisaoAtual/DatagridVisaoAtualPayloads";
 
 export interface ToolbarVisaoListItemProps {
 	visao: IDatagridVisao;
@@ -22,7 +22,7 @@ const ToolbarVisaoListItem = ({ visao }: ToolbarVisaoListItemProps) => {
 	const apiRef = useGridApiContext();
 	const dataGridContext = useDataGridContext()!;
 	const { data: visaoAtual } = useDatagridVisaoAtualByDatagridQuery(dataGridContext.visao?.datagrid);
-	const { mutateAsync: marcarDatagridVisaoAtual } = useMarcarDatagridVisaoAtualMutation();
+	const { mutate: marcarDatagridVisaoAtual } = useMarcarDatagridVisaoAtualMutation();
 	const { mutateAsync: patchDatagridVisao } = usePatchDatagridVisaoMutation();
 	const { mutateAsync: deleteDatagridVisao } = useDeleteDatagridVisaoMutation();
 	const { confirm } = useConfirm();
