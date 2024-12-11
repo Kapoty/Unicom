@@ -142,7 +142,7 @@ const CustomDataGrid = ({ titulo, apiRef, stateKey, columnGroupingModel, visao, 
 
 			pagination
 			headerFilters
-			headerFilterHeight={56}
+			headerFilterHeight={72}
 			columnHeaderHeight={56}
 			ignoreDiacritics
 

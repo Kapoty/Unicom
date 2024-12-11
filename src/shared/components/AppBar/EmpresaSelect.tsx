@@ -1,9 +1,11 @@
-import { Alert, CircularProgress, FormControl, MenuItem, Select } from "@mui/material";
+import { Alert, CircularProgress, FormControl, ListSubheader, MenuItem, Select } from "@mui/material";
 import useEmpresaIdParam from "../../hooks/useEmpresaIdParam";
 import { useUsuarioLogadoQuery } from "../../../domains/usuario/UsuarioQueries";
 import browserHistory from "../../utils/browserHistory";
 import EmpresaChip from "../../../domains/empresa/EmpresaChip";
 import { useEmpresasByUsuarioQuery } from "../../../domains/empresa/EmpresaQueries";
+import { useCallback } from "react";
+import { IEmpresaPublic } from "../../../domains/empresa/Empresa";
 
 const EmpresaSelect = () => {
 
@@ -13,7 +15,7 @@ const EmpresaSelect = () => {
 
 	const empresaId = useEmpresaIdParam();
 
-	/*const renderEmpresasItems = useCallback((empresas: EmpresaPublic[]) => {
+	/*const renderEmpresasItems = useCallback((empresas: IEmpresaPublic[]) => {
 		let items = [];
 		let currentGrupo;
 		let empresasSorted = empresas.sort((e1, e2) => e1.grupo.nome.localeCompare(e2.grupo.nome));

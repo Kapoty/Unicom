@@ -1,17 +1,16 @@
-import { GridActionsCellItem, GridColDef, GridColumnGroupingModel, GridColumnVisibilityModel, useGridApiRef } from "@mui/x-data-grid-premium"
-import { Add, Edit, FileCopy, Refresh, Search } from "@mui/icons-material"
+import { Add, Edit, Refresh } from "@mui/icons-material"
+import { GridActionsCellItem, GridColDef, GridColumnGroupingModel, useGridApiRef } from "@mui/x-data-grid-premium"
 import { flatten } from "flat"
+import { useSnackbar } from "notistack"
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { Fab, Tooltip } from "@mui/material"
 import DashboardContent from "../../shared/components/Dashboard/DashboardContent"
 import CustomDataGrid from "../../shared/components/DataGrid/CustomDataGrid"
+import CustomFab from "../../shared/components/Fab/CustomFab"
 import browserHistory from "../../shared/utils/browserHistory"
 import { IDatagridVisao } from "../datagridVisao/DatagridVisao"
-import { useEmpresasAdminQuery } from "./EmpresaQueries"
 import { IEmpresaAdmin } from "./Empresa"
 import EmpresaChip from "./EmpresaChip"
-import { useSnackbar } from "notistack"
-import CustomFab from "../../shared/components/Fab/CustomFab"
+import { useEmpresasAdminQuery } from "./EmpresaQueries"
 
 const columns: GridColDef<IEmpresaAdmin>[] = [
 	{ field: 'empresaId', headerName: 'ID', type: 'number', width: 100 },
@@ -23,8 +22,9 @@ const columns: GridColDef<IEmpresaAdmin>[] = [
 	{ field: 'cnpj', headerName: 'CNPJ', width: 150 },
 	{ field: 'grupo.grupoId', headerName: 'ID', type: 'number', width: 100 },
 	{ field: 'grupo.nome', headerName: 'Nome', width: 150 },
-	{ field: 'aparencia.cor', headerName: 'Cor', width: 150 },
-	{ field: 'aparencia.icone', headerName: 'Ícone', width: 150 },
+	{ field: 'contratoAtual.ativo', headerName: 'Ativo', type: 'boolean', width: 150},
+	{ field: 'contratoAtual.limiteUsuarios', headerName: 'Limite de Usuários', width: 150 },
+	{ field: 'contratoAtual.valor', headerName: 'Valor', width: 150 },
 	{
 		field: 'actions', headerName: "", type: 'actions', getActions: (params) => [
 			<GridActionsCellItem
@@ -32,12 +32,7 @@ const columns: GridColDef<IEmpresaAdmin>[] = [
 				label="Editar"
 				onClick={() => browserHistory.push(`/admin/empresas/` + params.row.empresaId)}
 				showInMenu
-			/>,
-			<GridActionsCellItem
-				icon={<FileCopy />}
-				label="Duplicar"
-				showInMenu
-			/>,
+			/>
 		],
 	}
 ]
@@ -56,9 +51,9 @@ const columnGroupingModel: GridColumnGroupingModel = [
 		freeReordering: true,
 	},
 	{
-		groupId: 'aparencia',
-		headerName: "Aparência",
-		children: [{ field: 'aparencia.cor' }, { field: 'aparencia.icone' }],
+		groupId: 'contratoAtual',
+		headerName: "Contrato Atual",
+		children: [{ field: 'contratoAtual.ativo' }, { field: 'contratoAtual.limiteUsuarios' }, { field: 'contratoAtual.valor' }],
 		freeReordering: true,
 	},
 	{
@@ -69,6 +64,11 @@ const columnGroupingModel: GridColumnGroupingModel = [
 	},
 ];
 
+const allColumnsVisibilityModel = columns.reduce((acc: any, val: any) => {
+	acc[val.field] = true;
+	return acc;
+}, {} as Record<string, boolean>);
+
 const visoesPadrao: IDatagridVisao[] = [
 	{
 		nome: 'Padrão',
@@ -76,42 +76,19 @@ const visoesPadrao: IDatagridVisao[] = [
 		state: {
 			columns: {
 				columnVisibilityModel: {
-					'empresaId': true,
-					'nome': true,
-					'cnpj': true,
-					'grupo.grupoId': true,
-					'grupo.nome': true,
-					'aparencia.cor': true,
-					'aparencia.icone': true,
+					...allColumnsVisibilityModel
 				}
 			}
 		},
-	},
-	{
-		nome: 'Esconder Aparência',
-		tipo: 'PADRAO',
-		state: {
-			columns: {
-				columnVisibilityModel: {
-					'empresaId': true,
-					'nome': true,
-					'cnpj': true,
-					'grupo.grupoId': true,
-					'grupo.nome': true,
-					'aparencia.cor': false,
-					'aparencia.icone': false,
-				}
-			}
-		}
 	}
 ]
 
 const ListaEmpresasPage = () => {
-
-	const [empresas, setEmpresas] = useState< IEmpresaAdmin[] | undefined>();
+	
 	const [isUpdating, setIsUpdating] = useState(false);
 	
-	const { data, isFetching, error, refetch } = useEmpresasAdminQuery(false);
+	const { data, error, refetch } = useEmpresasAdminQuery(false);
+	const [empresas, setEmpresas] = useState< IEmpresaAdmin[] | undefined>(data);
 
 	const { enqueueSnackbar } = useSnackbar();
 
@@ -151,16 +128,10 @@ const ListaEmpresasPage = () => {
 		fabs={[
 			<CustomFab tooltip={{title: 'Atualizar'}} key={0} onClick={() => update()} disabled={isUpdating} loading={isUpdating}><Refresh /></CustomFab>,
 			<CustomFab tooltip={{title: 'Nova Empresa'}} key={1} onClick={() => browserHistory.push("/admin/empresas/add")} color="primary"><Add /></CustomFab>,
-			//<Fab><Search /></Fab>,
 		]}
 	>
 		<CustomDataGrid
 			columns={columns}
-			initialState={{
-				pinnedColumns: {
-					//right: ['actions']
-				},
-			}}
 			loading={isUpdating}
 			rows={rows}
 			columnGroupingModel={columnGroupingModel}

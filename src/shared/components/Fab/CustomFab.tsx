@@ -1,14 +1,15 @@
 import { Badge, BadgeProps, Box, CircularProgress, Fab, FabProps, Tooltip, TooltipProps } from "@mui/material";
-import { forwardRef } from "react";
+import React, { forwardRef } from "react";
 
 export interface CustomFabProps extends FabProps {
 	tooltip?: Partial<TooltipProps>;
+	tooltipKey?: React.Key;
 	badge?: Partial<BadgeProps>;
 	loading?: boolean;
 }
 
-const CustomFab = forwardRef(({ tooltip, badge, loading, children, ...rest }: CustomFabProps, ref) => {
-	return <Tooltip {...tooltip} title={tooltip?.title ?? ''} ref={ref} hidden={!tooltip}>
+const CustomFab = forwardRef(({ tooltip, tooltipKey, badge, loading, children, ...rest }: CustomFabProps, ref) => {
+	return <Tooltip key={tooltipKey} {...tooltip} title={tooltip?.title ?? ''} ref={ref} hidden={!tooltip}>
 		<Box>
 			<Fab {...rest}>
 				<Badge variant="dot" color='primary' invisible={true} {...badge}>

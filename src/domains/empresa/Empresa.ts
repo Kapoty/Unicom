@@ -54,7 +54,8 @@ export const EmpresaSchema = EmpresaPublicSchema.extend({
 export type IEmpresa = z.infer<typeof EmpresaSchema>;
 
 export const EmpresaAdminSchema = EmpresaSchema.extend({
-	contratoId: z.number(),
+	contratoAtualId: z.number(),
+	contratoAtual: ContratoSchema,
 	contratos: z.array(ContratoSchema),
 	dominios: z.array(DominioSchema),
 });

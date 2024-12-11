@@ -1,27 +1,29 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowBack, Cancel, Description, Gavel, Refresh, Save } from "@mui/icons-material";
+import { ArrowBack, Description, Gavel } from "@mui/icons-material";
 import { Alert, Button, Chip, Divider, FormControl, FormControlLabel, FormHelperText, Grid2 as Grid, InputLabel, MenuItem, Select, Switch, TextField } from "@mui/material";
 import { DateTimePicker } from "@mui/x-date-pickers-pro";
 import { useSnackbar } from "notistack";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
 import { useParams } from "react-router-dom";
 import { z } from "zod";
-import { useConfirm } from "../../shared/components/ConfirmDialog/ConfirmProvider";
 import DashboardContent from "../../shared/components/Dashboard/DashboardContent";
 import DashboardContentTab from "../../shared/components/Dashboard/DashboardContentTab";
 import DashboardContentTabs from "../../shared/components/Dashboard/DashboardContentTabs";
 import CustomFab from "../../shared/components/Fab/CustomFab";
 import Carregando from "../../shared/components/Feedback/Carregando";
+import useFormFabs from "../../shared/components/Form/useFormFabs";
+import useHandleDiscardChanges from "../../shared/components/Form/useHandleDiscardChanges";
+import useHandleServerErrors from "../../shared/components/Form/useHandleServerErrors";
 import CNPJInput from "../../shared/components/Input/CNPJInput";
+import useBlockNavigation from "../../shared/hooks/useBlockNavigation";
 import browserHistory from "../../shared/utils/browserHistory";
 import { formatCnpj, testCnpjFormat, unformatCnpj } from "../../shared/utils/cnpjUtils";
-import { dateToApiDateTimeSchema, dateValidationSchema, toApiDateTime } from "../../shared/utils/dateUtils";
-import { handleServerErrors } from "../../shared/utils/formUtils";
+import { dateValidationSchema } from "../../shared/utils/dateUtils";
 import { useGruposAdminQuery } from "../grupo/GrupoQueries";
 import { IEmpresaAdmin } from "./Empresa";
 import { usePatchEmpresaAdminMutation, usePostEmpresaAdminMutation } from "./EmpresaMutations";
-import { ContratoRequestSchema, PatchEmpresaAdminRequestSchema, PostEmpresaAdminRequestSchema } from "./EmpresaPayloads";
+import { PatchEmpresaAdminRequestSchema, PostEmpresaAdminRequestSchema } from "./EmpresaPayloads";
 import { useEmpresaAdminQuery } from "./EmpresaQueries";
 
 const ContratoFormSchema = z.object({
@@ -32,13 +34,11 @@ const ContratoFormSchema = z.object({
 	valor: z.nullable(z.coerce.number()),
 })
 
-type ContratoFormData = z.infer<typeof ContratoFormSchema>;
-
 const EmpresaFormSchema = z.object({
 	nome: z.string().min(1, 'obrigatório').max(100),
 	cnpj: z.string().refine(cnpj => testCnpjFormat(cnpj), 'CNPJ inválido'),
 	grupoId: z.coerce.number().min(1, 'obrigatório'),
-	contratoId: z.coerce.number().min(1, 'obrigatório'),
+	contratoAtualId: z.coerce.number().min(1, 'obrigatório'),
 	contratos: z.array(ContratoFormSchema).min(1, 'obrigatório um contrato'),
 	createdAt: z.nullable(dateValidationSchema),
 	updatedAt: z.nullable(dateValidationSchema),
@@ -50,15 +50,15 @@ const EmpresaForm = () => {
 
 	const { empresaId: empresaIdParam } = useParams();
 	const empresaId = parseInt(empresaIdParam!);
-	const isEditMode = useRef(empresaIdParam !== 'add').current;
+
+	const isEditMode = empresaIdParam !== 'add';
 
 	const [empresa, setEmpresa] = useState<IEmpresaAdmin>();
 	const [isUpdating, setIsUpdating] = useState(false);
+	const [isUpdateRequired, setIsUpdateRequired] = useState(false);
 	const [isNewDataAvailable, setIsNewDataAvailable] = useState(false);
 
 	const { enqueueSnackbar } = useSnackbar();
-
-	const { confirm } = useConfirm();
 
 	const { data, refetch, isFetching, error } = useEmpresaAdminQuery(isEditMode ? empresaId : undefined);
 
@@ -69,7 +69,7 @@ const EmpresaForm = () => {
 
 	const {
 		handleSubmit,
-		formState: { errors, isDirty, dirtyFields, disabled, isSubmitting},
+		formState: { errors, isDirty, disabled, isSubmitting },
 		setError,
 		setValue,
 		reset,
@@ -79,7 +79,7 @@ const EmpresaForm = () => {
 			nome: '',
 			cnpj: '',
 			grupoId: -1,
-			contratoId: -1,
+			contratoAtualId: -1,
 			contratos: [],
 			createdAt: null,
 			updatedAt: null,
@@ -89,72 +89,52 @@ const EmpresaForm = () => {
 		disabled: isUpdating,
 	});
 
+	const handleServerErrors = useHandleServerErrors(setError, setIsUpdateRequired, setIsNewDataAvailable);
+
+	const unblockNavigation = useBlockNavigation(isDirty);
+
 	const onSubmit = async (data: EmpresaFormData) => {
-		if (true || await confirm({
-			title: "Salvar alterações?",
-			cancelText: 'Continuar editando',
-			confirmColor: 'success',
-			confirmText: 'Salvar',
-			confirmIcon: <Save />,
-		})) {
-			try {
-
-				if (isEditMode) {
-
-					const response = await patchEmpresaAdmin({
-						empresaId: empresaId!,
-						payload: PatchEmpresaAdminRequestSchema.parse({
-							...data,
-							cnpj: unformatCnpj(data.cnpj),
-						}),
-					});
-
-					reset();
-					setEmpresa(response);
-
-				} else {
-
-					const response = await postEmpresaAdmin({
-						payload: PostEmpresaAdminRequestSchema.parse({
-							...data,
-							cnpj: unformatCnpj(data.cnpj),
-						}),
-					});
-
-					browserHistory.push(`/admin/empresas/${response.empresaId}`);
-
-				}
-
-				enqueueSnackbar('Salvo com sucesso!', { variant: 'success' });
-
-			} catch (error: any) {
-				enqueueSnackbar('Falha ao salvar!', { variant: 'error' });
-				const errors = error?.response?.data?.errors;
-				handleServerErrors(errors, setError);
-				console.error(error);
-				console.log(data);
-			}
+		try {
+			if (isEditMode)
+				await patch(data)
+			else
+				await post(data);
+			enqueueSnackbar('Salvo com sucesso!', { variant: 'success' });
+		} catch (error: any) {
+			const errors = error?.response?.data?.errors;
+			handleServerErrors(errors);
 		}
 	}
 
 	const onError = (error: any) => {
 		enqueueSnackbar('Falha ao salvar', { variant: 'error' });
 		console.error(error);
-		console.log(control._formValues);
 	}
 
-	const handleDiscardChanges = useCallback(async () => {
-		if (await confirm({
-			title: "Descartar alterações?",
-			message: 'Atenção: dados não salvos serão perdidos!',
-			cancelText: 'Continuar editando',
-			confirmColor: 'error',
-			confirmText: 'Descartar',
-			confirmIcon: <Cancel />,
-		})) {
-			reset();
-		}
-	}, []);
+	const patch = async (data: EmpresaFormData) => {
+		const response = await patchEmpresaAdmin({
+			empresaId: empresaId!,
+			payload: PatchEmpresaAdminRequestSchema.parse({
+				...data,
+				cnpj: unformatCnpj(data.cnpj),
+			}),
+		});
+		reset();
+		setEmpresa(response);
+	}
+
+	const post = async (data: EmpresaFormData) => {
+		const response = await postEmpresaAdmin({
+			payload: PostEmpresaAdminRequestSchema.parse({
+				...data,
+				cnpj: unformatCnpj(data.cnpj),
+			}),
+		});
+		unblockNavigation?.();
+		browserHistory.push(`/admin/empresas/${response.empresaId}`);
+	}
+
+	const handleDiscardChanges = useHandleDiscardChanges(reset);
 
 	const update = useCallback(async () => {
 		setIsUpdating(true);
@@ -162,9 +142,8 @@ const EmpresaForm = () => {
 			const result = await refetch();
 			if (result.error)
 				throw error;
-
 			setEmpresa(result.data!);
-
+			setIsUpdateRequired(false);
 		} catch (error) {
 			enqueueSnackbar('Falha ao atualizar!', { variant: 'error' });
 		} finally {
@@ -191,27 +170,26 @@ const EmpresaForm = () => {
 	const updatedAt = useWatch({ control, name: 'updatedAt' });
 
 	useEffect(() => {
-		if (!!updatedAt && data)
+		if (updatedAt && data)
 			setIsNewDataAvailable(!data.updatedAt.isSame(updatedAt));
 	}, [updatedAt, data]);
 
 	const hasTabError = useCallback((tab: number) => {
 		let keys = Object.keys(errors);
-
 		switch (tab) {
 			case 0:
 				return ["nome", "cnpj", "grupoId"].some(r => keys.includes(r));
 				break;
 			case 1:
-				return ["contratoId"].some(r => keys.includes(r)) ||
+				return ["contratoAtualId"].some(r => keys.includes(r)) ||
 					keys.some(k => k.startsWith("contratos"));
 				break;
 		}
 		return false;
 	}, [errors]);
 
-	const contratoId = useWatch({ control, name: 'contratoId' });
-	const setContratoId = useCallback((id: number) => setValue('contratoId', id, { shouldDirty: true }), [setValue]);
+	const contratoAtualId = useWatch({ control, name: 'contratoAtualId' });
+	const setContratoAtualId = useCallback((id: number) => setValue('contratoAtualId', id, { shouldDirty: true }), [setValue]);
 
 	const { fields: contratos, append: appendContrato, remove: removeContrato } = useFieldArray({ control, name: "contratos" });
 	const appendNovoContrato = useCallback(() => appendContrato({
@@ -224,17 +202,17 @@ const EmpresaForm = () => {
 
 	const { data: grupos } = useGruposAdminQuery();
 
+	const formFabs = useFormFabs(1, isEditMode, isNewDataAvailable, isUpdateRequired, update, isUpdating, handleSubmit, onSubmit, onError, isDirty, isSubmitting, handleDiscardChanges);
+
 	return <DashboardContent
 		titulo={isEditMode ? 'Editar Empresa' : 'Nova Empresa'}
 		fabs={[
 			<CustomFab tooltip={{ title: 'Voltar' }} key={0} onClick={() => browserHistory.push('/admin/empresas')} ><ArrowBack /></CustomFab>,
-			...(isEditMode ? [<CustomFab tooltip={{ title: 'Atualizar' }} badge={{ invisible: !isNewDataAvailable }} key={1} onClick={() => update()} disabled={isUpdating} loading={isUpdating}><Refresh /></CustomFab>] : []),
-			<CustomFab tooltip={{ title: 'Salvar' }} key={2} onClick={handleSubmit(onSubmit, onError)} color='success' disabled={!isDirty || isSubmitting} loading={isSubmitting}><Save /></CustomFab>,
-			...(isDirty ? [<CustomFab tooltip={{ title: 'Descartar Alterações' }} key={3} onClick={handleDiscardChanges} color='error' disabled={isSubmitting}><Cancel /></CustomFab>] : [])
+			...formFabs
 		]}
 	>
 		{(!empresa && isFetching) ? <Carregando /> :
-			(!empresa && error) ? <Alert severity='error'> Falha ao obter empresa </Alert> :
+			(!empresa && error) ? <Alert severity='error'> Falha ao carregar </Alert> :
 				<DashboardContentTabs
 					tabs={[
 						<DashboardContentTab error={hasTabError(0)} icon={<Description />} label="Informações Básicas" key={0} />,
@@ -244,9 +222,6 @@ const EmpresaForm = () => {
 					setCurrentTab={setCurrentTab}
 				>
 					<Grid container spacing={1}>
-						<Grid size={12}>
-							{JSON.stringify(contratos)}
-						</Grid>
 						<Grid size={{ xs: 12, md: 6 }}>
 							<Controller
 								name={`nome`}
@@ -293,6 +268,7 @@ const EmpresaForm = () => {
 										<Select
 											{...field}
 											value={field.value > 0 ? field.value : ''}
+											variant="filled"
 											label="Grupo"
 										>
 											{(grupos ?? []).map((grupo) => <MenuItem key={grupo.grupoId} value={grupo.grupoId}>{grupo.nome}</MenuItem>)}
@@ -358,7 +334,7 @@ const EmpresaForm = () => {
 						{(errors?.contratos?.root || errors?.contratos?.message) && <Grid size={12}>
 							<Alert severity='error'>{errors.contratos?.root?.message || errors.contratos?.message}</Alert>
 						</Grid>}
-						{errors?.contratoId && <Grid size={12}>
+						{errors?.contratoAtualId && <Grid size={12}>
 							<Alert severity='error'>obrigatório definir um contrato atual</Alert>
 						</Grid>}
 						{contratos.map((contrato, i) => <React.Fragment key={contrato.id} >
@@ -407,7 +383,6 @@ const EmpresaForm = () => {
 										<DateTimePicker
 											{...field}
 											label='Início'
-											inputRef={field.ref}
 											slotProps={{
 												field: { clearable: true },
 												textField: {
@@ -452,7 +427,7 @@ const EmpresaForm = () => {
 								/>
 							</Grid>
 							<Grid size={{ xs: 6, md: 6 }} alignItems='center'>
-								{contratoId == i + 1 ? <Alert severity='success'>Atual</Alert> : <Button color='success' onClick={() => setContratoId(i + 1)}>
+								{contratoAtualId == i + 1 ? <Alert variant="filled" severity='success'>Atual</Alert> : <Button variant="outlined" color='success' onClick={() => setContratoAtualId(i + 1)}>
 									Marcar como atual
 								</Button>}
 							</Grid>

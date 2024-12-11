@@ -17,6 +17,7 @@ type ConfirmOptions = {
 	confirmIcon?: ReactNode;
 	cancelText?: ReactNode;
 	cancelIcon?: ReactNode;
+	hideCancel?: Boolean;
 };
 
 type ConfirmContextType = {
@@ -51,9 +52,9 @@ export const ConfirmProvider: React.FC<{ children: ReactNode }> = ({ children })
 					<DialogContentText>{options.message}</DialogContentText>
 				</DialogContent>}
 				<DialogActions>
-					<Button onClick={() => handleClose(false)} color="error" autoFocus endIcon={options.cancelIcon}>
+					{!options.hideCancel && <Button onClick={() => handleClose(false)} color="error" autoFocus endIcon={options.cancelIcon}>
 						{options.cancelText || "Cancelar"}
-					</Button>
+					</Button>}
 					<Button onClick={() => handleClose(true)} color={options.confirmColor || "primary"} variant="contained" endIcon={options.confirmIcon}>
 						{options.confirmText || "Confirmar"}
 					</Button>

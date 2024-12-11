@@ -13,7 +13,7 @@ export const PostEmpresaAdminRequestSchema = z.object({
 	grupoId: z.number(),
 	nome: z.string(),
 	cnpj: z.string(),
-	contratoId: z.number(),
+	contratoAtualId: z.number(),
 	contratos: z.array(ContratoRequestSchema),
 });
 
@@ -23,7 +23,7 @@ export const PatchEmpresaAdminRequestSchema = z.object({
 	grupoId: z.number(),
 	nome: z.string(),
 	cnpj: z.string(),
-	contratoId: z.number(),
+	contratoAtualId: z.number(),
 	contratos: z.array(ContratoRequestSchema),
 	updatedAt: dateToApiDateTimeSchema,
 });
