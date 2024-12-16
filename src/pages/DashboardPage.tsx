@@ -1,15 +1,13 @@
 import { Fade, Stack } from "@mui/material";
 import { Suspense, useEffect } from "react";
+import { Outlet } from "react-router-dom";
+import { useEmpresaQuery } from "../domains/empresa/EmpresaQueries";
+import RelatoriosPage from "../domains/relatorio/RelatoriosPage";
 import CustomAppBar from "../shared/components/AppBar/CustomAppBar";
 import CustomBottomNavigation from "../shared/components/BottomNavigation/CustomBottomNavigation";
 import CustomDrawer from "../shared/components/Drawer/CustomDrawer";
-import CustomBackdrop from "../shared/components/Backdrop/CustomBackdrop";
-import useEmpresaIdParam from "../shared/hooks/useEmpresaIdParam";
-import { useEmpresaQuery } from "../domains/empresa/EmpresaQueries";
-import useAuthStore from "../domains/auth/useAuthStore";
-import { Outlet } from "react-router-dom";
-import { TransitionGroup } from "react-transition-group";
 import Carregando from "../shared/components/Feedback/Carregando";
+import useEmpresaIdParam from "../shared/hooks/useEmpresaIdParam";
 import useAppStore from "../shared/state/useAppStore";
 
 const DashBoardPage = () => {
@@ -41,6 +39,7 @@ const DashBoardPage = () => {
 					<Suspense fallback={<Carregando />}>
 						<Outlet/>
 					</Suspense>
+					<RelatoriosPage/>
 				</Stack>
 			</Stack>
 			{isMobile && false && <CustomBottomNavigation/>}

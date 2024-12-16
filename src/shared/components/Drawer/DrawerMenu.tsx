@@ -1,5 +1,5 @@
-import { Add, AddCard, Apartment, CreditCard, Groups, Home } from "@mui/icons-material";
-import { Collapse, List } from "@mui/material";
+import { Add, AddCard, Apartment, CreditCard, GroupAdd, Groups, Home, Leaderboard } from "@mui/icons-material";
+import { Collapse, Icon, List } from "@mui/material";
 import { useMemo } from "react";
 import { Location, useLocation } from "react-router-dom";
 import { TransitionGroup } from "react-transition-group";
@@ -11,6 +11,9 @@ import { usePapelAtualQuery } from "../../../domains/papel/PapelQueries";
 import { useUsuarioLogadoQuery } from "../../../domains/usuario/UsuarioQueries";
 import DrawerMenuItem from "./DrawerMenuItem";
 import useAppStore from "../../state/useAppStore";
+import { IRelatorio } from "../../../domains/relatorio/Relatorio";
+import { useRelatoriosByPerfilQuery } from "../../../domains/relatorio/RelatorioQueries";
+import { usePerfilAtualQuery } from "../../../domains/perfil/PerfilQueries";
 
 export interface DrawerMenuItemContext {
 	usuarioLogado?: IUsuarioMe,
@@ -18,6 +21,7 @@ export interface DrawerMenuItemContext {
 	empresaId?: number | undefined,
 	papel?: Papel,
 	location: Location,
+	relatorios?: IRelatorio[],
 }
 
 export interface IDrawerMenuItem {
@@ -32,7 +36,7 @@ export interface IDrawerMenuItem {
 		empresaId?: boolean;
 		permissao?: Permissao;
 	},
-	submenu?: IDrawerMenuItem[];
+	submenu?: IDrawerMenuItem[] | ((context: DrawerMenuItemContext) => IDrawerMenuItem[]);
 }
 
 export const menuItems: IDrawerMenuItem[] = [
@@ -120,11 +124,47 @@ export const menuItems: IDrawerMenuItem[] = [
 		titulo: "Usuários",
 		icone: <Groups />,
 		match: /^\/e\/\d+\/usuarios/,
-		to: (context) => `/e/${context?.empresa?.empresaId}/usuarios`,
 		condicoes: {
 			empresa: true,
 			permissao: "CADASTRAR_USUARIOS"
-		}
+		},
+		submenu: [
+			{
+				titulo: "Usuários",
+				icone: <Groups />,
+				match: /^\/e\/\d+\/usuarios$/,
+				to: (context) => `/e/${context?.empresa?.empresaId}/usuarios`,
+				condicoes: {
+					empresa: true,
+				}
+			},
+			{
+				titulo: "Novo Usuário",
+				icone: <GroupAdd />,
+				match: /^\/e\/\d+\/usuarios\/\w+/,
+				to: (context) => `/e/${context?.empresa?.empresaId}/usuarios/add`,
+				condicoes: {
+					empresa: true,
+				}
+			}
+		]
+	},
+	{
+		titulo: "Relatórios",
+		icone: <Leaderboard />,
+		match: /^\/e\/\d+\/relatorios/,
+		condicoes: {
+			empresa: true,
+		},
+		submenu: (context) => context.relatorios?.map(relatorio => ({
+			titulo: relatorio.titulo,
+			icone: <Icon>{relatorio.icone ?? 'leaderboard'}</Icon>,
+			match: new RegExp(`^\/e\/\\d+\/relatorios\/${relatorio.uri}$`),
+			to: `/e/${context?.empresa?.empresaId}/relatorios/${relatorio.uri}`,
+			condicoes: {
+				empresa: true,
+			}
+		})) ?? []
 	}
 ];
 
@@ -146,7 +186,7 @@ export const getActiveMenuItems = (items: IDrawerMenuItem[], context: DrawerMenu
 		if (shouldRender) {
 			menuItems.push({
 				...menuItem,
-				...(menuItem.submenu ? { submenu: getActiveMenuItems(menuItem.submenu, context) } : {}),
+				...(menuItem.submenu ? { submenu: getActiveMenuItems((typeof menuItem.submenu === 'function') ? menuItem.submenu(context) : menuItem.submenu, context) } : {}),
 			});
 		}
 	});
@@ -168,7 +208,7 @@ const renderMenuItems = (items: IDrawerMenuItem[], context: DrawerMenuItemContex
 				selected={match?.test(context.location.pathname) ?? false}
 				depth={depth}
 			>
-				{submenu && renderMenuItems(submenu, context, depth + 1)}
+				{submenu && renderMenuItems((typeof submenu === 'function') ? submenu(context) : submenu, context, depth + 1)}
 			</DrawerMenuItem>
 		</Collapse>
 	});
@@ -181,6 +221,8 @@ const DrawerMenu = () => {
 	const location = useLocation();
 	const { data: papel } = usePapelAtualQuery();
 	const empresaId = useEmpresaIdParam();
+	const {data: perfil } = usePerfilAtualQuery();
+	const {data: relatorios} = useRelatoriosByPerfilQuery(perfil?.perfilId);
 
 	const items = useMemo(() => {
 		const context = {
@@ -189,6 +231,7 @@ const DrawerMenu = () => {
 			empresaId: empresaId,
 			location: location,
 			papel: papel,
+			relatorios: relatorios,
 		};
 		const activeMenuItems = getActiveMenuItems(menuItems, context);
 		return renderMenuItems(activeMenuItems, context);

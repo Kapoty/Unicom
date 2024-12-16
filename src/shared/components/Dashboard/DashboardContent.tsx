@@ -11,11 +11,12 @@ export interface DashboardContentProps {
 	children?: ReactNode;
 	fabs?: ReactElement[];
 	hideHomeShortcut?: boolean;
+	verticalFabs?: boolean;
 }
 
 const DashboardContent = forwardRef<HTMLDivElement, DashboardContentProps>((props, ref) => {
 
-	const { titulo, subtitulo, children, fabs, hideHomeShortcut } = props;
+	const { titulo, subtitulo, children, fabs, hideHomeShortcut, verticalFabs } = props;
 
 	const isMobile = useAppStore(s => s.isMobile);
 	const theme = useTheme();
@@ -68,11 +69,20 @@ const DashboardContent = forwardRef<HTMLDivElement, DashboardContentProps>((prop
 
 	return <Fade in ref={ref}>
 		<Stack ref={ref} gap={1} height={1}>
-			{(titulo || (isMobile && fabs)) && <Stack direction="row" gap={1} alignItems="center">
+			{(titulo || (fabs && !isMobile && !verticalFabs)) && <Stack direction="row" gap={1} alignItems="center">
 				{!isMobile && <>
-					<Stack direction="row" gap={1} alignItems="center">
+					<TransitionGroup
+						style={{
+							display: 'flex',
+							flexDirection: 'row',
+							gap: theme.spacing(1),
+							justifyContent: "center",
+							alignItems: "center",
+							position: 'relative',
+						}}
+					>
 						{fabs?.map(fab => <Slide in direction='down' key={fab.key}>{fab}</Slide>)}
-					</Stack>
+					</TransitionGroup>
 				</>}
 				{titulo && <Typography variant="h3" align={isMobile ? 'center' : 'left'} flexGrow={1}>
 					{titulo}
@@ -81,7 +91,19 @@ const DashboardContent = forwardRef<HTMLDivElement, DashboardContentProps>((prop
 			{subtitulo && <Typography variant="caption" color='textSecondary' align={isMobile ? 'center' : 'left'}>
 				{subtitulo}
 			</Typography>}
-			<Stack direction='column' gap={1} flexGrow={1} overflow='auto' height='1px'>
+			<Stack direction='row' gap={1} flexGrow={1} overflow='auto' height='1px'>
+				{fabs && !isMobile && verticalFabs && <TransitionGroup
+					style={{
+						display: 'flex',
+						flexDirection: 'column',
+						gap: theme.spacing(1),
+						justifyContent: "start",
+						alignItems: "center",
+						position: 'relative',
+					}}
+				>
+					{fabs?.map(fab => <Slide in direction='left' key={fab.key}>{fab}</Slide>)}
+				</TransitionGroup>}
 				{children}
 			</Stack>
 			{isMobile && <TransitionGroup

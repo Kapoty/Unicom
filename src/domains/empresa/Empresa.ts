@@ -2,8 +2,29 @@ import { z } from "zod";
 import { apiDateTimeToDateSchema, parseDate } from "../../shared/utils/dateUtils";
 import { GrupoSchema } from "../grupo/Grupo";
 
+export const AparenciaCorSchema = z.enum([
+	'red',
+	'pink',
+	'purple',
+	'deepPurple',
+	'indigo',
+	'blue',
+	'lightBlue',
+	'cyan',
+	'teal',
+	'green',
+	'lightGreen',
+	'lime',
+	'yellow',
+	'amber',
+	'orange',
+	'deepOrange'
+])
+
+export type AparenciaCor = z.infer<typeof AparenciaCorSchema>;
+
 export const AparenciaSchema = z.object({
-	cor: z.string(),
+	cor: AparenciaCorSchema,
 	icone: z.string(),
 });
 

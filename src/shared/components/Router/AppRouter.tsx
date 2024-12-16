@@ -108,19 +108,30 @@ const indexRouteWithoutIds: IRoute = {
 
 								},
 								{
+									path: 'usuarios/:usuarioId',
+									condicoes: {
+										empresa: true,
+										permissao: PermissaoSchema.enum.CADASTRAR_USUARIOS
+									},
+									element: <DashboardContent titulo='Novo Usuário' />,
+									keys: ['usuarioId'],
+								},
+								{
+									path: 'relatorios/:uri',
+									condicoes: {
+										empresa: true,
+									},
+								},
+								{
 									path: '*',
 									condicoes: {
 										empresa: true,
 										papel: true,
 									},
 									element: <Navigate to='' />,
-
 								},
 								{
 									path: '*',
-									condicoes: {
-										papel: false,
-									},
 									element: <Carregando />,
 								}
 							]
@@ -152,7 +163,7 @@ const indexRouteWithoutIds: IRoute = {
 						},
 						{
 							path: '*',
-							element: ({ usuarioLogado }: Context) => <Navigate to={`/e/${usuarioLogado?.empresaPrincipalId}`} />
+							element: ({ usuarioLogado }: Context) => <Navigate to={`/e/${usuarioLogado?.empresaPrincipalId}`} />,
 						},
 					]
 				},

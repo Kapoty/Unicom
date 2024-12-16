@@ -77,6 +77,7 @@ module.exports = {
 				cert: __dirname + '/cert/server.pem',
 			}
 		},
+		allowedHosts: "all"
 	},
 	cache: {
 		type: "filesystem", // Ativa o cache no sistema de arquivos

@@ -1,9 +1,10 @@
 import { Theme } from '@mui/material';
-import { green, red } from '@mui/material/colors';
+import { red, pink, purple, deepPurple, indigo, blue, lightBlue, cyan, teal, green, lightGreen, lime, yellow, amber, orange, deepOrange } from '@mui/material/colors';
 import { alpha, createTheme, responsiveFontSizes } from '@mui/material/styles';
 import { ptBR } from '@mui/x-data-grid-premium/locales';
 import { deepmerge } from '@mui/utils';
 import { PaletteColorOptions } from "@mui/material/styles";
+import { AparenciaCor } from '../../domains/empresa/Empresa';
 
 declare module '@mui/material/styles' {
 	interface TypeBackground {
@@ -16,7 +17,26 @@ declare module '@mui/material/styles' {
 }
 
 export interface ThemeProps {
-	corPrimaria?: string
+	corPrimaria?: AparenciaCor
+}
+
+const colors = {
+	'red': red,
+	'pink': pink,
+	'purple': purple,
+	'deepPurple': deepPurple,
+	'indigo': indigo,
+	'blue': blue,
+	'lightBlue': lightBlue,
+	'cyan': cyan,
+	'teal': teal,
+	'green': green,
+	'lightGreen': lightGreen,
+	'lime': lime,
+	'yellow': yellow,
+	'amber': amber,
+	'orange': orange,
+	'deepOrange': deepOrange
 }
 
 const createCustomTheme = (props?: ThemeProps): Theme => {
@@ -24,9 +44,9 @@ const createCustomTheme = (props?: ThemeProps): Theme => {
 		palette: {
 			mode: "dark",
 			primary: {
-				main: props?.corPrimaria ?? "#c62828"//"#455a64"
+				main: colors?.[props?.corPrimaria ?? 'red']?.[800] ?? colors.red[800],
 			},
-			secondary: red,
+			secondary: colors.red,
 			success: {
 				main: "#388e3c"
 			},
@@ -40,17 +60,17 @@ const createCustomTheme = (props?: ThemeProps): Theme => {
 				main: "#fbc02d"
 			},
 			background: {
-				default: "#0f1214",
-				paper: "#0f1214",
+				default: "#0D0F12",//"#0f1214",
+				paper: "#0D0F12",//"#0f1214",
 				light: "#13181b",
 			},
-			green: green
+			green: colors.green
 		},
 		components: {
 			MuiCssBaseline: {
 				styleOverrides: {
 					body: {
-						backgroundColor: "#111215",
+						backgroundColor: "#0D0F12", //"#111215",//
 					},
 					'.dirtyField': {
 						paddingBottom: '5px !important',

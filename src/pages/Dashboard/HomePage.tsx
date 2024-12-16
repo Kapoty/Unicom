@@ -11,8 +11,10 @@ import browserHistory from "../../shared/utils/browserHistory";
 import React from "react";
 import { TransitionGroup } from "react-transition-group";
 import useAppStore from "../../shared/state/useAppStore";
+import { usePerfilAtualQuery } from "../../domains/perfil/PerfilQueries";
+import { useRelatoriosByPerfilQuery } from "../../domains/relatorio/RelatorioQueries";
 
-const filterMenuItems = (items: IDrawerMenuItem[], query: string) => {
+const filterMenuItems = (items: IDrawerMenuItem[], query: string, context: DrawerMenuItemContext) => {
 	let filteredMenuItems: IDrawerMenuItem[] = [];
 	items.forEach(item => {
 		if (item.hideOnHome)
@@ -21,7 +23,7 @@ const filterMenuItems = (items: IDrawerMenuItem[], query: string) => {
 		if (item.titulo.toLowerCase().includes(query.toLowerCase()))
 			filteredMenuItems.push(item);
 		else if (item.submenu) {
-			item.submenu = filterMenuItems(item.submenu, query);
+			item.submenu = filterMenuItems((typeof item.submenu === 'function') ? item.submenu(context) : item.submenu, query, context);
 			if (item.submenu?.length !== 0)
 				filteredMenuItems.push(item);
 		}
@@ -40,7 +42,7 @@ const renderShortcutItems = (items: IDrawerMenuItem[], context: DrawerMenuItemCo
 				{/*<Typography color="primary" variant='button'>{titulo}</Typography>*/}
 				<Chip label={titulo} sx={{mb: 1}}/>
 				<Stack direction="row" gap={1} sx={{mb: 1}}>
-					{renderShortcutItems(submenu ? submenu : [menuItem], context, depth + 1)}
+					{renderShortcutItems(submenu ? (typeof submenu === 'function') ? submenu(context) : submenu : [menuItem], context, depth + 1)}
 				</Stack>
 			</Collapse>
 		else
@@ -81,6 +83,8 @@ const HomePage = () => {
 	const location = useLocation();
 	const { data: papel } = usePapelAtualQuery();
 	const empresaId = useEmpresaIdParam();
+	const {data: perfil } = usePerfilAtualQuery();
+	const {data: relatorios} = useRelatoriosByPerfilQuery(perfil?.perfilId);
 
 	const items = useMemo(() => {
 		const context = {
@@ -89,9 +93,10 @@ const HomePage = () => {
 			empresaId: empresaId,
 			location: location,
 			papel: papel,
+			relatorios: relatorios,
 		};
 		const activeMenuItems = getActiveMenuItems(menuItems, context);
-		const filteredMenuItems = filterMenuItems(activeMenuItems, query);
+		const filteredMenuItems = filterMenuItems(activeMenuItems, query, context);
 		return renderShortcutItems(filteredMenuItems, context, 1);
 	}, [usuarioLogado, empresa, empresaId, location, papel, query]);
 
