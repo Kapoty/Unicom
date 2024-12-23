@@ -8,29 +8,23 @@ import CustomDataGrid from "../../shared/components/DataGrid/CustomDataGrid"
 import CustomFab from "../../shared/components/Fab/CustomFab"
 import browserHistory from "../../shared/utils/browserHistory"
 import { IDatagridVisao } from "../datagridVisao/DatagridVisao"
-import { IEmpresaAdmin } from "./Empresa"
-import EmpresaChip from "./EmpresaChip"
-import { useEmpresasAdminQuery } from "./EmpresaQueries"
+import { IGrupo } from "./Grupo"
+import { useGruposQuery } from "./GrupoQueries"
+import { Chip } from "@mui/material"
 
-const columns: GridColDef<IEmpresaAdmin>[] = [
-	{ field: 'empresaId', headerName: 'ID', type: 'number', width: 100 },
-	{ field: 'nome', headerName: 'Nome', width: 150, renderCell: (params) =>
-		<EmpresaChip
-			empresa={(params.row as any).empresa}
-			onClick={() => browserHistory.push(`/admin/empresas/` + params.row.empresaId)}
-		/> },
-	{ field: 'cnpj', headerName: 'CNPJ', width: 150 },
-	{ field: 'grupo.grupoId', headerName: 'ID', type: 'number', width: 100 },
-	{ field: 'grupo.nome', headerName: 'Nome', width: 150 },
-	{ field: 'contratoAtual.ativo', headerName: 'Ativo', type: 'boolean', width: 150},
-	{ field: 'contratoAtual.limiteUsuarios', headerName: 'Limite de Usuários', width: 150 },
-	{ field: 'contratoAtual.valor', headerName: 'Valor', width: 150 },
+const columns: GridColDef<IGrupo>[] = [
+	{ field: 'grupoId', headerName: 'ID', type: 'number', width: 100 },
+	{ field: 'nome', headerName: 'Nome', width: 150 , renderCell: (params) =>
+		<Chip
+			label={params.value}
+			onClick={() => browserHistory.push(`/admin/grupos/` + params.row.grupoId)}
+	/> },
 	{
 		field: 'actions', headerName: "", type: 'actions', getActions: (params) => [
 			<GridActionsCellItem
 				icon={<Edit />}
 				label="Editar"
-				onClick={() => browserHistory.push(`/admin/empresas/` + params.row.empresaId)}
+				onClick={() => browserHistory.push(`/admin/grupos/` + params.row.grupoId)}
 				showInMenu
 			/>
 		],
@@ -39,21 +33,9 @@ const columns: GridColDef<IEmpresaAdmin>[] = [
 
 const columnGroupingModel: GridColumnGroupingModel = [
 	{
-		groupId: 'empresa',
-		headerName: "Empresa",
-		children: [{ field: 'empresaId' }, { field: 'nome' }, { field: 'cnpj' }],
-		freeReordering: true,
-	},
-	{
 		groupId: 'grupo',
 		headerName: "Grupo",
-		children: [{ field: 'grupo.grupoId' }, { field: 'grupo.nome' }],
-		freeReordering: true,
-	},
-	{
-		groupId: 'contratoAtual',
-		headerName: "Contrato Atual",
-		children: [{ field: 'contratoAtual.ativo' }, { field: 'contratoAtual.limiteUsuarios' }, { field: 'contratoAtual.valor' }],
+		children: [{ field: 'grupoId' }, { field: 'nome' }],
 		freeReordering: true,
 	},
 	{
@@ -83,27 +65,27 @@ const visoesPadrao: IDatagridVisao[] = [
 	}
 ]
 
-const ListaEmpresasPage = () => {
+const ListaGruposPage = () => {
 	
 	const [isUpdating, setIsUpdating] = useState(false);
 	
-	const { data, refetch } = useEmpresasAdminQuery();
-	const [empresas, setEmpresas] = useState< IEmpresaAdmin[] | undefined>(data);
+	const { data, refetch } = useGruposQuery();
+	const [grupos, setGrupos] = useState< IGrupo[] | undefined>(data);
 
 	const { enqueueSnackbar } = useSnackbar();
 
 	const apiRef = useGridApiRef();
 
 	const rows = useMemo(() => {
-		return empresas?.map(empresa => {
+		return grupos?.map(grupo => {
 			return {
-				...Object.assign({}, flatten(empresa)),
-				id: empresa.empresaId,
-				empresa: empresa,
+				...Object.assign({}, flatten(grupo)),
+				id: grupo.grupoId,
+				grupo: grupo,
 			}
 		}
 		) ?? []
-	}, [empresas]);
+	}, [grupos]);
 
 	const update = useCallback(async () => {
 		setIsUpdating(true);
@@ -111,7 +93,7 @@ const ListaEmpresasPage = () => {
 			const result = await refetch();
 			if (result.error)
 				throw result.error;
-			setEmpresas(result.data);
+			setGrupos(result.data);
 		} catch (error) {
 			enqueueSnackbar('Falha ao atualizar!', {variant: 'error'});
 		} finally {
@@ -124,10 +106,10 @@ const ListaEmpresasPage = () => {
 	}, []);
 
 	return <DashboardContent
-		titulo="Empresas"
+		titulo="Grupos"
 		fabs={[
 			<CustomFab tooltip={{title: 'Atualizar'}} key={0} onClick={() => update()} disabled={isUpdating} loading={isUpdating}><Refresh /></CustomFab>,
-			<CustomFab tooltip={{title: 'Nova Empresa'}} key={1} onClick={() => browserHistory.push("/admin/empresas/add")} color="primary"><Add /></CustomFab>,
+			<CustomFab tooltip={{title: 'Novo Grupo'}} key={1} onClick={() => browserHistory.push("/admin/grupos/add")} color="primary"><Add /></CustomFab>,
 		]}
 	>
 		<CustomDataGrid
@@ -136,9 +118,9 @@ const ListaEmpresasPage = () => {
 			rows={rows}
 			columnGroupingModel={columnGroupingModel}
 			apiRef={apiRef}
-			stateKey={["empresas"]}
+			stateKey={["grupos"]}
 			visao={{
-				datagrid: "empresas",
+				datagrid: "grupos",
 				visoesPadrao: visoesPadrao,
 			}}
 
@@ -147,4 +129,4 @@ const ListaEmpresasPage = () => {
 	</DashboardContent>
 }
 
-export default ListaEmpresasPage;
+export default ListaGruposPage;

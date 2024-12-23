@@ -104,7 +104,9 @@ const DashboardContent = forwardRef<HTMLDivElement, DashboardContentProps>((prop
 				>
 					{fabs?.map(fab => <Slide in direction='left' key={fab.key}>{fab}</Slide>)}
 				</TransitionGroup>}
-				{children}
+				<Stack direction='column' gap={1} flexGrow={1} overflow='auto'>
+					{children}
+				</Stack>
 			</Stack>
 			{isMobile && <TransitionGroup
 				style={{

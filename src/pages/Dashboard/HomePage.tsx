@@ -12,7 +12,7 @@ import React from "react";
 import { TransitionGroup } from "react-transition-group";
 import useAppStore from "../../shared/state/useAppStore";
 import { usePerfilAtualQuery } from "../../domains/perfil/PerfilQueries";
-import { useRelatoriosByPerfilQuery } from "../../domains/relatorio/RelatorioQueries";
+import { useRelatoriosByEmpresaIdQuery, useRelatoriosByPerfilQuery } from "../../domains/relatorio/RelatorioQueries";
 
 const filterMenuItems = (items: IDrawerMenuItem[], query: string, context: DrawerMenuItemContext) => {
 	let filteredMenuItems: IDrawerMenuItem[] = [];
@@ -85,6 +85,7 @@ const HomePage = () => {
 	const empresaId = useEmpresaIdParam();
 	const {data: perfil } = usePerfilAtualQuery();
 	const {data: relatorios} = useRelatoriosByPerfilQuery(perfil?.perfilId);
+	const { data: relatoriosAdmin } = useRelatoriosByEmpresaIdQuery(empresa?.empresaId, usuarioLogado?.isAdmin ?? false);
 
 	const items = useMemo(() => {
 		const context = {
@@ -93,7 +94,7 @@ const HomePage = () => {
 			empresaId: empresaId,
 			location: location,
 			papel: papel,
-			relatorios: relatorios,
+			relatorios: relatoriosAdmin?.filter(relatorio => relatorio.ativo) || relatorios,
 		};
 		const activeMenuItems = getActiveMenuItems(menuItems, context);
 		const filteredMenuItems = filterMenuItems(activeMenuItems, query, context);

@@ -8,29 +8,31 @@ import CustomDataGrid from "../../shared/components/DataGrid/CustomDataGrid"
 import CustomFab from "../../shared/components/Fab/CustomFab"
 import browserHistory from "../../shared/utils/browserHistory"
 import { IDatagridVisao } from "../datagridVisao/DatagridVisao"
-import { IEmpresaAdmin } from "./Empresa"
-import EmpresaChip from "./EmpresaChip"
-import { useEmpresasAdminQuery } from "./EmpresaQueries"
+import { Chip, Icon } from "@mui/material"
+import EmpresaChip from "../empresa/EmpresaChip"
+import { IRelatorio, IRelatorioAdmin } from "./Relatorio"
+import { useRelatoriosByEmpresaIdQuery } from "./RelatorioQueries"
+import useEmpresaIdParam from "../../shared/hooks/useEmpresaIdParam"
 
-const columns: GridColDef<IEmpresaAdmin>[] = [
-	{ field: 'empresaId', headerName: 'ID', type: 'number', width: 100 },
-	{ field: 'nome', headerName: 'Nome', width: 150, renderCell: (params) =>
-		<EmpresaChip
-			empresa={(params.row as any).empresa}
-			onClick={() => browserHistory.push(`/admin/empresas/` + params.row.empresaId)}
-		/> },
-	{ field: 'cnpj', headerName: 'CNPJ', width: 150 },
-	{ field: 'grupo.grupoId', headerName: 'ID', type: 'number', width: 100 },
-	{ field: 'grupo.nome', headerName: 'Nome', width: 150 },
-	{ field: 'contratoAtual.ativo', headerName: 'Ativo', type: 'boolean', width: 150},
-	{ field: 'contratoAtual.limiteUsuarios', headerName: 'Limite de Usuários', width: 150 },
-	{ field: 'contratoAtual.valor', headerName: 'Valor', width: 150 },
+const columns: GridColDef<IRelatorioAdmin>[] = [
+	{ field: 'relatorioId', headerName: 'ID', type: 'number', width: 100 },
+	{ field: 'titulo', headerName: 'Título', width: 250 , renderCell: (params) =>
+		<Chip
+			label={params.value}
+			onClick={() => browserHistory.push(`/e/${params.row.empresaId}/cadastrar-relatorios/${params.row.relatorioId}`)}
+	/> },
+	{ field: 'uri', headerName: 'URI', width: 100 },
+	{ field: 'link', headerName: 'Link', width: 200 },
+	{ field: 'linkMobile', headerName: 'Link Mobile', width: 200 },
+	{ field: 'icone', headerName: 'Ícone', width: 100, renderCell: (parmas) => <Icon>{parmas?.value ?? 'leaderboard'}</Icon> },
+	{ field: 'novaGuia', headerName: 'Nova Guia', type: 'boolean', width: 100 },
+	{ field: 'ativo', headerName: 'Ativo', type: 'boolean', width: 100 },
 	{
 		field: 'actions', headerName: "", type: 'actions', getActions: (params) => [
 			<GridActionsCellItem
 				icon={<Edit />}
 				label="Editar"
-				onClick={() => browserHistory.push(`/admin/empresas/` + params.row.empresaId)}
+				onClick={() => browserHistory.push(`/e/${params.row.empresaId}/cadastrar-relatorios/${params.row.relatorioId}`)}
 				showInMenu
 			/>
 		],
@@ -39,21 +41,9 @@ const columns: GridColDef<IEmpresaAdmin>[] = [
 
 const columnGroupingModel: GridColumnGroupingModel = [
 	{
-		groupId: 'empresa',
-		headerName: "Empresa",
-		children: [{ field: 'empresaId' }, { field: 'nome' }, { field: 'cnpj' }],
-		freeReordering: true,
-	},
-	{
-		groupId: 'grupo',
-		headerName: "Grupo",
-		children: [{ field: 'grupo.grupoId' }, { field: 'grupo.nome' }],
-		freeReordering: true,
-	},
-	{
-		groupId: 'contratoAtual',
-		headerName: "Contrato Atual",
-		children: [{ field: 'contratoAtual.ativo' }, { field: 'contratoAtual.limiteUsuarios' }, { field: 'contratoAtual.valor' }],
+		groupId: 'relatorio',
+		headerName: "Relatório",
+		children: [{ field: 'relatorioId' }, { field: 'titulo' }, { field: 'uri' }, { field: 'link' }, { field: 'linkMobile' }, { field: 'icone' }, { field: 'novaGuia' }, { field: 'ativo' }],
 		freeReordering: true,
 	},
 	{
@@ -83,27 +73,29 @@ const visoesPadrao: IDatagridVisao[] = [
 	}
 ]
 
-const ListaEmpresasPage = () => {
+const ListaRelatoriosPage = () => {
 	
 	const [isUpdating, setIsUpdating] = useState(false);
+
+	const empresaId = useEmpresaIdParam();
 	
-	const { data, refetch } = useEmpresasAdminQuery();
-	const [empresas, setEmpresas] = useState< IEmpresaAdmin[] | undefined>(data);
+	const { data, refetch } = useRelatoriosByEmpresaIdQuery(empresaId);
+	const [relatorios, setRelatorios] = useState< IRelatorio[] | undefined>(data);
 
 	const { enqueueSnackbar } = useSnackbar();
 
 	const apiRef = useGridApiRef();
 
 	const rows = useMemo(() => {
-		return empresas?.map(empresa => {
+		return relatorios?.map(relatorio => {
 			return {
-				...Object.assign({}, flatten(empresa)),
-				id: empresa.empresaId,
-				empresa: empresa,
+				...Object.assign({}, flatten(relatorio)),
+				id: relatorio.relatorioId,
+				relatorio: relatorio,
 			}
 		}
 		) ?? []
-	}, [empresas]);
+	}, [relatorios]);
 
 	const update = useCallback(async () => {
 		setIsUpdating(true);
@@ -111,7 +103,7 @@ const ListaEmpresasPage = () => {
 			const result = await refetch();
 			if (result.error)
 				throw result.error;
-			setEmpresas(result.data);
+			setRelatorios(result.data);
 		} catch (error) {
 			enqueueSnackbar('Falha ao atualizar!', {variant: 'error'});
 		} finally {
@@ -124,10 +116,10 @@ const ListaEmpresasPage = () => {
 	}, []);
 
 	return <DashboardContent
-		titulo="Empresas"
+		titulo="Relatórios"
 		fabs={[
 			<CustomFab tooltip={{title: 'Atualizar'}} key={0} onClick={() => update()} disabled={isUpdating} loading={isUpdating}><Refresh /></CustomFab>,
-			<CustomFab tooltip={{title: 'Nova Empresa'}} key={1} onClick={() => browserHistory.push("/admin/empresas/add")} color="primary"><Add /></CustomFab>,
+			<CustomFab tooltip={{title: 'Novo Relatório'}} key={1} onClick={() => browserHistory.push(`/e/${empresaId}/cadastrar-relatorios/add`)} color="primary"><Add /></CustomFab>,
 		]}
 	>
 		<CustomDataGrid
@@ -136,9 +128,9 @@ const ListaEmpresasPage = () => {
 			rows={rows}
 			columnGroupingModel={columnGroupingModel}
 			apiRef={apiRef}
-			stateKey={["empresas"]}
+			stateKey={["relatorios", empresaId]}
 			visao={{
-				datagrid: "empresas",
+				datagrid: "relatorios",
 				visoesPadrao: visoesPadrao,
 			}}
 
@@ -147,4 +139,4 @@ const ListaEmpresasPage = () => {
 	</DashboardContent>
 }
 
-export default ListaEmpresasPage;
+export default ListaRelatoriosPage;

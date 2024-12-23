@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { dateToApiDateTimeSchema } from "../../shared/utils/dateUtils";
+import { AparenciaCorSchema } from "./Empresa";
 
 export const ContratoRequestSchema = z.object({
 	ativo: z.boolean(),
@@ -9,7 +10,7 @@ export const ContratoRequestSchema = z.object({
 	valor: z.nullable(z.number()),
 })
 
-export const PostEmpresaAdminRequestSchema = z.object({
+export const EmpresaAdminPostRequestSchema = z.object({
 	grupoId: z.number(),
 	nome: z.string(),
 	cnpj: z.string(),
@@ -17,9 +18,9 @@ export const PostEmpresaAdminRequestSchema = z.object({
 	contratos: z.array(ContratoRequestSchema),
 });
 
-export type PostEmpresaAdminRequest = z.infer<typeof PostEmpresaAdminRequestSchema>;
+export type EmpresaAdminPostRequest = z.infer<typeof EmpresaAdminPostRequestSchema>;
 
-export const PatchEmpresaAdminRequestSchema = z.object({
+export const EmpresaAdminPatchRequestSchema = z.object({
 	grupoId: z.number(),
 	nome: z.string(),
 	cnpj: z.string(),
@@ -28,4 +29,12 @@ export const PatchEmpresaAdminRequestSchema = z.object({
 	updatedAt: dateToApiDateTimeSchema,
 });
 
-export type PatchEmpresaAdminRequest = z.infer<typeof PatchEmpresaAdminRequestSchema>;
+export type EmpresaAdminPatchRequest = z.infer<typeof EmpresaAdminPatchRequestSchema>;
+
+export const EmpresaAparenciaPatchRequestSchema = z.object({
+	icone: z.optional(z.nullable(z.string())),
+	cor: z.nullable(AparenciaCorSchema),
+	updatedAt: dateToApiDateTimeSchema,
+});
+
+export type EmpresaAparenciaPatchRequest = z.infer<typeof EmpresaAparenciaPatchRequestSchema>;

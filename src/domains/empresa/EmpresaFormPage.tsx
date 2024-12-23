@@ -20,10 +20,10 @@ import useBlockNavigation from "../../shared/hooks/useBlockNavigation";
 import browserHistory from "../../shared/utils/browserHistory";
 import { formatCnpj, testCnpjFormat, unformatCnpj } from "../../shared/utils/cnpjUtils";
 import { dateValidationSchema } from "../../shared/utils/dateUtils";
-import { useGruposAdminQuery } from "../grupo/GrupoQueries";
+import { useGruposQuery } from "../grupo/GrupoQueries";
 import { IEmpresaAdmin } from "./Empresa";
-import { usePatchEmpresaAdminMutation, usePostEmpresaAdminMutation } from "./EmpresaMutations";
-import { PatchEmpresaAdminRequestSchema, PostEmpresaAdminRequestSchema } from "./EmpresaPayloads";
+import { useEmpresaAdminPatchMutation, useEmpresaAdminPostMutation } from "./EmpresaMutations";
+import { EmpresaAdminPatchRequestSchema, EmpresaAdminPostRequestSchema } from "./EmpresaPayloads";
 import { useEmpresaAdminQuery } from "./EmpresaQueries";
 
 const ContratoFormSchema = z.object({
@@ -46,7 +46,7 @@ const EmpresaFormSchema = z.object({
 
 type EmpresaFormData = z.infer<typeof EmpresaFormSchema>;
 
-const EmpresaForm = () => {
+const EmpresaFormPage = () => {
 
 	const { empresaId: empresaIdParam } = useParams();
 	const empresaId = parseInt(empresaIdParam!);
@@ -62,8 +62,8 @@ const EmpresaForm = () => {
 
 	const { data, refetch, isFetching, error } = useEmpresaAdminQuery(isEditMode ? empresaId : undefined);
 
-	const { mutateAsync: postEmpresaAdmin } = usePostEmpresaAdminMutation();
-	const { mutateAsync: patchEmpresaAdmin } = usePatchEmpresaAdminMutation();
+	const { mutateAsync: postEmpresaAdmin } = useEmpresaAdminPostMutation();
+	const { mutateAsync: patchEmpresaAdmin } = useEmpresaAdminPatchMutation();
 
 	const [currentTab, setCurrentTab] = useState(0);
 
@@ -114,7 +114,7 @@ const EmpresaForm = () => {
 	const patch = async (data: EmpresaFormData) => {
 		const response = await patchEmpresaAdmin({
 			empresaId: empresaId!,
-			payload: PatchEmpresaAdminRequestSchema.parse({
+			payload: EmpresaAdminPatchRequestSchema.parse({
 				...data,
 				cnpj: unformatCnpj(data.cnpj),
 			}),
@@ -125,7 +125,7 @@ const EmpresaForm = () => {
 
 	const post = async (data: EmpresaFormData) => {
 		const response = await postEmpresaAdmin({
-			payload: PostEmpresaAdminRequestSchema.parse({
+			payload: EmpresaAdminPostRequestSchema.parse({
 				...data,
 				cnpj: unformatCnpj(data.cnpj),
 			}),
@@ -200,7 +200,7 @@ const EmpresaForm = () => {
 		valor: 0,
 	}), [appendContrato]);
 
-	const { data: grupos } = useGruposAdminQuery();
+	const { data: grupos } = useGruposQuery();
 
 	const formFabs = useFormFabs(1, isEditMode, isNewDataAvailable, isUpdateRequired, update, isUpdating, handleSubmit, onSubmit, onError, isDirty, isSubmitting, handleDiscardChanges);
 
@@ -450,4 +450,4 @@ const EmpresaForm = () => {
 	</DashboardContent>
 }
 
-export default EmpresaForm;
+export default EmpresaFormPage;

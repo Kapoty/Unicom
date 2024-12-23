@@ -89,4 +89,9 @@ module.exports = {
 	optimization: {
 		usedExports: true, // Tree-shaking
 	},
+	performance: {
+		hints: false,
+		maxEntrypointSize: 512000,
+		maxAssetSize: 512000
+	}
 }

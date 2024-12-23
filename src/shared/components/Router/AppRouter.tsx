@@ -1,17 +1,16 @@
-import React, { PropsWithChildren, Suspense, useMemo, lazy } from "react";
+import React, { lazy, PropsWithChildren, Suspense, useMemo } from "react";
 import { Navigate, Outlet, Route, Routes, useParams } from "react-router-dom";
-import { IEmpresaPublic } from "../../../domains/empresa/Empresa";
-import { Papel, Permissao, PermissaoSchema } from "../../../domains/papel/Papel";
-import { usePapelAtualQuery } from "../../../domains/papel/PapelQueries";
-import { useUsuarioLogadoQuery } from "../../../domains/usuario/UsuarioQueries";
 import useAuthStore from "../../../domains/auth/useAuthStore";
+import { IEmpresaPublic } from "../../../domains/empresa/Empresa";
+import { Papel, Permissao } from "../../../domains/papel/Papel";
+import { usePapelAtualQuery } from "../../../domains/papel/PapelQueries";
 import { IUsuarioMe } from "../../../domains/usuario/Usuario";
+import { useUsuarioLogadoQuery } from "../../../domains/usuario/UsuarioQueries";
 import browserHistory from "../../utils/browserHistory";
 import CustomBackdrop from "../Backdrop/CustomBackdrop";
 
-import Carregando from "../Feedback/Carregando";
-import { Box } from "@mui/material";
 import useAppStore from "../../state/useAppStore";
+import Carregando from "../Feedback/Carregando";
 
 const LoginPage = lazy(() => import("../../../pages/LoginPage"));
 const DashBoardPage = lazy(() => import("../../../pages/DashboardPage"));
@@ -21,10 +20,22 @@ const DashboardContent = lazy(() => import("../Dashboard/DashboardContent"));
 const ListaEmpresasPage = lazy(() => import("../../../domains/empresa/ListaEmpresasPage"));
 const EmpresaFormPage = lazy(() => import("../../../domains/empresa/EmpresaFormPage"));
 
+const ListaGruposPage = lazy(() => import("../../../domains/grupo/ListaGruposPage"));
+const GrupoFormPage = lazy(() => import("../../../domains/grupo/GrupoFormPage"));
+
+const ListaDominiosPage = lazy(() => import("../../../domains/dominio/ListaDominiosPage"));
+const DominioFormPage = lazy(() => import("../../../domains/dominio/DominioFormPage"));
+
 /* Empresa */
 const HomePage = lazy(() => import('../../../pages/Dashboard/HomePage'));
+
 const VendaFormPage = lazy(() => import('../../../domains/venda/VendaFormPage'));
 const ListaVendasPage = lazy(() => import('../../../domains/venda/ListaVendasPage'));
+
+const ListaRelatoriosPage = lazy(() => import("../../../domains/relatorio/ListaRelatoriosPage"));
+const RelatorioFormPage = lazy(() => import("../../../domains/relatorio/RelatorioFormPage"));
+
+const EmpresaAparenciaFormPage = lazy(() => import("../../../domains/empresa/EmpresaAparenciaFormPage"));
 
 export interface Context {
 	auth?: boolean,
@@ -102,16 +113,15 @@ const indexRouteWithoutIds: IRoute = {
 									path: 'usuarios',
 									condicoes: {
 										empresa: true,
-										permissao: PermissaoSchema.enum.CADASTRAR_USUARIOS
+										permissao: 'CADASTRAR_USUARIOS'
 									},
 									element: <DashboardContent titulo='Usuários' />,
-
 								},
 								{
 									path: 'usuarios/:usuarioId',
 									condicoes: {
 										empresa: true,
-										permissao: PermissaoSchema.enum.CADASTRAR_USUARIOS
+										permissao: 'CADASTRAR_USUARIOS'
 									},
 									element: <DashboardContent titulo='Novo Usuário' />,
 									keys: ['usuarioId'],
@@ -121,6 +131,31 @@ const indexRouteWithoutIds: IRoute = {
 									condicoes: {
 										empresa: true,
 									},
+								},
+								{
+									path: 'cadastrar-relatorios',
+									condicoes: {
+										empresa: true,
+										permissao: 'CONFIGURAR_EMPRESA'
+									},
+									element: <ListaRelatoriosPage/>,
+								},
+								{
+									path: 'cadastrar-relatorios/:relatorioId',
+									condicoes: {
+										empresa: true,
+										permissao: 'CONFIGURAR_EMPRESA'
+									},
+									element: <RelatorioFormPage/>,
+									keys: ['relatorioId'],
+								},
+								{
+									path: 'configurar-empresa/aparencia',
+									condicoes: {
+										empresa: true,
+										permissao: 'CONFIGURAR_EMPRESA'
+									},
+									element: <EmpresaAparenciaFormPage/>,
 								},
 								{
 									path: '*',
@@ -154,6 +189,24 @@ const indexRouteWithoutIds: IRoute = {
 									path: 'empresas/:empresaId',
 									element: <EmpresaFormPage/>,
 									keys: ['empresaId'],
+								},
+								{
+									path: 'grupos',
+									element: <ListaGruposPage/>,
+								},
+								{
+									path: 'grupos/:grupoId',
+									element: <GrupoFormPage/>,
+									keys: ['grupoId'],
+								},
+								{
+									path: 'dominios',
+									element: <ListaDominiosPage/>,
+								},
+								{
+									path: 'dominios/:dominioId',
+									element: <DominioFormPage/>,
+									keys: ['dominioId'],
 								},
 								{
 									path: '*',
@@ -233,7 +286,7 @@ const renderRoute = (dashboardRoute: IRoute, context: Context) => {
 		&& (admin == undefined || admin == context?.usuarioLogado?.isAdmin)
 		&& (empresa == undefined || empresa == !!context.empresa)
 		&& (papel == undefined || papel == !!context.papel)
-		&& (admin || permissao == undefined || context?.papel?.contemPermissao(permissao))
+		&& (context?.usuarioLogado?.isAdmin || permissao == undefined || context?.papel?.contemPermissao(permissao))
 	)
 
 	if (shouldRender) {

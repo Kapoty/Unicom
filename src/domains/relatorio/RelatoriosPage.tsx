@@ -3,15 +3,18 @@ import { useMatch } from "react-router-dom";
 import useAppStore from "../../shared/state/useAppStore";
 import { usePerfilAtualQuery } from "../perfil/PerfilQueries";
 import RelatorioPage from "./RelatorioPage";
-import { useRelatoriosByPerfilQuery } from "./RelatorioQueries";
+import { useRelatoriosByEmpresaIdQuery, useRelatoriosByPerfilQuery } from "./RelatorioQueries";
 import { Stack } from "@mui/material";
 import browserHistory from "../../shared/utils/browserHistory";
+import { useUsuarioLogadoQuery } from "../usuario/UsuarioQueries";
 
 const RelatoriosPage = () => {
 
 	const empresa = useAppStore(s => s.empresa);
+	const { data: usuarioLogado } = useUsuarioLogadoQuery();
 	const { data: perfilAtual } = usePerfilAtualQuery();
 	const { data: relatorios } = useRelatoriosByPerfilQuery(perfilAtual?.perfilId);
+	const { data: relatoriosAdmin } = useRelatoriosByEmpresaIdQuery(empresa?.empresaId, usuarioLogado?.isAdmin ?? false);
 
 	const [relatoriosOpened, setRelatoriosOpened] = useState<Set<String>>(new Set());
 
@@ -35,7 +38,7 @@ const RelatoriosPage = () => {
 	}, [empresa])
 
 	return <>
-		{relatorios?.map(relatorio => <Stack key={relatorio.uri} flexGrow={1} display={(uri == relatorio.uri) ? 'flex' : 'none'}>
+		{(relatoriosAdmin || relatorios)?.map(relatorio => <Stack key={relatorio.uri} flexGrow={1} display={(uri == relatorio.uri) ? 'flex' : 'none'}>
 			<RelatorioPage
 				relatorio={relatorio}
 				open={relatoriosOpened.has(relatorio.uri)}

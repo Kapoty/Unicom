@@ -7,11 +7,11 @@ import { useCallback, useState } from "react";
 import { IDatagridVisao } from "../../../../../domains/datagridVisao/DatagridVisao";
 import DatagridVisaoFormDialog from "../../../../../domains/datagridVisao/DatagridVisaoFormDialog";
 import { useDeleteDatagridVisaoMutation, usePatchDatagridVisaoMutation } from "../../../../../domains/datagridVisao/DatagridVisaoMutations";
-import { useMarcarDatagridVisaoAtualMutation } from "../../../../../domains/datagridVisaoAtual/DatagridVisaoAtualMutations";
+import { useDatagridVisaoAtualMarcarMutation } from "../../../../../domains/datagridVisaoAtual/DatagridVisaoAtualMutations";
 import { useDatagridVisaoAtualByDatagridQuery } from "../../../../../domains/datagridVisaoAtual/DatagridVisaoAtualQueries";
 import { useConfirm } from "../../../ConfirmDialog/ConfirmProvider";
 import { useDataGridContext } from "../../DataGridContext";
-import { MarcarDatagridVisaoAtualRequestSchema } from "../../../../../domains/datagridVisaoAtual/DatagridVisaoAtualPayloads";
+import { DatagridVisaoAtualMarcarRequestSchema } from "../../../../../domains/datagridVisaoAtual/DatagridVisaoAtualPayloads";
 
 export interface ToolbarVisaoListItemProps {
 	visao: IDatagridVisao;
@@ -22,7 +22,7 @@ const ToolbarVisaoListItem = ({ visao }: ToolbarVisaoListItemProps) => {
 	const apiRef = useGridApiContext();
 	const dataGridContext = useDataGridContext()!;
 	const { data: visaoAtual } = useDatagridVisaoAtualByDatagridQuery(dataGridContext.visao?.datagrid);
-	const { mutate: marcarDatagridVisaoAtual } = useMarcarDatagridVisaoAtualMutation();
+	const { mutate: marcarDatagridVisaoAtual } = useDatagridVisaoAtualMarcarMutation();
 	const { mutateAsync: patchDatagridVisao } = usePatchDatagridVisaoMutation();
 	const { mutateAsync: deleteDatagridVisao } = useDeleteDatagridVisaoMutation();
 	const { confirm } = useConfirm();
@@ -32,7 +32,7 @@ const ToolbarVisaoListItem = ({ visao }: ToolbarVisaoListItemProps) => {
 	const handleMarcar = useCallback(() => {
 		marcarDatagridVisaoAtual({
 			datagrid: dataGridContext.visao?.datagrid!,
-			payload: MarcarDatagridVisaoAtualRequestSchema.parse(visao),
+			payload: DatagridVisaoAtualMarcarRequestSchema.parse(visao),
 		});
 		apiRef.current.restoreState(visao.state as GridInitialStatePremium);
 	}, [visao]);

@@ -17,10 +17,10 @@ declare module '@mui/material/styles' {
 }
 
 export interface ThemeProps {
-	corPrimaria?: AparenciaCor
+	corPrimaria?: AparenciaCor | null
 }
 
-const colors = {
+export const colors = {
 	'red': red,
 	'pink': pink,
 	'purple': purple,

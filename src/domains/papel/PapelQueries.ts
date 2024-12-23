@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { usePerfilAtualQuery } from '../perfil/PerfilQueries';
-import { getPapelById } from './PapelService';
+import { getPapeis, getPapelById } from './PapelService';
 
 export const usePapelQuery = (papelId?: number) => {
 
@@ -19,5 +19,13 @@ export const usePapelAtualQuery = () => {
 		queryKey: ['papeis', 'perfis', perfil?.perfilId],
 		queryFn: async () => getPapelById(perfil?.papelId!),
 		enabled: !!perfil
+	});
+};
+
+export const usePapeisQuery = () => {
+
+	return useQuery({
+		queryKey: ['papeis'],
+		queryFn: async () => getPapeis()
 	});
 };

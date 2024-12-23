@@ -39,7 +39,7 @@ const App = () => {
 
 	return (
 		<QueryClientProvider client={queryClient}>
-			{false && <ReactQueryDevtools/>}
+			{true && <ReactQueryDevtools/>}
 			<ThemeProvider theme={theme}>
 				<LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="pt">
 					<CustomSnackbarProvider>

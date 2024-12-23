@@ -1,5 +1,5 @@
-import { Add, AddCard, Apartment, CreditCard, GroupAdd, Groups, Home, Leaderboard } from "@mui/icons-material";
-import { Collapse, Icon, List } from "@mui/material";
+import { Abc, Add, AddCard, Apartment, CorporateFare, CreditCard, DisplaySettings, GroupAdd, Groups, Home, Leaderboard, Palette, Settings, Workspaces } from "@mui/icons-material";
+import { Badge, Collapse, Icon, List } from "@mui/material";
 import { useMemo } from "react";
 import { Location, useLocation } from "react-router-dom";
 import { TransitionGroup } from "react-transition-group";
@@ -12,7 +12,7 @@ import { useUsuarioLogadoQuery } from "../../../domains/usuario/UsuarioQueries";
 import DrawerMenuItem from "./DrawerMenuItem";
 import useAppStore from "../../state/useAppStore";
 import { IRelatorio } from "../../../domains/relatorio/Relatorio";
-import { useRelatoriosByPerfilQuery } from "../../../domains/relatorio/RelatorioQueries";
+import { useRelatoriosByEmpresaIdQuery, useRelatoriosByPerfilQuery } from "../../../domains/relatorio/RelatorioQueries";
 import { usePerfilAtualQuery } from "../../../domains/perfil/PerfilQueries";
 
 export interface DrawerMenuItemContext {
@@ -53,7 +53,7 @@ export const menuItems: IDrawerMenuItem[] = [
 	},
 	{
 		titulo: "Empresas",
-		icone: <Apartment />,
+		icone: <CorporateFare />,
 		match: /^\/admin\/empresas/,
 		condicoes: {
 			admin: true,
@@ -62,7 +62,7 @@ export const menuItems: IDrawerMenuItem[] = [
 		submenu: [
 			{
 				titulo: "Empresas",
-				icone: <Apartment />,
+				icone: <CorporateFare />,
 				match: /^\/admin\/empresas$/,
 				to: '/admin/empresas',
 				condicoes: {
@@ -75,6 +75,68 @@ export const menuItems: IDrawerMenuItem[] = [
 				icone: <Add />,
 				match: /^\/admin\/empresas\/\w+/,
 				to: '/admin/empresas/add',
+				condicoes: {
+					admin: true,
+					empresaId: false,
+				},
+			}
+		]
+	},
+	{
+		titulo: "Grupos",
+		icone: <Workspaces />,
+		match: /^\/admin\/grupos/,
+		condicoes: {
+			admin: true,
+			empresaId: false,
+		},
+		submenu: [
+			{
+				titulo: "Grupos",
+				icone: <Workspaces />,
+				match: /^\/admin\/grupos$/,
+				to: '/admin/grupos',
+				condicoes: {
+					admin: true,
+					empresaId: false,
+				},
+			},
+			{
+				titulo: "Novo Grupo",
+				icone: <Add />,
+				match: /^\/admin\/grupos\/\w+/,
+				to: '/admin/grupos/add',
+				condicoes: {
+					admin: true,
+					empresaId: false,
+				},
+			}
+		]
+	},
+	{
+		titulo: "Domínios",
+		icone: <Abc />,
+		match: /^\/admin\/dominios/,
+		condicoes: {
+			admin: true,
+			empresaId: false,
+		},
+		submenu: [
+			{
+				titulo: "Domínios",
+				icone: <Abc />,
+				match: /^\/admin\/dominios$/,
+				to: '/admin/dominios',
+				condicoes: {
+					admin: true,
+					empresaId: false,
+				},
+			},
+			{
+				titulo: "Novo Domínio",
+				icone: <Add />,
+				match: /^\/admin\/dominios\/\w+/,
+				to: '/admin/dominios/add',
 				condicoes: {
 					admin: true,
 					empresaId: false,
@@ -121,6 +183,23 @@ export const menuItems: IDrawerMenuItem[] = [
 		]
 	},
 	{
+		titulo: "Relatórios",
+		icone: <Leaderboard />,
+		match: /^\/e\/\d+\/relatorios/,
+		condicoes: {
+			empresa: true,
+		},
+		submenu: (context) => context.relatorios?.map(relatorio => ({
+			titulo: relatorio.titulo,
+			icone: <Icon>{relatorio?.icone ?? 'leaderboard'}</Icon>,
+			match: new RegExp(`^\/e\/\\d+\/relatorios\/${relatorio.uri}$`),
+			to: `/e/${context?.empresa?.empresaId}/relatorios/${relatorio.uri}`,
+			condicoes: {
+				empresa: true,
+			}
+		})).toSorted((a, b) => a.titulo.localeCompare(b.titulo)) ?? []
+	},
+	{
 		titulo: "Usuários",
 		icone: <Groups />,
 		match: /^\/e\/\d+\/usuarios/,
@@ -150,22 +229,54 @@ export const menuItems: IDrawerMenuItem[] = [
 		]
 	},
 	{
-		titulo: "Relatórios",
-		icone: <Leaderboard />,
-		match: /^\/e\/\d+\/relatorios/,
+		titulo: "Cadastrar Relatórios",
+		icone: <DisplaySettings />,
+		match: /^\/e\/\d+\/cadastrar-relatorios/,
 		condicoes: {
 			empresa: true,
+			permissao: "CONFIGURAR_EMPRESA"
 		},
-		submenu: (context) => context.relatorios?.map(relatorio => ({
-			titulo: relatorio.titulo,
-			icone: <Icon>{relatorio.icone ?? 'leaderboard'}</Icon>,
-			match: new RegExp(`^\/e\/\\d+\/relatorios\/${relatorio.uri}$`),
-			to: `/e/${context?.empresa?.empresaId}/relatorios/${relatorio.uri}`,
-			condicoes: {
-				empresa: true,
+		submenu: [
+			{
+				titulo: "Relatórios",
+				icone: <DisplaySettings />,
+				match: /^\/e\/\d+\/cadastrar-relatorios$/,
+				to: (context) => `/e/${context?.empresa?.empresaId}/cadastrar-relatorios`,
+				condicoes: {
+					empresa: true,
+				}
+			},
+			{
+				titulo: "Novo Relatório",
+				icone: <Add />,
+				match: /^\/e\/\d+\/cadastrar-relatorios\/\w+/,
+				to: (context) => `/e/${context?.empresa?.empresaId}/cadastrar-relatorios/add`,
+				condicoes: {
+					empresa: true,
+				}
 			}
-		})) ?? []
-	}
+		]
+	},
+	{
+		titulo: "Configurar Empresa",
+		icone: <Settings />,
+		match: /^\/e\/\d+\/configurar-empresa/,
+		condicoes: {
+			empresa: true,
+			permissao: "CONFIGURAR_EMPRESA"
+		},
+		submenu: [
+			{
+				titulo: "Aparência",
+				icone: <Palette />,
+				match: /^\/e\/\d+\/configurar-empresa\/aparencia$/,
+				to: (context) => `/e/${context?.empresa?.empresaId}/configurar-empresa/aparencia`,
+				condicoes: {
+					empresa: true,
+				}
+			},
+		]
+	},
 ];
 
 export const getActiveMenuItems = (items: IDrawerMenuItem[], context: DrawerMenuItemContext): IDrawerMenuItem[] => {
@@ -180,7 +291,7 @@ export const getActiveMenuItems = (items: IDrawerMenuItem[], context: DrawerMenu
 			(admin == undefined || admin == context?.usuarioLogado?.isAdmin)
 			&& (empresa == undefined || empresa == !!context.empresa)
 			&& (empresaId == undefined || empresaId == !!context.empresaId)
-			&& (admin || permissao == undefined || context?.papel?.contemPermissao(permissao))
+			&& (context?.usuarioLogado?.isAdmin || permissao == undefined || context?.papel?.contemPermissao(permissao))
 		)
 
 		if (shouldRender) {
@@ -221,8 +332,9 @@ const DrawerMenu = () => {
 	const location = useLocation();
 	const { data: papel } = usePapelAtualQuery();
 	const empresaId = useEmpresaIdParam();
-	const {data: perfil } = usePerfilAtualQuery();
-	const {data: relatorios} = useRelatoriosByPerfilQuery(perfil?.perfilId);
+	const { data: perfil } = usePerfilAtualQuery();
+	const { data: relatorios } = useRelatoriosByPerfilQuery(perfil?.perfilId);
+	const { data: relatoriosAdmin } = useRelatoriosByEmpresaIdQuery(empresa?.empresaId, usuarioLogado?.isAdmin ?? false);
 
 	const items = useMemo(() => {
 		const context = {
@@ -231,7 +343,7 @@ const DrawerMenu = () => {
 			empresaId: empresaId,
 			location: location,
 			papel: papel,
-			relatorios: relatorios,
+			relatorios: relatoriosAdmin?.filter(relatorio => relatorio.ativo) || relatorios,
 		};
 		const activeMenuItems = getActiveMenuItems(menuItems, context);
 		return renderMenuItems(activeMenuItems, context);

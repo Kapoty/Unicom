@@ -36,11 +36,10 @@ export const useEmpresaQuery = (empresaId?: number) => {
 	});
 };
 
-export const useEmpresasAdminQuery = (enabled = true) => {
+export const useEmpresasAdminQuery = () => {
 	return useQuery({
 		queryKey: ['empresas', 'admin'],
 		queryFn: async () => { await delay(0); return getEmpresasAdmin() },
-		enabled: enabled,
 	});
 };
 

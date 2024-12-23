@@ -1,9 +1,17 @@
 import { useQuery } from "@tanstack/react-query";
-import { getGruposAdmin } from "./GrupoService";
+import { getGrupoById, getGrupos } from "./GrupoService";
 
-export const useGruposAdminQuery = () => {
+export const useGruposQuery = () => {
 	return useQuery({
-		queryKey: ['grupos', 'admin'],
-		queryFn: async () => getGruposAdmin(),
+		queryKey: ['grupos'],
+		queryFn: async () => getGrupos(),
 	});
 };
+
+export const useGrupoQuery = (grupoId?: number) => {
+	return useQuery({
+		queryKey: ['grupos', grupoId],
+		queryFn: async () => getGrupoById(grupoId!!),
+		enabled: !!grupoId
+	})
+}

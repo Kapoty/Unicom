@@ -8,29 +8,26 @@ import CustomDataGrid from "../../shared/components/DataGrid/CustomDataGrid"
 import CustomFab from "../../shared/components/Fab/CustomFab"
 import browserHistory from "../../shared/utils/browserHistory"
 import { IDatagridVisao } from "../datagridVisao/DatagridVisao"
-import { IEmpresaAdmin } from "./Empresa"
-import EmpresaChip from "./EmpresaChip"
-import { useEmpresasAdminQuery } from "./EmpresaQueries"
+import { Chip } from "@mui/material"
+import { IDominio } from "./Dominio"
+import EmpresaChip from "../empresa/EmpresaChip"
+import { useDominiosQuery } from "./DominioQueries"
 
-const columns: GridColDef<IEmpresaAdmin>[] = [
-	{ field: 'empresaId', headerName: 'ID', type: 'number', width: 100 },
-	{ field: 'nome', headerName: 'Nome', width: 150, renderCell: (params) =>
-		<EmpresaChip
-			empresa={(params.row as any).empresa}
-			onClick={() => browserHistory.push(`/admin/empresas/` + params.row.empresaId)}
-		/> },
-	{ field: 'cnpj', headerName: 'CNPJ', width: 150 },
-	{ field: 'grupo.grupoId', headerName: 'ID', type: 'number', width: 100 },
-	{ field: 'grupo.nome', headerName: 'Nome', width: 150 },
-	{ field: 'contratoAtual.ativo', headerName: 'Ativo', type: 'boolean', width: 150},
-	{ field: 'contratoAtual.limiteUsuarios', headerName: 'Limite de Usuários', width: 150 },
-	{ field: 'contratoAtual.valor', headerName: 'Valor', width: 150 },
+const columns: GridColDef<IDominio>[] = [
+	{ field: 'dominioId', headerName: 'ID', type: 'number', width: 100 },
+	{ field: 'dominio', headerName: 'Domínio', width: 250 , renderCell: (params) =>
+		<Chip
+			label={params.value}
+			onClick={() => browserHistory.push(`/admin/dominios/` + params.row.dominioId)}
+	/> },
+	{ field: 'empresaId', headerName: 'Empresa', type: 'number', width: 150 , renderCell: (params) =>
+		<EmpresaChip empresaId={params.value}/> },
 	{
 		field: 'actions', headerName: "", type: 'actions', getActions: (params) => [
 			<GridActionsCellItem
 				icon={<Edit />}
 				label="Editar"
-				onClick={() => browserHistory.push(`/admin/empresas/` + params.row.empresaId)}
+				onClick={() => browserHistory.push(`/admin/dominios/` + params.row.dominioId)}
 				showInMenu
 			/>
 		],
@@ -39,21 +36,9 @@ const columns: GridColDef<IEmpresaAdmin>[] = [
 
 const columnGroupingModel: GridColumnGroupingModel = [
 	{
-		groupId: 'empresa',
-		headerName: "Empresa",
-		children: [{ field: 'empresaId' }, { field: 'nome' }, { field: 'cnpj' }],
-		freeReordering: true,
-	},
-	{
-		groupId: 'grupo',
-		headerName: "Grupo",
-		children: [{ field: 'grupo.grupoId' }, { field: 'grupo.nome' }],
-		freeReordering: true,
-	},
-	{
-		groupId: 'contratoAtual',
-		headerName: "Contrato Atual",
-		children: [{ field: 'contratoAtual.ativo' }, { field: 'contratoAtual.limiteUsuarios' }, { field: 'contratoAtual.valor' }],
+		groupId: 'dominio',
+		headerName: "Domínio",
+		children: [{ field: 'dominioId' }, { field: 'empresaId' }, { field: 'dominio' }],
 		freeReordering: true,
 	},
 	{
@@ -83,27 +68,27 @@ const visoesPadrao: IDatagridVisao[] = [
 	}
 ]
 
-const ListaEmpresasPage = () => {
+const ListaDominiosPage = () => {
 	
 	const [isUpdating, setIsUpdating] = useState(false);
 	
-	const { data, refetch } = useEmpresasAdminQuery();
-	const [empresas, setEmpresas] = useState< IEmpresaAdmin[] | undefined>(data);
+	const { data, refetch } = useDominiosQuery();
+	const [dominios, setDominios] = useState< IDominio[] | undefined>(data);
 
 	const { enqueueSnackbar } = useSnackbar();
 
 	const apiRef = useGridApiRef();
 
 	const rows = useMemo(() => {
-		return empresas?.map(empresa => {
+		return dominios?.map(dominio => {
 			return {
-				...Object.assign({}, flatten(empresa)),
-				id: empresa.empresaId,
-				empresa: empresa,
+				...Object.assign({}, flatten(dominio)),
+				id: dominio.dominioId,
+				_dominio: dominio,
 			}
 		}
 		) ?? []
-	}, [empresas]);
+	}, [dominios]);
 
 	const update = useCallback(async () => {
 		setIsUpdating(true);
@@ -111,7 +96,7 @@ const ListaEmpresasPage = () => {
 			const result = await refetch();
 			if (result.error)
 				throw result.error;
-			setEmpresas(result.data);
+			setDominios(result.data);
 		} catch (error) {
 			enqueueSnackbar('Falha ao atualizar!', {variant: 'error'});
 		} finally {
@@ -124,10 +109,10 @@ const ListaEmpresasPage = () => {
 	}, []);
 
 	return <DashboardContent
-		titulo="Empresas"
+		titulo="Domínios"
 		fabs={[
 			<CustomFab tooltip={{title: 'Atualizar'}} key={0} onClick={() => update()} disabled={isUpdating} loading={isUpdating}><Refresh /></CustomFab>,
-			<CustomFab tooltip={{title: 'Nova Empresa'}} key={1} onClick={() => browserHistory.push("/admin/empresas/add")} color="primary"><Add /></CustomFab>,
+			<CustomFab tooltip={{title: 'Novo Domínio'}} key={1} onClick={() => browserHistory.push("/admin/dominios/add")} color="primary"><Add /></CustomFab>,
 		]}
 	>
 		<CustomDataGrid
@@ -136,9 +121,9 @@ const ListaEmpresasPage = () => {
 			rows={rows}
 			columnGroupingModel={columnGroupingModel}
 			apiRef={apiRef}
-			stateKey={["empresas"]}
+			stateKey={["dominios"]}
 			visao={{
-				datagrid: "empresas",
+				datagrid: "dominios",
 				visoesPadrao: visoesPadrao,
 			}}
 
@@ -147,4 +132,4 @@ const ListaEmpresasPage = () => {
 	</DashboardContent>
 }
 
-export default ListaEmpresasPage;
+export default ListaDominiosPage;

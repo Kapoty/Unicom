@@ -1,11 +1,11 @@
 import { useMutation } from "@tanstack/react-query";
 import queryClient from "../../shared/utils/queryClient";
-import { MarcarDatagridVisaoAtualRequest } from "./DatagridVisaoAtualPayloads";
+import { DatagridVisaoAtualMarcarRequest } from "./DatagridVisaoAtualPayloads";
 import { marcarDatagridVisaoAtualByDatagrid } from "./DatagridVisaoAtualService";
 
-export const useMarcarDatagridVisaoAtualMutation = () => {
+export const useDatagridVisaoAtualMarcarMutation = () => {
 	return useMutation({
-		mutationFn: async (variables: { datagrid: string, payload: MarcarDatagridVisaoAtualRequest }) =>
+		mutationFn: async (variables: { datagrid: string, payload: DatagridVisaoAtualMarcarRequest }) =>
 			marcarDatagridVisaoAtualByDatagrid(variables.datagrid, variables.payload),
 		onSuccess: (data, variables, context) => {
 			queryClient.invalidateQueries({
