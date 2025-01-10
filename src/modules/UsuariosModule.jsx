@@ -70,6 +70,7 @@ class UsuariosModule extends React.Component {
 			{ field: 'dataNascimento', headerName: 'Data de Nascimento', minWidth: 200, flex: 1, type: 'date', renderCell: (params) => params.value !== null ? dayjs(params.value).format('L') : "" },
 			{ field: 'dataContratacao', headerName: 'Data Contratação', minWidth: 200, flex: 1, type: 'date', renderCell: (params) => params.value !== null ? dayjs(params.value).format('L') : "" },
 			{ field: 'jornadaStatusGrupo', headerName: 'Grupo de Status', valueGetter: (value, row) => value?.nome, minWidth: 200, flex: 1 },
+			{ field: 'fotoPerfil', headerName: 'Foto', type: 'boolean', minWidth: 100, flex: 1 },
 			{ field: 'ativo', headerName: 'Status', valueGetter: (value, row) => value ? "Ativo" : "Inativo", width: 100, renderCell: (params) =>
 				<Chip label={params.value} color={params.row.ativo ? "success" : "error"} /> },
 			{ field: "actions", headerName: "Ações", width: 250, type: "actions", renderCell: (params) => <Stack direction="row" spacing={1}>
@@ -130,6 +131,7 @@ class UsuariosModule extends React.Component {
 					dataNascimento: usuario.dataNascimento !== null ? new Date(usuario.dataNascimento) : null,
 					dataContratacao: usuario.dataContratacao !== null ? new Date(usuario.dataContratacao) : null,
 					jornadaStatusGrupo: usuario.jornadaStatusGrupo,
+					fotoPerfil: usuario.fotoPerfil,
 					ativo: usuario.ativo
 				}})
 				this.setState({usuarioList: response.data, usuarioRows: usuarioRows, calling: false});
