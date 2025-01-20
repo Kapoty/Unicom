@@ -49,6 +49,13 @@ export const ContratoSchema = z.object({
 
 export type IContrato = z.infer<typeof ContratoSchema>;
 
+export const GoogleDriveSchema = z.object({
+	empresaId: z.number(),
+	folderId: z.nullable(z.string()),
+});
+
+export type IGoogleDrive = z.infer<typeof GoogleDriveSchema>;
+
 export const EmpresaPublicSchema = z.object({
 	empresaId: z.number(),
 	grupoId: z.number(),
@@ -72,6 +79,7 @@ export const EmpresaAdminSchema = EmpresaSchema.extend({
 	contratoAtual: ContratoSchema,
 	contratos: z.array(ContratoSchema),
 	dominios: z.array(DominioSchema),
+	googleDrive: GoogleDriveSchema,
 });
 
 export type IEmpresaAdmin = z.infer<typeof EmpresaAdminSchema>;

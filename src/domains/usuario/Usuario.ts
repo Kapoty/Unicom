@@ -1,5 +1,7 @@
 import { z } from "zod";
-import { parseDate } from "../../shared/utils/dateUtils";
+import { apiDateTimeToDateSchema, parseDate } from "../../shared/utils/dateUtils";
+import { EmpresaPublicSchema } from "../empresa/Empresa";
+import { PerfilSchema } from "../perfil/Perfil";
 
 export const PapelSistemaSchema = z.enum(["ADMIN", "USUARIO"]);
 
@@ -15,10 +17,11 @@ export const UsuarioMeAPISchema = z.object({
     nomeCompleto: z.string(),
     email: z.string(),
     matricula: z.nullable(z.number()),
-    ativo: z.boolean(),
     papelSistema: PapelSistemaSchema,
     empresaPrincipalId: z.number(),
     aceiteTermos: z.nullable(AceiteTermosSchema),
+	createdAt: apiDateTimeToDateSchema,
+	updatedAt: apiDateTimeToDateSchema,
 });
 
 export type IUsuarioMeAPI = z.infer<typeof UsuarioMeAPISchema>;
@@ -29,3 +32,43 @@ export const UsuarioMeSchema = UsuarioMeAPISchema.transform((data) => ({
 }));
 
 export type IUsuarioMe = z.infer<typeof UsuarioMeSchema>;
+
+export const UsuarioAdminAPISchema = z.object({
+    usuarioId: z.number(),
+    nomeCompleto: z.string(),
+    email: z.string(),
+    matricula: z.nullable(z.number()),
+    papelSistema: PapelSistemaSchema,
+    empresaPrincipalId: z.number(),
+    aceiteTermos: z.nullable(AceiteTermosSchema),
+	createdAt: apiDateTimeToDateSchema,
+	updatedAt: apiDateTimeToDateSchema,
+});
+
+export type IUsuarioAdminAPI = z.infer<typeof UsuarioAdminAPISchema>;
+
+export const UsuarioAdminSchema = UsuarioAdminAPISchema.transform((data) => ({
+	...data,
+	isAdmin: data.papelSistema == 'ADMIN'
+}));
+
+export type IUsuarioAdmin = z.infer<typeof UsuarioAdminSchema>;
+
+export const UsuarioPublicAPISchema = z.object({
+    usuarioId: z.number(),
+    nomeCompleto: z.string(),
+    email: z.string(),
+    matricula: z.nullable(z.number()),
+    papelSistema: PapelSistemaSchema,
+	empresaPrincipal: EmpresaPublicSchema,
+	perfilPrincipal: PerfilSchema,
+});
+
+export type IUsuarioPublicAPI = z.infer<typeof UsuarioPublicAPISchema>;
+
+export const UsuarioPublicSchema = UsuarioPublicAPISchema.transform((data) => ({
+	...data,
+	isAdmin: data.papelSistema == 'ADMIN'
+}));
+
+export type IUsuarioPublic = z.infer<typeof UsuarioPublicSchema>;

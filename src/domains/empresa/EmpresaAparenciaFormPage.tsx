@@ -58,12 +58,13 @@ const EmpresaForm = () => {
 
 	const {
 		handleSubmit,
-		formState: { errors, isDirty, disabled, isSubmitting },
+		formState: { errors, isDirty, disabled, isSubmitting, dirtyFields, defaultValues },
 		setError,
 		setValue,
 		reset,
 		control,
-		watch
+		watch,
+		getValues
 	} = useForm<EmpresaAparenciaFormData>({
 		defaultValues: {
 			icone: null,
@@ -157,7 +158,7 @@ const EmpresaForm = () => {
 		let keys = Object.keys(errors);
 		switch (tab) {
 			case 0:
-				return ["cor"].some(r => keys.includes(r));
+				return ["cor", "icone"].some(r => keys.includes(r));
 				break;
 		}
 		return false;
@@ -174,7 +175,7 @@ const EmpresaForm = () => {
 			toBase64(file).then((base64) => {
 				if (!base64?.startsWith('data:image/png;base64'))
 					throw new Error();
-				setValue('novoIcone', base64?.toString());
+				setValue('novoIcone', base64?.toString(), {shouldDirty: true});
 			}).catch((error) => {
 				console.error(error);
 				enqueueSnackbar({message: 'Arquivo inválido!', variant: 'error'});
@@ -182,12 +183,8 @@ const EmpresaForm = () => {
 		}
 	}
 
-	const handleIconeDiscard: React.MouseEventHandler<HTMLButtonElement> = (e) => {
-		setValue('novoIcone', undefined);
-	}
-
 	const handleIconeDelete: React.MouseEventHandler<HTMLButtonElement> = (e) => {
-		setValue('novoIcone', null);
+		setValue('novoIcone', null, {shouldDirty: true});
 	}
 
 	return <DashboardContent
@@ -209,7 +206,7 @@ const EmpresaForm = () => {
 					{[<Grid key={0} container spacing={1}>
 						<Grid container size={12}>
 							<Grid size={12} container justifyContent='center'>
-								Ícone
+								<Chip label="Ícone"/>
 							</Grid>
 							<Grid size={12} container justifyContent='center'>
 								{novoIcone === undefined ? <Avatar variant='square' src={icone !== null ? getArquivoUrl(empresaId!, icone!) : undefined}><SvgIcon component={NoImageIcon} inheritViewBox /></Avatar>

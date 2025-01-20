@@ -15,12 +15,14 @@ const useAuthStore = create<AuthState>()((set) => ({
 	setIsAuth: (isAuth) => set({isAuth}),
 	login: (redirect = '/') => {
 		set({isAuth: true});
-		queryClient.removeQueries({ queryKey: ['usuario', 'me'] });
+		queryClient.removeQueries();
 		browserHistory.push(redirect);
 	},
 	logout: (redirect = false) => {
 		if (!browserHistory.location.pathname.startsWith("/login")) {
 			deleteTokens();
+
+			queryClient.removeQueries();
 
 			if (redirect && browserHistory.location.pathname !== "/")
 				browserHistory.push(`/login?redirect=${browserHistory.location.pathname}`);

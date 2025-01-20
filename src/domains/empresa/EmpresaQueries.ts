@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { getEmpresaAdminById, getEmpresaByDominio, getEmpresaById, getEmpresaPublicById, getEmpresasAdmin, getEmpresasByUsuario } from './EmpresaService';
+import { getEmpresaAdminById, getEmpresaByDominio, getEmpresaById, getEmpresaPublicById, getEmpresasAdmin, getEmpresasByUsuario, getLimitesByEmpresaId } from './EmpresaService';
 import { delay } from '../../shared/utils/timingUtils';
 import queryClient from '../../shared/utils/queryClient';
 import { IEmpresa } from './Empresa';
@@ -40,6 +40,8 @@ export const useEmpresasAdminQuery = () => {
 	return useQuery({
 		queryKey: ['empresas', 'admin'],
 		queryFn: async () => { await delay(0); return getEmpresasAdmin() },
+		refetchOnMount: false,
+		refetchOnWindowFocus: false,
 	});
 };
 
@@ -52,5 +54,13 @@ export const useEmpresasByUsuarioQuery = (usuarioId?: number) => {
 			return empresas;
 		},
 		enabled: !!usuarioId
+	});
+};
+
+export const useEmpresaLimitesQuery = (empresaId?: number) => {
+	return useQuery({
+		queryKey: ['empresas', empresaId, 'limites'],
+		queryFn: async () => getLimitesByEmpresaId(empresaId!),
+		enabled: !!empresaId
 	});
 };

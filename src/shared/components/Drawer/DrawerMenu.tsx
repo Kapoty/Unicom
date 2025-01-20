@@ -1,4 +1,4 @@
-import { Abc, Add, AddCard, Apartment, CorporateFare, CreditCard, DisplaySettings, GroupAdd, Groups, Home, Leaderboard, Palette, Settings, Workspaces } from "@mui/icons-material";
+import { Abc, Add, AddCard, Apartment, CorporateFare, CreditCard, DisplaySettings, GroupAdd, Groups, Home, Leaderboard, Palette, Settings, Workspaces, Badge as BadgeIcon, ManageAccounts } from "@mui/icons-material";
 import { Badge, Collapse, Icon, List } from "@mui/material";
 import { useMemo } from "react";
 import { Location, useLocation } from "react-router-dom";
@@ -229,6 +229,35 @@ export const menuItems: IDrawerMenuItem[] = [
 		]
 	},
 	{
+		titulo: "Perfis",
+		icone: <BadgeIcon />,
+		match: /^\/e\/\d+\/perfis/,
+		condicoes: {
+			empresa: true,
+			permissao: "CADASTRAR_USUARIOS"
+		},
+		submenu: [
+			{
+				titulo: "Perfis",
+				icone: <BadgeIcon />,
+				match: /^\/e\/\d+\/perfis$/,
+				to: (context) => `/e/${context?.empresa?.empresaId}/perfis`,
+				condicoes: {
+					empresa: true,
+				}
+			},
+			{
+				titulo: "Novo Perfil",
+				icone: <Add />,
+				match: /^\/e\/\d+\/perfis\/\w+/,
+				to: (context) => `/e/${context?.empresa?.empresaId}/perfis/add`,
+				condicoes: {
+					empresa: true,
+				}
+			}
+		]
+	},
+	{
 		titulo: "Cadastrar Relatórios",
 		icone: <DisplaySettings />,
 		match: /^\/e\/\d+\/cadastrar-relatorios/,
@@ -276,6 +305,15 @@ export const menuItems: IDrawerMenuItem[] = [
 				}
 			},
 		]
+	},
+	{
+		titulo: "Meu Usuário",
+		icone: <ManageAccounts />,
+		match: /^\/e\/\d+\/usuarios\/me/,
+		to: (context) => `/e/${context?.usuarioLogado?.empresaPrincipalId}/usuarios/me`,
+		condicoes: {
+			empresa: true,
+		}
 	},
 ];
 

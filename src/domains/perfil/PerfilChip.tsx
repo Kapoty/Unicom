@@ -1,16 +1,16 @@
 import { Error as ErrorIcon, MoreHoriz } from "@mui/icons-material";
 import { Avatar, Box, Chip, ChipProps, ChipPropsColorOverrides, CircularProgress, IconButton, Skeleton, Tooltip } from "@mui/material";
 import { usePerfilQuery } from "./PerfilQueries";
-import { getFotoUrl } from "./PerfilService";
 import { IPerfil } from "./Perfil";
 import { forwardRef, ReactNode } from "react";
+import { getArquivoUrl } from "./PerfilService";
 
 export interface PerfilChipProps extends ChipProps {
 	perfilId?: number,
 	perfil?: IPerfil,
 	isLoading?: boolean,
 	error?: boolean,
-	avatarOnly: boolean
+	avatarOnly?: boolean
 }
 
 const PerfilChip = forwardRef<HTMLDivElement, PerfilChipProps>(
@@ -25,10 +25,10 @@ const PerfilChip = forwardRef<HTMLDivElement, PerfilChipProps>(
 	let title, label, color: 'primary' | 'error' | 'default', avatarSrc, avatarIcon;
 
 	if (perfilData) {
-		title = perfilData.nome;
+		title = `${perfilData.nome}`;
 		label = title;
 		color = 'primary';
-		avatarSrc = perfilData?.foto ? getFotoUrl(perfilData.perfilId) : '';
+		avatarSrc = perfilData?.foto ? getArquivoUrl(perfilData.perfilId, perfilData.foto) : '';
 		avatarIcon = perfilData.nome.charAt(0);
 	} else if (perfilError) {
 		title = 'Perfil não identificado!';
@@ -45,7 +45,7 @@ const PerfilChip = forwardRef<HTMLDivElement, PerfilChipProps>(
 	}
 
 	return <Tooltip arrow title={title}>
-		<Box>
+		<Box width='fit-content'>
 			<Chip
 				color={color}
 				avatar={<Avatar src={avatarSrc}>{avatarIcon}</Avatar>}

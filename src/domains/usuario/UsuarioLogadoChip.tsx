@@ -6,8 +6,9 @@ import useAuthStore from "../auth/useAuthStore";
 import { usePapelAtualQuery } from "../papel/PapelQueries";
 import PerfilChip from "../perfil/PerfilChip";
 import { usePerfilAtualQuery } from "../perfil/PerfilQueries";
-import { getFotoUrl } from "../perfil/PerfilService";
 import { useUsuarioLogadoQuery } from "./UsuarioQueries";
+import { getArquivoUrl } from "../perfil/PerfilService";
+import browserHistory from "../../shared/utils/browserHistory";
 
 const UsuarioLogadoChip = () => {
 
@@ -22,6 +23,11 @@ const UsuarioLogadoChip = () => {
 
 	const { data: perfil, isLoading: isPerfilLoading, error: perfilError } = usePerfilAtualQuery();
 	const { data: papel, isLoading: isPapelLoading, error: papelError} = usePapelAtualQuery();
+
+	const handleMeuUsuario = () => {
+		browserHistory.push(`/e/${usuarioLogado?.empresaPrincipalId}/usuarios/me`);
+		setMenuOpen(false);
+	}
 
 	return <>
 		<PerfilChip
@@ -48,7 +54,7 @@ const UsuarioLogadoChip = () => {
 			{perfil ? <ListItem>
 				<ListItemIcon>
 					<Avatar
-						src={perfil?.foto ? getFotoUrl(perfil?.perfilId) : ''}
+						src={perfil?.foto ? getArquivoUrl(perfil.perfilId, perfil.foto) : ''}
 					>
 						{perfil?.nome.charAt(0)}
 					</Avatar>
@@ -59,11 +65,11 @@ const UsuarioLogadoChip = () => {
 				</Stack>
 			</ListItem> : <CircularProgress/>}
 			<Divider sx={{mb: 1}} />
-			<MenuItem>
+			<MenuItem onClick={() => handleMeuUsuario()}>
 				<ListItemIcon>
 					<ManageAccounts/>
 				</ListItemIcon>
-				Minha Conta
+				Meu Usuário
 			</MenuItem>
 			<Divider />
 			<MenuItem onClick={() => logout()}>

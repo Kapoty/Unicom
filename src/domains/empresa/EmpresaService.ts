@@ -1,6 +1,6 @@
 import { EmpresaSchema, EmpresaPublicSchema, IEmpresa, IEmpresaPublic, EmpresaAdminSchema, IEmpresaAdmin } from './Empresa';
 import api from '../../shared/utils/api';
-import { EmpresaAdminPatchRequest, EmpresaAdminPostRequest, EmpresaAparenciaPatchRequest } from './EmpresaPayloads';
+import { EmpresaAdminPatchRequest, EmpresaAdminPostRequest, EmpresaAparenciaPatchRequest, EmpresaLimitesResponse, EmpresaLimitesResponseSchema } from './EmpresaPayloads';
 
 export const getEmpresaByDominio = async (dominio: string) =>
 	EmpresaPublicSchema.parse((await api.get<IEmpresaPublic>(`/empresas/dominios/dominio?dominio=${dominio}`)).data);
@@ -30,3 +30,6 @@ export const patchEmpresaAdmin = async (empresaId: number, payload: EmpresaAdmin
 
 export const patchEmpresaAparencia = async (empresaId: number, payload: EmpresaAparenciaPatchRequest) =>
 	EmpresaSchema.parse((await api.patch<IEmpresa>(`/empresas/${empresaId}/aparencia`, payload)).data);
+
+export const getLimitesByEmpresaId = async (empresaId: number): Promise<EmpresaLimitesResponse> =>
+	EmpresaLimitesResponseSchema.parse((await api.get<EmpresaLimitesResponse>(`/empresas/${empresaId}/limites`)).data);

@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowBack, Description, Gavel } from "@mui/icons-material";
+import { ArrowBack, Cloud, Description, Gavel } from "@mui/icons-material";
 import { Alert, Button, Chip, Divider, FormControl, FormControlLabel, FormHelperText, Grid2 as Grid, InputLabel, MenuItem, Select, Switch, TextField } from "@mui/material";
 import { DateTimePicker } from "@mui/x-date-pickers-pro";
 import { useSnackbar } from "notistack";
@@ -26,13 +26,17 @@ import { useEmpresaAdminPatchMutation, useEmpresaAdminPostMutation } from "./Emp
 import { EmpresaAdminPatchRequestSchema, EmpresaAdminPostRequestSchema } from "./EmpresaPayloads";
 import { useEmpresaAdminQuery } from "./EmpresaQueries";
 
+const GoogleDriveFormSchema = z.object({
+	folderId: z.string(),
+});
+
 const ContratoFormSchema = z.object({
 	ativo: z.boolean(),
 	limiteUsuarios: z.coerce.number(),
 	inicio: z.nullable(dateValidationSchema),
 	fim: z.nullable(dateValidationSchema),
 	valor: z.nullable(z.coerce.number()),
-})
+});
 
 const EmpresaFormSchema = z.object({
 	nome: z.string().min(1, 'obrigatório').max(100),
@@ -40,6 +44,7 @@ const EmpresaFormSchema = z.object({
 	grupoId: z.coerce.number().min(1, 'obrigatório'),
 	contratoAtualId: z.coerce.number().min(1, 'obrigatório'),
 	contratos: z.array(ContratoFormSchema).min(1, 'obrigatório um contrato'),
+	googleDrive: GoogleDriveFormSchema,
 	createdAt: z.nullable(dateValidationSchema),
 	updatedAt: z.nullable(dateValidationSchema),
 });
@@ -81,6 +86,9 @@ const EmpresaFormPage = () => {
 			grupoId: -1,
 			contratoAtualId: -1,
 			contratos: [],
+			googleDrive: {
+				folderId: '',
+			},
 			createdAt: null,
 			updatedAt: null,
 		},
@@ -101,6 +109,7 @@ const EmpresaFormPage = () => {
 				await post(data);
 			enqueueSnackbar('Salvo com sucesso!', { variant: 'success' });
 		} catch (error: any) {
+			console.error(error);
 			const errors = error?.response?.data?.errors;
 			handleServerErrors(errors);
 		}
@@ -117,6 +126,9 @@ const EmpresaFormPage = () => {
 			payload: EmpresaAdminPatchRequestSchema.parse({
 				...data,
 				cnpj: unformatCnpj(data.cnpj),
+				googleDrive: {
+					folderId: data.googleDrive.folderId !== '' ? data.googleDrive.folderId : null, 
+				}
 			}),
 		});
 		reset();
@@ -161,6 +173,10 @@ const EmpresaFormPage = () => {
 			reset(EmpresaFormSchema.parse({
 				...empresa,
 				cnpj: formatCnpj(empresa.cnpj),
+				googleDrive: {
+					...empresa.googleDrive,
+					folderId: empresa.googleDrive?.folderId ?? '',
+				}
 			}), {
 				keepDirty: true,
 				keepDirtyValues: true,
@@ -183,6 +199,9 @@ const EmpresaFormPage = () => {
 			case 1:
 				return ["contratoAtualId"].some(r => keys.includes(r)) ||
 					keys.some(k => k.startsWith("contratos"));
+				break;
+			case 2:
+				return ["googleDrive.folderId"].some(r => keys.includes(r));
 				break;
 		}
 		return false;
@@ -216,7 +235,8 @@ const EmpresaFormPage = () => {
 				<DashboardContentTabs
 					tabs={[
 						<DashboardContentTab error={hasTabError(0)} icon={<Description />} label="Informações Básicas" key={0} />,
-						<DashboardContentTab error={hasTabError(1)} icon={<Gavel />} label="Contratos" key={1} />
+						<DashboardContentTab error={hasTabError(1)} icon={<Gavel />} label="Contratos" key={1} />,
+						<DashboardContentTab error={hasTabError(2)} icon={<Cloud />} label="Google Drive" key={2} />
 					]}
 					currentTab={currentTab}
 					setCurrentTab={setCurrentTab}
@@ -444,6 +464,24 @@ const EmpresaFormPage = () => {
 							</Grid>
 						</React.Fragment>
 						)}
+					</Grid>
+					<Grid container spacing={1}>
+						<Grid size={{ xs: 12, md: 12 }}>
+							<Controller
+								name={`googleDrive.folderId`}
+								control={control}
+								render={({ field, fieldState }) => (
+									<TextField
+										{...field}
+										fullWidth
+										variant='filled'
+										label="Folder ID"
+										error={!!(fieldState?.error)}
+										helperText={fieldState?.error?.message}
+									/>
+								)}
+							/>
+						</Grid>
 					</Grid>
 				</DashboardContentTabs>}
 		{errors?.root && <Alert severity='error'>{errors.root?.message}</Alert>}

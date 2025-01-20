@@ -35,6 +35,14 @@ const ListaVendasPage = lazy(() => import('../../../domains/venda/ListaVendasPag
 const ListaRelatoriosPage = lazy(() => import("../../../domains/relatorio/ListaRelatoriosPage"));
 const RelatorioFormPage = lazy(() => import("../../../domains/relatorio/RelatorioFormPage"));
 
+const ListaUsuariosPage = lazy(() => import("../../../domains/usuario/ListaUsuariosPage"));
+const UsuarioFormPage = lazy(() => import("../../../domains/usuario/UsuarioFormPage"));
+
+const ListaPerfisPage = lazy(() => import("../../../domains/perfil/ListaPerfisPage"));
+const PerfilFormPage = lazy(() => import("../../../domains/perfil/PerfilFormPage"));
+
+const UsuarioMeFormPage = lazy(() => import("../../../domains/usuario/UsuarioMeFormPage"));
+
 const EmpresaAparenciaFormPage = lazy(() => import("../../../domains/empresa/EmpresaAparenciaFormPage"));
 
 export interface Context {
@@ -115,7 +123,14 @@ const indexRouteWithoutIds: IRoute = {
 										empresa: true,
 										permissao: 'CADASTRAR_USUARIOS'
 									},
-									element: <DashboardContent titulo='Usuários' />,
+									element: <ListaUsuariosPage/>,
+								},
+								{
+									path: 'usuarios/me',
+									condicoes: {
+										empresa: true,
+									},
+									element: <UsuarioMeFormPage/>,
 								},
 								{
 									path: 'usuarios/:usuarioId',
@@ -123,8 +138,25 @@ const indexRouteWithoutIds: IRoute = {
 										empresa: true,
 										permissao: 'CADASTRAR_USUARIOS'
 									},
-									element: <DashboardContent titulo='Novo Usuário' />,
+									element: <UsuarioFormPage/>,
 									keys: ['usuarioId'],
+								},
+								{
+									path: 'perfis',
+									condicoes: {
+										empresa: true,
+										permissao: 'CADASTRAR_USUARIOS'
+									},
+									element: <ListaPerfisPage/>,
+								},
+								{
+									path: 'perfis/:perfilId',
+									condicoes: {
+										empresa: true,
+										permissao: 'CADASTRAR_USUARIOS'
+									},
+									element: <PerfilFormPage/>,
+									keys: ['perfilId'],
 								},
 								{
 									path: 'relatorios/:uri',

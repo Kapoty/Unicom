@@ -8,7 +8,11 @@ export const ContratoRequestSchema = z.object({
 	inicio: z.nullable(dateToApiDateTimeSchema),
 	fim: z.nullable(dateToApiDateTimeSchema),
 	valor: z.nullable(z.number()),
-})
+});
+
+export const GoogleDriveRequestSchema = z.object({
+	folderId: z.nullable(z.string())
+});
 
 export const EmpresaAdminPostRequestSchema = z.object({
 	grupoId: z.number(),
@@ -16,6 +20,7 @@ export const EmpresaAdminPostRequestSchema = z.object({
 	cnpj: z.string(),
 	contratoAtualId: z.number(),
 	contratos: z.array(ContratoRequestSchema),
+	googleDrive: GoogleDriveRequestSchema,
 });
 
 export type EmpresaAdminPostRequest = z.infer<typeof EmpresaAdminPostRequestSchema>;
@@ -26,6 +31,7 @@ export const EmpresaAdminPatchRequestSchema = z.object({
 	cnpj: z.string(),
 	contratoAtualId: z.number(),
 	contratos: z.array(ContratoRequestSchema),
+	googleDrive: GoogleDriveRequestSchema,
 	updatedAt: dateToApiDateTimeSchema,
 });
 
@@ -38,3 +44,10 @@ export const EmpresaAparenciaPatchRequestSchema = z.object({
 });
 
 export type EmpresaAparenciaPatchRequest = z.infer<typeof EmpresaAparenciaPatchRequestSchema>;
+
+export const EmpresaLimitesResponseSchema = z.object({
+	limiteUsuarios: z.number(),
+	usuariosAtivos: z.number(),
+});
+
+export type EmpresaLimitesResponse = z.infer<typeof EmpresaLimitesResponseSchema>;
