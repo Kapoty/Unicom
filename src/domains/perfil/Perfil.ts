@@ -9,6 +9,7 @@ export const PerfilSchema = z.object({
 	ativo: z.boolean(),
 	nome: z.string(),
 	foto: z.nullable(z.string()),
+	equipeId: z.nullable(z.number()),
 });
 
 export type IPerfil = z.infer<typeof PerfilSchema>;

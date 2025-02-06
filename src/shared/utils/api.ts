@@ -42,7 +42,7 @@ const refreshAccessToken = async (): Promise<string> => {
 }
 
 const api = axios.create({
-	baseURL: process.env.NODE_ENV === "development" ? "https://dev.unisystem.app.br:8000/api" /*"https://192.168.100.4:8000/api"*/ : "https://dev.unisystem.app.br:8000/api",
+	baseURL: process.env.NODE_ENV === "development" ? "https://192.168.100.4:8000/api" /*"https://dev.unisystem.app.br:8000/api"*/ : "https://dev.unisystem.app.br:8000/api",
 	headers: {
 		"Content-Type": "application/json",
 	},

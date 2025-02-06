@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useUsuarioLogadoQuery } from '../usuario/UsuarioQueries';
 import useEmpresaIdParam from '../../shared/hooks/useEmpresaIdParam';
-import { getPerfilAdminByEmpresaIdAndPerfilId, getPerfilById, getPerfilByUsuarioIdAndEmpresaId, getPerfisAdminByEmpresaId, getPerfisByUsuarioIdAndEmpresaId } from './PerfilService';
+import { getPerfilAdminByEmpresaIdAndPerfilId, getPerfilById, getPerfilByUsuarioIdAndEmpresaId, getPerfisAdminByEmpresaId, getPerfisByEmpresaId, getPerfisByUsuarioIdAndEmpresaId } from './PerfilService';
 
 export const usePerfilQuery = (perfilId?: number) => {
 
@@ -33,6 +33,17 @@ export const usePerfisByUsuarioIdAndEmpresaIdQuery = (usuarioId?: number, empres
 		queryKey: ['perfis', 'usuarios', usuarioId],
 		queryFn: async () => getPerfisByUsuarioIdAndEmpresaId(usuarioId!, empresaId!),
 		enabled: !!empresaId && !!usuarioId
+	});
+};
+
+export const usePerfisByEmpresaIdQuery = (empresaId?: number) => {
+
+	return useQuery({
+		queryKey: ['perfis', 'empresas', empresaId],
+		queryFn: async () => getPerfisByEmpresaId(empresaId!),
+		enabled: !!empresaId,
+		refetchOnMount: false,
+		refetchOnWindowFocus: false,
 	});
 };
 

@@ -1,4 +1,4 @@
-import { Abc, Add, AddCard, Apartment, CorporateFare, CreditCard, DisplaySettings, GroupAdd, Groups, Home, Leaderboard, Palette, Settings, Workspaces, Badge as BadgeIcon, ManageAccounts } from "@mui/icons-material";
+import { Abc, Add, AddCard, Apartment, CorporateFare, CreditCard, DisplaySettings, GroupAdd, Groups, Home, Leaderboard, Palette, Settings, Workspaces, Badge as BadgeIcon, ManageAccounts, People, PersonAddAlt1 } from "@mui/icons-material";
 import { Badge, Collapse, Icon, List } from "@mui/material";
 import { useMemo } from "react";
 import { Location, useLocation } from "react-router-dom";
@@ -14,6 +14,8 @@ import useAppStore from "../../state/useAppStore";
 import { IRelatorio } from "../../../domains/relatorio/Relatorio";
 import { useRelatoriosByEmpresaIdQuery, useRelatoriosByPerfilQuery } from "../../../domains/relatorio/RelatorioQueries";
 import { usePerfilAtualQuery } from "../../../domains/perfil/PerfilQueries";
+import { IEquipe } from "../../../domains/equipe/Equipe";
+import { useEquipesByEmpresaIdQuery, useEquipesByPerfilQuery } from "../../../domains/equipe/EquipeQueries";
 
 export interface DrawerMenuItemContext {
 	usuarioLogado?: IUsuarioMe,
@@ -22,6 +24,7 @@ export interface DrawerMenuItemContext {
 	papel?: Papel,
 	location: Location,
 	relatorios?: IRelatorio[],
+	equipes?: IEquipe[],
 }
 
 export interface IDrawerMenuItem {
@@ -35,6 +38,7 @@ export interface IDrawerMenuItem {
 		empresa?: boolean;
 		empresaId?: boolean;
 		permissao?: Permissao;
+		custom?: ((context: DrawerMenuItemContext) => boolean);
 	},
 	submenu?: IDrawerMenuItem[] | ((context: DrawerMenuItemContext) => IDrawerMenuItem[]);
 }
@@ -200,9 +204,26 @@ export const menuItems: IDrawerMenuItem[] = [
 		})).toSorted((a, b) => a.titulo.localeCompare(b.titulo)) ?? []
 	},
 	{
-		titulo: "Usuários",
+		titulo: "Equipes",
 		icone: <Groups />,
-		match: /^\/e\/\d+\/usuarios/,
+		match: /^\/e\/\d+\/equipes/,
+		condicoes: {
+			empresa: true,
+		},
+		submenu: (context) => context.equipes?.map(equipe => ({
+			titulo: equipe.nome,
+			icone: <Icon>{equipe?.icone ?? 'groups'}</Icon>,
+			match: new RegExp(`^\/e\/\\d+\/equipes\/${equipe.equipeId}$`),
+			to: `/e/${context?.empresa?.empresaId}/equipes/${equipe.equipeId}`,
+			condicoes: {
+				empresa: true,
+			}
+		})).toSorted((a, b) => a.titulo.localeCompare(b.titulo)) ?? []
+	},
+	{
+		titulo: "Usuários e Perfis",
+		icone: <People />,
+		match: /(^\/e\/\d+\/usuarios(?!\/me))|^\/e\/\d+\/perfis/,
 		condicoes: {
 			empresa: true,
 			permissao: "CADASTRAR_USUARIOS"
@@ -210,7 +231,7 @@ export const menuItems: IDrawerMenuItem[] = [
 		submenu: [
 			{
 				titulo: "Usuários",
-				icone: <Groups />,
+				icone: <People />,
 				match: /^\/e\/\d+\/usuarios$/,
 				to: (context) => `/e/${context?.empresa?.empresaId}/usuarios`,
 				condicoes: {
@@ -219,24 +240,13 @@ export const menuItems: IDrawerMenuItem[] = [
 			},
 			{
 				titulo: "Novo Usuário",
-				icone: <GroupAdd />,
-				match: /^\/e\/\d+\/usuarios\/\w+/,
+				icone: <PersonAddAlt1 />,
+				match: /^\/e\/\d+\/usuarios\/(?!me)\w+/,
 				to: (context) => `/e/${context?.empresa?.empresaId}/usuarios/add`,
 				condicoes: {
 					empresa: true,
 				}
-			}
-		]
-	},
-	{
-		titulo: "Perfis",
-		icone: <BadgeIcon />,
-		match: /^\/e\/\d+\/perfis/,
-		condicoes: {
-			empresa: true,
-			permissao: "CADASTRAR_USUARIOS"
-		},
-		submenu: [
+			},
 			{
 				titulo: "Perfis",
 				icone: <BadgeIcon />,
@@ -258,50 +268,62 @@ export const menuItems: IDrawerMenuItem[] = [
 		]
 	},
 	{
-		titulo: "Cadastrar Relatórios",
-		icone: <DisplaySettings />,
-		match: /^\/e\/\d+\/cadastrar-relatorios/,
+		titulo: "Cadastros e Configurações",
+		icone: <Settings />,
+		match: /(^\/e\/\d+\/cadastros)|(^\/e\/\d+\/empresa)/,
 		condicoes: {
 			empresa: true,
-			permissao: "CONFIGURAR_EMPRESA"
+			custom: (context) => (context?.papel?.contemPermissao('CADASTRAR_EQUIPES') || context?.papel?.contemPermissao('CONFIGURAR_EMPRESA')) ?? false,
 		},
 		submenu: [
 			{
 				titulo: "Relatórios",
 				icone: <DisplaySettings />,
-				match: /^\/e\/\d+\/cadastrar-relatorios$/,
-				to: (context) => `/e/${context?.empresa?.empresaId}/cadastrar-relatorios`,
+				match: /^\/e\/\d+\/cadastros\/relatorios$/,
+				to: (context) => `/e/${context?.empresa?.empresaId}/cadastros/relatorios`,
 				condicoes: {
 					empresa: true,
+					permissao: "CONFIGURAR_EMPRESA"
 				}
 			},
 			{
 				titulo: "Novo Relatório",
 				icone: <Add />,
-				match: /^\/e\/\d+\/cadastrar-relatorios\/\w+/,
-				to: (context) => `/e/${context?.empresa?.empresaId}/cadastrar-relatorios/add`,
+				match: /^\/e\/\d+\/cadastros\/relatorios\/\w+/,
+				to: (context) => `/e/${context?.empresa?.empresaId}/cadastros/relatorios/add`,
 				condicoes: {
 					empresa: true,
+					permissao: "CONFIGURAR_EMPRESA"
 				}
-			}
-		]
-	},
-	{
-		titulo: "Configurar Empresa",
-		icone: <Settings />,
-		match: /^\/e\/\d+\/configurar-empresa/,
-		condicoes: {
-			empresa: true,
-			permissao: "CONFIGURAR_EMPRESA"
-		},
-		submenu: [
+			},
+			{
+				titulo: "Equipes",
+				icone: <Groups />,
+				match: /^\/e\/\d+\/cadastros\/equipes$/,
+				to: (context) => `/e/${context?.empresa?.empresaId}/cadastros/equipes`,
+				condicoes: {
+					empresa: true,
+					permissao: "CADASTRAR_EQUIPES"
+				}
+			},
+			{
+				titulo: "Nova Equipe",
+				icone: <GroupAdd />,
+				match: /^\/e\/\d+\/cadastros\/equipes\/\w+/,
+				to: (context) => `/e/${context?.empresa?.empresaId}/cadastros/equipes/add`,
+				condicoes: {
+					empresa: true,
+					permissao: "CADASTRAR_EQUIPES"
+				}
+			},
 			{
 				titulo: "Aparência",
 				icone: <Palette />,
-				match: /^\/e\/\d+\/configurar-empresa\/aparencia$/,
-				to: (context) => `/e/${context?.empresa?.empresaId}/configurar-empresa/aparencia`,
+				match: /^\/e\/\d+\/empresa\/aparencia$/,
+				to: (context) => `/e/${context?.empresa?.empresaId}/empresa/aparencia`,
 				condicoes: {
 					empresa: true,
+					permissao: "CONFIGURAR_EMPRESA"
 				}
 			},
 		]
@@ -323,13 +345,14 @@ export const getActiveMenuItems = (items: IDrawerMenuItem[], context: DrawerMenu
 
 		const { condicoes } = menuItem;
 
-		const { admin, empresa, empresaId, permissao } = condicoes ?? {};
+		const { admin, empresa, empresaId, permissao, custom } = condicoes ?? {};
 
 		const shouldRender = (
 			(admin == undefined || admin == context?.usuarioLogado?.isAdmin)
 			&& (empresa == undefined || empresa == !!context.empresa)
 			&& (empresaId == undefined || empresaId == !!context.empresaId)
 			&& (context?.usuarioLogado?.isAdmin || permissao == undefined || context?.papel?.contemPermissao(permissao))
+			&& (custom == undefined || custom(context))
 		)
 
 		if (shouldRender) {
@@ -373,6 +396,8 @@ const DrawerMenu = () => {
 	const { data: perfil } = usePerfilAtualQuery();
 	const { data: relatorios } = useRelatoriosByPerfilQuery(perfil?.perfilId);
 	const { data: relatoriosAdmin } = useRelatoriosByEmpresaIdQuery(empresa?.empresaId, usuarioLogado?.isAdmin ?? false);
+	const { data: equipes } = useEquipesByPerfilQuery(perfil?.perfilId);
+	const { data: equipesAdmin } = useEquipesByEmpresaIdQuery(empresa?.empresaId, usuarioLogado?.isAdmin ?? false);
 
 	const items = useMemo(() => {
 		const context = {
@@ -382,6 +407,7 @@ const DrawerMenu = () => {
 			location: location,
 			papel: papel,
 			relatorios: relatoriosAdmin?.filter(relatorio => relatorio.ativo) || relatorios,
+			equipes: equipesAdmin || equipes,
 		};
 		const activeMenuItems = getActiveMenuItems(menuItems, context);
 		return renderMenuItems(activeMenuItems, context);

@@ -13,6 +13,7 @@ export const PerfilAdminSchema = z.object({
 	ativo: z.boolean(),
 	nome: z.string(),
 	foto: z.nullable(z.string()),
+	equipeId: z.nullable(z.number()),
 	createdAt: apiDateTimeToDateSchema,
 	updatedAt: apiDateTimeToDateSchema,
 });

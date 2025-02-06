@@ -45,6 +45,10 @@ const UsuarioMeFormPage = lazy(() => import("../../../domains/usuario/UsuarioMeF
 
 const EmpresaAparenciaFormPage = lazy(() => import("../../../domains/empresa/EmpresaAparenciaFormPage"));
 
+const ListaEquipesPage = lazy(() => import("../../../domains/equipe/ListaEquipesPage"));
+const EquipeFormPage = lazy(() => import("../../../domains/equipe/EquipeFormPage"));
+const EquipePage = lazy(() => import("../../../domains/equipe/EquipePage"));
+
 export interface Context {
 	auth?: boolean,
 	usuarioLogado?: IUsuarioMe,
@@ -165,7 +169,7 @@ const indexRouteWithoutIds: IRoute = {
 									},
 								},
 								{
-									path: 'cadastrar-relatorios',
+									path: 'cadastros/relatorios',
 									condicoes: {
 										empresa: true,
 										permissao: 'CONFIGURAR_EMPRESA'
@@ -173,7 +177,7 @@ const indexRouteWithoutIds: IRoute = {
 									element: <ListaRelatoriosPage/>,
 								},
 								{
-									path: 'cadastrar-relatorios/:relatorioId',
+									path: 'cadastros/relatorios/:relatorioId',
 									condicoes: {
 										empresa: true,
 										permissao: 'CONFIGURAR_EMPRESA'
@@ -182,7 +186,32 @@ const indexRouteWithoutIds: IRoute = {
 									keys: ['relatorioId'],
 								},
 								{
-									path: 'configurar-empresa/aparencia',
+									path: 'equipes/:equipeId',
+									condicoes: {
+										empresa: true
+									},
+									element: <EquipePage/>,
+									keys: ['equipeId'],
+								},
+								{
+									path: 'cadastros/equipes',
+									condicoes: {
+										empresa: true,
+										permissao: 'CADASTRAR_EQUIPES'
+									},
+									element: <ListaEquipesPage/>,
+								},
+								{
+									path: 'cadastros/equipes/:equipeId',
+									condicoes: {
+										empresa: true,
+										permissao: 'CADASTRAR_EQUIPES'
+									},
+									element: <EquipeFormPage/>,
+									keys: ['equipeId'],
+								},
+								{
+									path: 'empresa/aparencia',
 									condicoes: {
 										empresa: true,
 										permissao: 'CONFIGURAR_EMPRESA'

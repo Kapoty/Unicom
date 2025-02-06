@@ -6,7 +6,7 @@ import browserHistory from "../../utils/browserHistory";
 import useAppStore from "../../state/useAppStore";
 
 export interface DashboardContentProps {
-	titulo?: string;
+	titulo?: ReactNode;
 	subtitulo?: string;
 	children?: ReactNode;
 	fabs?: ReactElement[];

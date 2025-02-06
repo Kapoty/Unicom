@@ -1,7 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
-import { aceitarPerfil, patchPerfil, postPerfil, recusarPerfil } from "./PerfilService";
+import { aceitarPerfil, alterarEquipe, patchPerfil, postPerfil, recusarPerfil } from "./PerfilService";
 import queryClient from "../../shared/utils/queryClient";
-import { PerfilAdminPatchRequest, PerfilAdminPostRequest } from "./PerfilPayloads";
+import { PerfilAdminPatchRequest, PerfilAdminPostRequest, PerfilAlterarEquipeRequest } from "./PerfilPayloads";
 
 export const usePerfilAceitarMutation = () => {
 	return useMutation({
@@ -48,5 +48,12 @@ export const usePerfilPatchMutation = () => {
 				queryKey: ['perfis', 'empresas', variables.empresaId, variables.perfilId]
 			});
 		},
+	})
+}
+
+export const usePerfilAlterarEquipeMutation = () => {
+	return useMutation({
+		mutationFn: async (variables: {perfilId: number, payload: PerfilAlterarEquipeRequest }) =>
+			alterarEquipe(variables.perfilId, variables.payload),
 	})
 }

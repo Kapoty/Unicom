@@ -9,30 +9,26 @@ import CustomFab from "../../shared/components/Fab/CustomFab"
 import browserHistory from "../../shared/utils/browserHistory"
 import { IDatagridVisao } from "../datagridVisao/DatagridVisao"
 import { Chip, Icon } from "@mui/material"
-import EmpresaChip from "../empresa/EmpresaChip"
-import { IRelatorio, IRelatorioAdmin } from "./Relatorio"
-import { useRelatoriosByEmpresaIdQuery } from "./RelatorioQueries"
 import useEmpresaIdParam from "../../shared/hooks/useEmpresaIdParam"
+import { IEquipe, IEquipeAdmin } from "./Equipe"
+import PerfilChip from "../perfil/PerfilChip"
+import { useEquipesByEmpresaIdQuery } from "./EquipeQueries"
 
-const columns: GridColDef<IRelatorioAdmin>[] = [
-	{ field: 'relatorioId', headerName: 'ID', type: 'number', width: 100 },
-	{ field: 'titulo', headerName: 'Título', width: 250 , renderCell: (params) =>
+const columns: GridColDef<IEquipeAdmin>[] = [
+	{ field: 'equipeId', headerName: 'ID', type: 'number', width: 100 },
+	{ field: 'nome', headerName: 'Nome', width: 250 , renderCell: (params) =>
 		<Chip
 			label={params.value}
-			onClick={() => browserHistory.push(`/e/${params.row.empresaId}/cadastros/relatorios/${params.row.relatorioId}`)}
+			onClick={() => browserHistory.push(`/e/${params.row.empresaId}/cadastros/equipes/${params.row.equipeId}`)}
 	/> },
-	{ field: 'uri', headerName: 'URI', width: 100 },
-	{ field: 'link', headerName: 'Link', width: 200 },
-	{ field: 'linkMobile', headerName: 'Link Mobile', width: 200 },
-	{ field: 'icone', headerName: 'Ícone', width: 100, renderCell: (parmas) => <Icon>{parmas?.value ?? 'leaderboard'}</Icon> },
-	{ field: 'novaGuia', headerName: 'Nova Guia', type: 'boolean', width: 100 },
-	{ field: 'ativo', headerName: 'Ativo', type: 'boolean', width: 100 },
+	{ field: 'icone', headerName: 'Ícone', width: 100, renderCell: (parmas) => <Icon>{parmas?.value ?? 'groups'}</Icon> },
+	{ field: 'supervisorId', headerName: 'Supervisor', width: 200, renderCell: (params) => <PerfilChip perfilId={params.value}/> },
 	{
 		field: 'actions', headerName: "", type: 'actions', getActions: (params) => [
 			<GridActionsCellItem
 				icon={<Edit />}
 				label="Editar"
-				onClick={() => browserHistory.push(`/e/${params.row.empresaId}/cadastros/relatorios/${params.row.relatorioId}`)}
+				onClick={() => browserHistory.push(`/e/${params.row.empresaId}/cadastros/equipes/${params.row.equipeId}`)}
 				showInMenu
 			/>
 		],
@@ -41,9 +37,9 @@ const columns: GridColDef<IRelatorioAdmin>[] = [
 
 const columnGroupingModel: GridColumnGroupingModel = [
 	{
-		groupId: 'relatorio',
-		headerName: "Relatório",
-		children: [{ field: 'relatorioId' }, { field: 'titulo' }, { field: 'uri' }, { field: 'link' }, { field: 'linkMobile' }, { field: 'icone' }, { field: 'novaGuia' }, { field: 'ativo' }],
+		groupId: 'equipe',
+		headerName: "Equipe",
+		children: [{ field: 'equipeId' }, { field: 'nome' }, { field: 'icone' }, { field: 'supervisorId' }],
 		freeReordering: true,
 	},
 	{
@@ -73,29 +69,29 @@ const visoesPadrao: IDatagridVisao[] = [
 	}
 ]
 
-const ListaRelatoriosPage = () => {
+const ListaEquipesPage = () => {
 	
 	const [isUpdating, setIsUpdating] = useState(false);
 
 	const empresaId = useEmpresaIdParam();
 	
-	const { data, refetch } = useRelatoriosByEmpresaIdQuery(empresaId);
-	const [relatorios, setRelatorios] = useState< IRelatorio[] | undefined>(data);
+	const { data, refetch } = useEquipesByEmpresaIdQuery(empresaId);
+	const [equipes, setEquipes] = useState< IEquipeAdmin[] | undefined>(data);
 
 	const { enqueueSnackbar } = useSnackbar();
 
 	const apiRef = useGridApiRef();
 
 	const rows = useMemo(() => {
-		return relatorios?.map(relatorio => {
+		return equipes?.map(equipe => {
 			return {
-				...Object.assign({}, flatten(relatorio)),
-				id: relatorio.relatorioId,
-				relatorio: relatorio,
+				...Object.assign({}, flatten(equipe)),
+				id: equipe.equipeId,
+				equipe: equipe,
 			}
 		}
 		) ?? []
-	}, [relatorios]);
+	}, [equipes]);
 
 	const update = useCallback(async () => {
 		setIsUpdating(true);
@@ -103,7 +99,7 @@ const ListaRelatoriosPage = () => {
 			const result = await refetch();
 			if (result.error)
 				throw result.error;
-			setRelatorios(result.data);
+			setEquipes(result.data);
 		} catch (error) {
 			enqueueSnackbar('Falha ao atualizar!', {variant: 'error'});
 		} finally {
@@ -116,10 +112,10 @@ const ListaRelatoriosPage = () => {
 	}, []);
 
 	return <DashboardContent
-		titulo="Relatórios"
+		titulo="Equipes"
 		fabs={[
 			<CustomFab tooltip={{title: 'Atualizar'}} key={0} onClick={() => update()} disabled={isUpdating} loading={isUpdating}><Refresh /></CustomFab>,
-			<CustomFab tooltip={{title: 'Novo Relatório'}} key={1} onClick={() => browserHistory.push(`/e/${empresaId}/cadastros/relatorios/add`)} color="primary"><Add /></CustomFab>,
+			<CustomFab tooltip={{title: 'Nova Equipe'}} key={1} onClick={() => browserHistory.push(`/e/${empresaId}/cadastros/equipes/add`)} color="primary"><Add /></CustomFab>,
 		]}
 	>
 		<CustomDataGrid
@@ -128,9 +124,9 @@ const ListaRelatoriosPage = () => {
 			rows={rows}
 			columnGroupingModel={columnGroupingModel}
 			apiRef={apiRef}
-			stateKey={["relatorios", empresaId]}
+			stateKey={["equipes", empresaId]}
 			visao={{
-				datagrid: "relatorios",
+				datagrid: "equipes",
 				visoesPadrao: visoesPadrao,
 			}}
 
@@ -139,4 +135,4 @@ const ListaRelatoriosPage = () => {
 	</DashboardContent>
 }
 
-export default ListaRelatoriosPage;
+export default ListaEquipesPage;

@@ -21,3 +21,9 @@ export const PerfilAdminPatchRequestSchema = z.object({
 });
 
 export type PerfilAdminPatchRequest = z.infer<typeof PerfilAdminPatchRequestSchema>;
+
+export const PerfilAlterarEquipeRequestSchema = z.object({
+	equipeId: z.nullable(z.number()),
+});
+
+export type PerfilAlterarEquipeRequest = z.infer<typeof PerfilAlterarEquipeRequestSchema>;
