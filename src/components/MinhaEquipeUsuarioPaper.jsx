@@ -50,9 +50,9 @@ class MinhaEquipeUsuarioPaper extends React.Component {
 				<Typography variant="h4" align="center">
 					{usuarioEquipe.nome}
 				</Typography>
-				<JornadaChip usuario={usuario} me={false} usuarioId={usuarioEquipe.usuarioId}/>
+				{/*<JornadaChip usuario={usuario} me={false} usuarioId={usuarioEquipe.usuarioId}/>
 				<AlterarJornadaButton usuario={usuario} usuarioId={usuarioEquipe.usuarioId}/>
-				<RelatorioJornadaButton usuario={usuario} usuarioId={usuarioEquipe.usuarioId} me={false}/>
+				<RelatorioJornadaButton usuario={usuario} usuarioId={usuarioEquipe.usuarioId} me={false}/>*/}
 			</Stack>
 		</MinhaEquipePaper>
 	}

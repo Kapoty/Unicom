@@ -68,7 +68,7 @@ class CustomAppBar extends React.Component {
 	}
 
 	componentDidMount() {
-		this.getDiaFechamentoFolha();
+		//this.getDiaFechamentoFolha();
 	}
 
 	getDiaFechamentoFolha() {
@@ -166,7 +166,7 @@ class CustomAppBar extends React.Component {
 
 			      	{this.props.usuario !==null && <RegistroDeAtividadesIcon usuario={this.props.usuario}/>}
 
-			      	{this.props.usuario !==null && this.props.usuario.permissaoList.includes("REGISTRAR_JORNADA") ? <JornadaChip usuario={this.props.usuario} me showFixButton/> : ""}
+			      	{this.props.usuario !==null && this.props.usuario.permissaoList.includes("REGISTRAR_JORNADA") && false ? <JornadaChip usuario={this.props.usuario} me showFixButton/> : ""}
 
 			      	<Stack direction="row" spacing={1} justifyContent="center" alignItems="center">
 			      		<Collapse in={this.state.alertFechamentoFolhaOpen} orientation="horizontal">
