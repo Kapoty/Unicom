@@ -10,25 +10,36 @@ import browserHistory from "../../shared/utils/browserHistory"
 import { IDatagridVisao } from "../datagridVisao/DatagridVisao"
 import { Chip, Icon } from "@mui/material"
 import useEmpresaIdParam from "../../shared/hooks/useEmpresaIdParam"
-import { IEquipe, IEquipeAdmin } from "./Equipe"
-import PerfilChip from "../perfil/PerfilChip"
-import { useEquipesAdminByEmpresaIdQuery } from "./EquipeQueries"
+import { ICampoExtraAdmin, ICampoExtraSlot } from "./CampoExtra"
+import { useCamposExtrasAdminByEmpresaIdQuery } from "./CampoExtraQueries"
 
-const columns: GridColDef<IEquipeAdmin>[] = [
-	{ field: 'equipeId', headerName: 'ID', type: 'number', width: 100 },
+interface IRow extends ICampoExtraAdmin {
+	campoExtraSlot: ICampoExtraSlot;
+	empresaId: number;
+	sugestoes: string[],
+}
+
+const columns: GridColDef<IRow>[] = [
+	{ field: 'campoExtraSlot', headerName: 'Slot', type: 'number', width: 200 },
 	{ field: 'nome', headerName: 'Nome', width: 250 , renderCell: (params) =>
 		<Chip
 			label={params.value}
-			onClick={() => browserHistory.push(`/e/${params.row.empresaId}/cadastros/equipes/${params.row.equipeId}`)}
+			onClick={() => browserHistory.push(`/e/${params.row.empresaId}/cadastros/campos-extras/${params.row.campoExtraSlot}`)}
 	/> },
-	{ field: 'icone', headerName: 'Ícone', width: 100, renderCell: (parmas) => <Icon>{parmas?.value ?? 'groups'}</Icon> },
-	{ field: 'supervisorId', headerName: 'Supervisor', width: 200, renderCell: (params) => <PerfilChip perfilId={params.value}/> },
+	{ field: 'ativo', headerName: 'Ativo', width: 125, type: 'boolean' },
+	{ field: 'obrigatorio', headerName: 'Obrigatório', width: 125, type: 'boolean' },
+	{ field: 'elevado', headerName: 'Elevado', width: 125, type: 'boolean' },
+	{ field: 'sugestoes', headerName: 'Sugestões', width: 125, type: 'number', valueGetter: (value: string[]) => value?.length ?? 0},
+	{ field: 'referencia', headerName: 'Referência', width: 125, type: 'boolean' },
+	{ field: 'regex', headerName: 'Regex', width: 200 },
+	{ field: 'valorPadrao', headerName: 'Valor Padrão', width: 200 },
+	{ field: 'tipoProduto', headerName: 'Tipo Produto', width: 200, valueGetter: (value) => value ?? 'AMBOS'},
 	{
 		field: 'actions', headerName: "", type: 'actions', getActions: (params) => [
 			<GridActionsCellItem
 				icon={<Edit />}
 				label="Editar"
-				onClick={() => browserHistory.push(`/e/${params.row.empresaId}/cadastros/equipes/${params.row.equipeId}`)}
+				onClick={() => browserHistory.push(`/e/${params.row.empresaId}/cadastros/campos-extras/${params.row.campoExtraSlot}`)}
 				showInMenu
 			/>
 		],
@@ -37,9 +48,9 @@ const columns: GridColDef<IEquipeAdmin>[] = [
 
 const columnGroupingModel: GridColumnGroupingModel = [
 	{
-		groupId: 'equipe',
-		headerName: "Equipe",
-		children: [{ field: 'equipeId' }, { field: 'nome' }, { field: 'icone' }, { field: 'supervisorId' }],
+		groupId: 'campoExtra',
+		headerName: "Campo Extra",
+		children: [{ field: 'campoExtraSlot' }, { field: 'nome' }, { field: 'ativo' }, { field: 'obrigatorio' }, { field: 'elevado' }, { field: 'sugestoes' }, { field: 'referencia' }, { field: 'regex' }, { field: 'valorPadrao' },  { field: 'tipoProduto' }],
 		freeReordering: true,
 	},
 	{
@@ -69,29 +80,32 @@ const visoesPadrao: IDatagridVisao[] = [
 	}
 ]
 
-const ListaEquipesPage = () => {
+const ListaCamposExtrasPage = () => {
 	
 	const [isUpdating, setIsUpdating] = useState(false);
 
 	const empresaId = useEmpresaIdParam();
 	
-	const { data, refetch } = useEquipesAdminByEmpresaIdQuery(empresaId);
-	const [equipes, setEquipes] = useState< IEquipeAdmin[] | undefined>(data);
+	const { data, refetch } = useCamposExtrasAdminByEmpresaIdQuery(empresaId);
+	const [camposExtras, setCamposExtras] = useState< ICampoExtraAdmin[] | undefined>(data);
 
 	const { enqueueSnackbar } = useSnackbar();
 
 	const apiRef = useGridApiRef();
 
 	const rows = useMemo(() => {
-		return equipes?.map(equipe => {
+		return camposExtras?.map(campoExtra => {
 			return {
-				...Object.assign({}, flatten(equipe)),
-				id: equipe.equipeId,
-				equipe: equipe,
+				...Object.assign({}, flatten(campoExtra)),
+				id: campoExtra.campoExtraId.campoExtraSlot,
+				campoExtra: campoExtra,
+				campoExtraSlot: campoExtra.campoExtraId.campoExtraSlot,
+				empresaId: campoExtra.campoExtraId.empresaId,
+				sugestoes: campoExtra.sugestoes,
 			}
 		}
 		) ?? []
-	}, [equipes]);
+	}, [camposExtras]);
 
 	const update = useCallback(async () => {
 		setIsUpdating(true);
@@ -99,7 +113,7 @@ const ListaEquipesPage = () => {
 			const result = await refetch();
 			if (result.error)
 				throw result.error;
-			setEquipes(result.data);
+			setCamposExtras(result.data);
 		} catch (error) {
 			enqueueSnackbar('Falha ao atualizar!', {variant: 'error'});
 		} finally {
@@ -112,10 +126,10 @@ const ListaEquipesPage = () => {
 	}, []);
 
 	return <DashboardContent
-		titulo="Equipes"
+		titulo="Campos Extras"
 		fabs={[
 			<CustomFab tooltip={{title: 'Atualizar'}} key={0} onClick={() => update()} disabled={isUpdating} loading={isUpdating}><Refresh /></CustomFab>,
-			<CustomFab tooltip={{title: 'Nova Equipe'}} key={1} onClick={() => browserHistory.push(`/e/${empresaId}/cadastros/equipes/add`)} color="primary"><Add /></CustomFab>,
+			<CustomFab tooltip={{title: 'Novo Campo Extra'}} key={1} onClick={() => browserHistory.push(`/e/${empresaId}/cadastros/campos-extras/add`)} color="primary"><Add /></CustomFab>,
 		]}
 	>
 		<CustomDataGrid
@@ -124,9 +138,9 @@ const ListaEquipesPage = () => {
 			rows={rows}
 			columnGroupingModel={columnGroupingModel}
 			apiRef={apiRef}
-			stateKey={["equipes", empresaId]}
+			stateKey={["campos-extras", empresaId]}
 			visao={{
-				datagrid: "equipes",
+				datagrid: "campos-extras",
 				visoesPadrao: visoesPadrao,
 			}}
 
@@ -135,4 +149,4 @@ const ListaEquipesPage = () => {
 	</DashboardContent>
 }
 
-export default ListaEquipesPage;
+export default ListaCamposExtrasPage;

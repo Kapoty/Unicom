@@ -10,25 +10,25 @@ import browserHistory from "../../shared/utils/browserHistory"
 import { IDatagridVisao } from "../datagridVisao/DatagridVisao"
 import { Chip, Icon } from "@mui/material"
 import useEmpresaIdParam from "../../shared/hooks/useEmpresaIdParam"
-import { IEquipe, IEquipeAdmin } from "./Equipe"
-import PerfilChip from "../perfil/PerfilChip"
-import { useEquipesAdminByEmpresaIdQuery } from "./EquipeQueries"
+import { IProdutoAdmin } from "./Produto"
+import { useProdutosAdminByEmpresaIdQuery } from "./ProdutoQueries"
 
-const columns: GridColDef<IEquipeAdmin>[] = [
-	{ field: 'equipeId', headerName: 'ID', type: 'number', width: 100 },
+const columns: GridColDef<IProdutoAdmin>[] = [
+	{ field: 'produtoId', headerName: 'ID', type: 'number', width: 100 },
 	{ field: 'nome', headerName: 'Nome', width: 250 , renderCell: (params) =>
 		<Chip
 			label={params.value}
-			onClick={() => browserHistory.push(`/e/${params.row.empresaId}/cadastros/equipes/${params.row.equipeId}`)}
+			onClick={() => browserHistory.push(`/e/${params.row.empresaId}/cadastros/produtos/${params.row.produtoId}`)}
 	/> },
-	{ field: 'icone', headerName: 'Ícone', width: 100, renderCell: (parmas) => <Icon>{parmas?.value ?? 'groups'}</Icon> },
-	{ field: 'supervisorId', headerName: 'Supervisor', width: 200, renderCell: (params) => <PerfilChip perfilId={params.value}/> },
+	{ field: 'valor', headerName: 'Valor', width: 100 },
+	{ field: 'ordem', headerName: 'Ordem', width: 100 },
+	{ field: 'tipoProduto', headerName: 'Tipo Produto', width: 200 },
 	{
 		field: 'actions', headerName: "", type: 'actions', getActions: (params) => [
 			<GridActionsCellItem
 				icon={<Edit />}
 				label="Editar"
-				onClick={() => browserHistory.push(`/e/${params.row.empresaId}/cadastros/equipes/${params.row.equipeId}`)}
+				onClick={() => browserHistory.push(`/e/${params.row.empresaId}/cadastros/produtos/${params.row.produtoId}`)}
 				showInMenu
 			/>
 		],
@@ -37,9 +37,9 @@ const columns: GridColDef<IEquipeAdmin>[] = [
 
 const columnGroupingModel: GridColumnGroupingModel = [
 	{
-		groupId: 'equipe',
-		headerName: "Equipe",
-		children: [{ field: 'equipeId' }, { field: 'nome' }, { field: 'icone' }, { field: 'supervisorId' }],
+		groupId: 'produto',
+		headerName: "Produto",
+		children: [{ field: 'produtoId' }, { field: 'nome' }, { field: 'valor' }, { field: 'ordem' }, { field: 'tipoProduto' }],
 		freeReordering: true,
 	},
 	{
@@ -69,29 +69,29 @@ const visoesPadrao: IDatagridVisao[] = [
 	}
 ]
 
-const ListaEquipesPage = () => {
+const ListaProdutosPage = () => {
 	
 	const [isUpdating, setIsUpdating] = useState(false);
 
 	const empresaId = useEmpresaIdParam();
 	
-	const { data, refetch } = useEquipesAdminByEmpresaIdQuery(empresaId);
-	const [equipes, setEquipes] = useState< IEquipeAdmin[] | undefined>(data);
+	const { data, refetch } = useProdutosAdminByEmpresaIdQuery(empresaId);
+	const [produtos, setProdutos] = useState< IProdutoAdmin[] | undefined>(data);
 
 	const { enqueueSnackbar } = useSnackbar();
 
 	const apiRef = useGridApiRef();
 
 	const rows = useMemo(() => {
-		return equipes?.map(equipe => {
+		return produtos?.map(produto => {
 			return {
-				...Object.assign({}, flatten(equipe)),
-				id: equipe.equipeId,
-				equipe: equipe,
+				...Object.assign({}, flatten(produto)),
+				id: produto.produtoId,
+				produto: produto,
 			}
 		}
 		) ?? []
-	}, [equipes]);
+	}, [produtos]);
 
 	const update = useCallback(async () => {
 		setIsUpdating(true);
@@ -99,7 +99,7 @@ const ListaEquipesPage = () => {
 			const result = await refetch();
 			if (result.error)
 				throw result.error;
-			setEquipes(result.data);
+			setProdutos(result.data);
 		} catch (error) {
 			enqueueSnackbar('Falha ao atualizar!', {variant: 'error'});
 		} finally {
@@ -112,10 +112,10 @@ const ListaEquipesPage = () => {
 	}, []);
 
 	return <DashboardContent
-		titulo="Equipes"
+		titulo="Produtos"
 		fabs={[
 			<CustomFab tooltip={{title: 'Atualizar'}} key={0} onClick={() => update()} disabled={isUpdating} loading={isUpdating}><Refresh /></CustomFab>,
-			<CustomFab tooltip={{title: 'Nova Equipe'}} key={1} onClick={() => browserHistory.push(`/e/${empresaId}/cadastros/equipes/add`)} color="primary"><Add /></CustomFab>,
+			<CustomFab tooltip={{title: 'Novo Produto'}} key={1} onClick={() => browserHistory.push(`/e/${empresaId}/cadastros/produtos/add`)} color="primary"><Add /></CustomFab>,
 		]}
 	>
 		<CustomDataGrid
@@ -124,9 +124,9 @@ const ListaEquipesPage = () => {
 			rows={rows}
 			columnGroupingModel={columnGroupingModel}
 			apiRef={apiRef}
-			stateKey={["equipes", empresaId]}
+			stateKey={["produtos", empresaId]}
 			visao={{
-				datagrid: "equipes",
+				datagrid: "produtos",
 				visoesPadrao: visoesPadrao,
 			}}
 
@@ -135,4 +135,4 @@ const ListaEquipesPage = () => {
 	</DashboardContent>
 }
 
-export default ListaEquipesPage;
+export default ListaProdutosPage;

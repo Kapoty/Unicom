@@ -4,8 +4,8 @@ import { EquipePatchRequest, EquipePostRequest } from './EquipePayloads';
 export const getEquipesByPerfilId = async (perfilId: number): Promise<IEquipe[]> =>
     (await api.get<IEquipe[]>(`/equipes/perfis/${perfilId}`)).data.map(equipe => EquipeSchema.parse(equipe));
 
-export const getEquipesByEmpresaId = async (empresaId: number): Promise<IEquipeAdmin[]> =>
-    (await api.get<IEquipeAdmin[]>(`/equipes/empresas/${empresaId}`)).data.map(equipe => EquipeAdminSchema.parse(equipe));
+export const getEquipesAdminByEmpresaId = async (empresaId: number): Promise<IEquipeAdmin[]> =>
+    (await api.get<IEquipeAdmin[]>(`/equipes/empresas/${empresaId}/admin`)).data.map(equipe => EquipeAdminSchema.parse(equipe));
 
 export const getEquipeByEmpresaIdAndEquipeId = async (empresaId: number, equipeId: number): Promise<IEquipe> =>
     EquipeSchema.parse((await api.get<IEquipe>(`/equipes/empresas/${empresaId}/${equipeId}`)).data);

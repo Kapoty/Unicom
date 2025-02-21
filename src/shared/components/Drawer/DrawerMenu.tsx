@@ -1,4 +1,4 @@
-import { Abc, Add, AddCard, Apartment, CorporateFare, CreditCard, DisplaySettings, GroupAdd, Groups, Home, Leaderboard, Palette, Settings, Workspaces, Badge as BadgeIcon, ManageAccounts, People, PersonAddAlt1 } from "@mui/icons-material";
+import { Abc, Add, AddCard, Apartment, CorporateFare, CreditCard, DisplaySettings, GroupAdd, Groups, Home, Leaderboard, Palette, Settings, Workspaces, Badge as BadgeIcon, ManageAccounts, People, PersonAddAlt1, Description, NoteAdd, Note, Place, AddLocation, AddCircle, AirlineStops, Computer, AccountBalance, Info, Input } from "@mui/icons-material";
 import { Badge, Collapse, Icon, List } from "@mui/material";
 import { useMemo } from "react";
 import { Location, useLocation } from "react-router-dom";
@@ -15,7 +15,7 @@ import { IRelatorio } from "../../../domains/relatorio/Relatorio";
 import { useRelatoriosByEmpresaIdQuery, useRelatoriosByPerfilQuery } from "../../../domains/relatorio/RelatorioQueries";
 import { usePerfilAtualQuery } from "../../../domains/perfil/PerfilQueries";
 import { IEquipe } from "../../../domains/equipe/Equipe";
-import { useEquipesByEmpresaIdQuery, useEquipesByPerfilQuery } from "../../../domains/equipe/EquipeQueries";
+import { useEquipesAdminByEmpresaIdQuery, useEquipesByPerfilQuery } from "../../../domains/equipe/EquipeQueries";
 
 export interface DrawerMenuItemContext {
 	usuarioLogado?: IUsuarioMe,
@@ -149,6 +149,37 @@ export const menuItems: IDrawerMenuItem[] = [
 		]
 	},
 	{
+		titulo: "Bancos",
+		icone: <AccountBalance />,
+		match: /^\/admin\/bancos/,
+		condicoes: {
+			admin: true,
+			empresaId: false,
+		},
+		submenu: [
+			{
+				titulo: "Bancos",
+				icone: <AccountBalance />,
+				match: /^\/admin\/bancos$/,
+				to: '/admin/bancos',
+				condicoes: {
+					admin: true,
+					empresaId: false,
+				},
+			},
+			{
+				titulo: "Novo Banco",
+				icone: <Add />,
+				match: /^\/admin\/bancos\/\w+/,
+				to: '/admin/bancos/add',
+				condicoes: {
+					admin: true,
+					empresaId: false,
+				},
+			}
+		]
+	},
+	{
 		titulo: "Início",
 		icone: <Home />,
 		match: /^\/e\/\d+$/,
@@ -177,7 +208,7 @@ export const menuItems: IDrawerMenuItem[] = [
 			},
 			{
 				titulo: "Nova Venda",
-				icone: <AddCard />,
+				icone: <Add />,
 				match: /^\/e\/\d+\/vendas\/\w+/,
 				to: (context) => `/e/${context?.empresa?.empresaId}/vendas/add`,
 				condicoes: {
@@ -240,7 +271,7 @@ export const menuItems: IDrawerMenuItem[] = [
 			},
 			{
 				titulo: "Novo Usuário",
-				icone: <PersonAddAlt1 />,
+				icone: <Add />,
 				match: /^\/e\/\d+\/usuarios\/(?!me)\w+/,
 				to: (context) => `/e/${context?.empresa?.empresaId}/usuarios/add`,
 				condicoes: {
@@ -273,9 +304,19 @@ export const menuItems: IDrawerMenuItem[] = [
 		match: /(^\/e\/\d+\/cadastros)|(^\/e\/\d+\/empresa)/,
 		condicoes: {
 			empresa: true,
-			custom: (context) => (context?.papel?.contemPermissao('CADASTRAR_EQUIPES') || context?.papel?.contemPermissao('CONFIGURAR_EMPRESA')) ?? false,
+			custom: (context) => (context?.usuarioLogado?.isAdmin || context?.papel?.contemPermissao('CADASTRAR_EQUIPES') || context?.papel?.contemPermissao('CONFIGURAR_EMPRESA')) ?? false,
 		},
 		submenu: [
+			{
+				titulo: "Aparência",
+				icone: <Palette />,
+				match: /^\/e\/\d+\/empresa\/aparencia$/,
+				to: (context) => `/e/${context?.empresa?.empresaId}/empresa/aparencia`,
+				condicoes: {
+					empresa: true,
+					permissao: "CONFIGURAR_EMPRESA"
+				}
+			},
 			{
 				titulo: "Relatórios",
 				icone: <DisplaySettings />,
@@ -308,7 +349,7 @@ export const menuItems: IDrawerMenuItem[] = [
 			},
 			{
 				titulo: "Nova Equipe",
-				icone: <GroupAdd />,
+				icone: <Add />,
 				match: /^\/e\/\d+\/cadastros\/equipes\/\w+/,
 				to: (context) => `/e/${context?.empresa?.empresaId}/cadastros/equipes/add`,
 				condicoes: {
@@ -317,10 +358,140 @@ export const menuItems: IDrawerMenuItem[] = [
 				}
 			},
 			{
-				titulo: "Aparência",
-				icone: <Palette />,
-				match: /^\/e\/\d+\/empresa\/aparencia$/,
-				to: (context) => `/e/${context?.empresa?.empresaId}/empresa/aparencia`,
+				titulo: "Produtos",
+				icone: <Description />,
+				match: /^\/e\/\d+\/cadastros\/produtos$/,
+				to: (context) => `/e/${context?.empresa?.empresaId}/cadastros/produtos`,
+				condicoes: {
+					empresa: true,
+					permissao: "CONFIGURAR_EMPRESA"
+				}
+			},
+			{
+				titulo: "Novo Produto",
+				icone: <Add />,
+				match: /^\/e\/\d+\/cadastros\/produtos\/\w+/,
+				to: (context) => `/e/${context?.empresa?.empresaId}/cadastros/produtos/add`,
+				condicoes: {
+					empresa: true,
+					permissao: "CONFIGURAR_EMPRESA"
+				}
+			},
+			{
+				titulo: "Adicionais",
+				icone: <Note />,
+				match: /^\/e\/\d+\/cadastros\/adicionais$/,
+				to: (context) => `/e/${context?.empresa?.empresaId}/cadastros/adicionais`,
+				condicoes: {
+					empresa: true,
+					permissao: "CONFIGURAR_EMPRESA"
+				}
+			},
+			{
+				titulo: "Novo Adicional",
+				icone: <Add />,
+				match: /^\/e\/\d+\/cadastros\/adicionais\/\w+/,
+				to: (context) => `/e/${context?.empresa?.empresaId}/cadastros/adicionais/add`,
+				condicoes: {
+					empresa: true,
+					permissao: "CONFIGURAR_EMPRESA"
+				}
+			},
+			{
+				titulo: "Pdvs",
+				icone: <Place />,
+				match: /^\/e\/\d+\/cadastros\/pdvs$/,
+				to: (context) => `/e/${context?.empresa?.empresaId}/cadastros/pdvs`,
+				condicoes: {
+					empresa: true,
+					permissao: "CONFIGURAR_EMPRESA"
+				}
+			},
+			{
+				titulo: "Novo Pdv",
+				icone: <Add />,
+				match: /^\/e\/\d+\/cadastros\/pdvs\/\w+/,
+				to: (context) => `/e/${context?.empresa?.empresaId}/cadastros/pdvs/add`,
+				condicoes: {
+					empresa: true,
+					permissao: "CONFIGURAR_EMPRESA"
+				}
+			},
+			{
+				titulo: "Origens",
+				icone: <AirlineStops />,
+				match: /^\/e\/\d+\/cadastros\/origens$/,
+				to: (context) => `/e/${context?.empresa?.empresaId}/cadastros/origens`,
+				condicoes: {
+					empresa: true,
+					permissao: "CONFIGURAR_EMPRESA"
+				}
+			},
+			{
+				titulo: "Nova Origem",
+				icone: <Add />,
+				match: /^\/e\/\d+\/cadastros\/origens\/\w+/,
+				to: (context) => `/e/${context?.empresa?.empresaId}/cadastros/origens/add`,
+				condicoes: {
+					empresa: true,
+					permissao: "CONFIGURAR_EMPRESA"
+				}
+			},
+			{
+				titulo: "Sistemas",
+				icone: <Computer />,
+				match: /^\/e\/\d+\/cadastros\/sistemas$/,
+				to: (context) => `/e/${context?.empresa?.empresaId}/cadastros/sistemas`,
+				condicoes: {
+					empresa: true,
+					permissao: "CONFIGURAR_EMPRESA"
+				}
+			},
+			{
+				titulo: "Novo Sistema",
+				icone: <Add />,
+				match: /^\/e\/\d+\/cadastros\/sistemas\/\w+/,
+				to: (context) => `/e/${context?.empresa?.empresaId}/cadastros/sistemas/add`,
+				condicoes: {
+					empresa: true,
+					permissao: "CONFIGURAR_EMPRESA"
+				}
+			},
+			{
+				titulo: "Venda Status",
+				icone: <Info />,
+				match: /^\/e\/\d+\/cadastros\/venda-status$/,
+				to: (context) => `/e/${context?.empresa?.empresaId}/cadastros/venda-status`,
+				condicoes: {
+					empresa: true,
+					permissao: "CONFIGURAR_EMPRESA"
+				}
+			},
+			{
+				titulo: "Novo Venda Status",
+				icone: <Add />,
+				match: /^\/e\/\d+\/cadastros\/venda-status\/\w+/,
+				to: (context) => `/e/${context?.empresa?.empresaId}/cadastros/venda-status/add`,
+				condicoes: {
+					empresa: true,
+					permissao: "CONFIGURAR_EMPRESA"
+				}
+			},
+			{
+				titulo: "Campo Extra",
+				icone: <Input />,
+				match: /^\/e\/\d+\/cadastros\/campos-extras$/,
+				to: (context) => `/e/${context?.empresa?.empresaId}/cadastros/campos-extras`,
+				condicoes: {
+					empresa: true,
+					permissao: "CONFIGURAR_EMPRESA"
+				}
+			},
+			{
+				titulo: "Novo Campo Extra",
+				icone: <Add />,
+				match: /^\/e\/\d+\/cadastros\/campos-extras\/\w+/,
+				to: (context) => `/e/${context?.empresa?.empresaId}/cadastros/campos-extras/add`,
 				condicoes: {
 					empresa: true,
 					permissao: "CONFIGURAR_EMPRESA"
@@ -397,7 +568,7 @@ const DrawerMenu = () => {
 	const { data: relatorios } = useRelatoriosByPerfilQuery(perfil?.perfilId);
 	const { data: relatoriosAdmin } = useRelatoriosByEmpresaIdQuery(empresa?.empresaId, usuarioLogado?.isAdmin ?? false);
 	const { data: equipes } = useEquipesByPerfilQuery(perfil?.perfilId);
-	const { data: equipesAdmin } = useEquipesByEmpresaIdQuery(empresa?.empresaId, usuarioLogado?.isAdmin ?? false);
+	const { data: equipesAdmin } = useEquipesAdminByEmpresaIdQuery(empresa?.empresaId, usuarioLogado?.isAdmin ?? false);
 
 	const items = useMemo(() => {
 		const context = {

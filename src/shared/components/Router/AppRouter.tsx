@@ -26,6 +26,9 @@ const GrupoFormPage = lazy(() => import("../../../domains/grupo/GrupoFormPage"))
 const ListaDominiosPage = lazy(() => import("../../../domains/dominio/ListaDominiosPage"));
 const DominioFormPage = lazy(() => import("../../../domains/dominio/DominioFormPage"));
 
+const ListaBancosPage = lazy(() => import("../../../domains/banco/ListaBancosPage"));
+const BancoFormPage = lazy(() => import("../../../domains/banco/BancoFormPage"));
+
 /* Empresa */
 const HomePage = lazy(() => import('../../../pages/Dashboard/HomePage'));
 
@@ -48,6 +51,27 @@ const EmpresaAparenciaFormPage = lazy(() => import("../../../domains/empresa/Emp
 const ListaEquipesPage = lazy(() => import("../../../domains/equipe/ListaEquipesPage"));
 const EquipeFormPage = lazy(() => import("../../../domains/equipe/EquipeFormPage"));
 const EquipePage = lazy(() => import("../../../domains/equipe/EquipePage"));
+
+const ListaProdutosPage = lazy(() => import("../../../domains/produto/ListaProdutosPage"));
+const ProdutoFormPage = lazy(() => import("../../../domains/produto/ProdutoFormPage"));
+
+const ListaAdicionaisPage = lazy(() => import("../../../domains/adicional/ListaAdicionaisPage"));
+const AdicionalFormPage = lazy(() => import("../../../domains/adicional/AdicionalFormPage"));
+
+const ListaPdvsPage = lazy(() => import("../../../domains/pdv/ListaPdvsPage"));
+const PdvFormPage = lazy(() => import("../../../domains/pdv/PdvFormPage"));
+
+const ListaOrigensPage = lazy(() => import("../../../domains/origem/ListaOrigensPage"));
+const OrigemFormPage = lazy(() => import("../../../domains/origem/OrigemFormPage"));
+
+const ListaSistemasPage = lazy(() => import("../../../domains/sistema/ListaSistemasPage"));
+const SistemaFormPage = lazy(() => import("../../../domains/sistema/SistemaFormPage"));
+
+const ListaVendaStatusPage = lazy(() => import("../../../domains/vendaStatus/ListaVendaStatusPage"));
+const VendaStatusFormPage = lazy(() => import("../../../domains/vendaStatus/VendaStatusFormPage"));
+
+const ListaCamposExtrasPage = lazy(() => import("../../../domains/campoExtra/ListaCamposExtrasPage"));
+const CampoExtraFormPage = lazy(() => import("../../../domains/campoExtra/CampoExtraFormPage"));
 
 export interface Context {
 	auth?: boolean,
@@ -169,6 +193,14 @@ const indexRouteWithoutIds: IRoute = {
 									},
 								},
 								{
+									path: 'empresa/aparencia',
+									condicoes: {
+										empresa: true,
+										permissao: 'CONFIGURAR_EMPRESA'
+									},
+									element: <EmpresaAparenciaFormPage/>,
+								},
+								{
 									path: 'cadastros/relatorios',
 									condicoes: {
 										empresa: true,
@@ -211,12 +243,123 @@ const indexRouteWithoutIds: IRoute = {
 									keys: ['equipeId'],
 								},
 								{
-									path: 'empresa/aparencia',
+									path: 'cadastros/produtos',
 									condicoes: {
 										empresa: true,
 										permissao: 'CONFIGURAR_EMPRESA'
 									},
-									element: <EmpresaAparenciaFormPage/>,
+									element: <ListaProdutosPage/>,
+								},
+								{
+									path: 'cadastros/produtos/:produtoId',
+									condicoes: {
+										empresa: true,
+										permissao: 'CONFIGURAR_EMPRESA'
+									},
+									element: <ProdutoFormPage/>,
+									keys: ['produtoId'],
+								},
+								{
+									path: 'cadastros/adicionais',
+									condicoes: {
+										empresa: true,
+										permissao: 'CONFIGURAR_EMPRESA'
+									},
+									element: <ListaAdicionaisPage/>,
+								},
+								{
+									path: 'cadastros/adicionais/:adicionalId',
+									condicoes: {
+										empresa: true,
+										permissao: 'CONFIGURAR_EMPRESA'
+									},
+									element: <AdicionalFormPage/>,
+									keys: ['adicionalId'],
+								},
+								{
+									path: 'cadastros/pdvs',
+									condicoes: {
+										empresa: true,
+										permissao: 'CONFIGURAR_EMPRESA'
+									},
+									element: <ListaPdvsPage/>,
+								},
+								{
+									path: 'cadastros/pdvs/:pdvId',
+									condicoes: {
+										empresa: true,
+										permissao: 'CONFIGURAR_EMPRESA'
+									},
+									element: <PdvFormPage/>,
+									keys: ['pdvId'],
+								},
+								{
+									path: 'cadastros/origens',
+									condicoes: {
+										empresa: true,
+										permissao: 'CONFIGURAR_EMPRESA'
+									},
+									element: <ListaOrigensPage/>,
+								},
+								{
+									path: 'cadastros/origens/:origemId',
+									condicoes: {
+										empresa: true,
+										permissao: 'CONFIGURAR_EMPRESA'
+									},
+									element: <OrigemFormPage/>,
+									keys: ['origemId'],
+								},
+								{
+									path: 'cadastros/sistemas',
+									condicoes: {
+										empresa: true,
+										permissao: 'CONFIGURAR_EMPRESA'
+									},
+									element: <ListaSistemasPage/>,
+								},
+								{
+									path: 'cadastros/sistemas/:sistemaId',
+									condicoes: {
+										empresa: true,
+										permissao: 'CONFIGURAR_EMPRESA'
+									},
+									element: <SistemaFormPage/>,
+									keys: ['sistemaId'],
+								},
+								{
+									path: 'cadastros/venda-status',
+									condicoes: {
+										empresa: true,
+										permissao: 'CONFIGURAR_EMPRESA'
+									},
+									element: <ListaVendaStatusPage/>,
+								},
+								{
+									path: 'cadastros/venda-status/:vendaStatusId',
+									condicoes: {
+										empresa: true,
+										permissao: 'CONFIGURAR_EMPRESA'
+									},
+									element: <VendaStatusFormPage/>,
+									keys: ['vendaStatusId'],
+								},
+								{
+									path: 'cadastros/campos-extras',
+									condicoes: {
+										empresa: true,
+										permissao: 'CONFIGURAR_EMPRESA'
+									},
+									element: <ListaCamposExtrasPage/>,
+								},
+								{
+									path: 'cadastros/campos-extras/:campoExtraSlot',
+									condicoes: {
+										empresa: true,
+										permissao: 'CONFIGURAR_EMPRESA'
+									},
+									element: <CampoExtraFormPage/>,
+									keys: ['campoExtraSlot'],
 								},
 								{
 									path: '*',
@@ -268,6 +411,15 @@ const indexRouteWithoutIds: IRoute = {
 									path: 'dominios/:dominioId',
 									element: <DominioFormPage/>,
 									keys: ['dominioId'],
+								},
+								{
+									path: 'bancos',
+									element: <ListaBancosPage/>,
+								},
+								{
+									path: 'bancos/:bancoId',
+									element: <BancoFormPage/>,
+									keys: ['bancoId'],
 								},
 								{
 									path: '*',

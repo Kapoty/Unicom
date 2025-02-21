@@ -13,7 +13,7 @@ import { TransitionGroup } from "react-transition-group";
 import useAppStore from "../../shared/state/useAppStore";
 import { usePerfilAtualQuery } from "../../domains/perfil/PerfilQueries";
 import { useRelatoriosByEmpresaIdQuery, useRelatoriosByPerfilQuery } from "../../domains/relatorio/RelatorioQueries";
-import { useEquipesByEmpresaIdQuery, useEquipesByPerfilQuery } from "../../domains/equipe/EquipeQueries";
+import { useEquipesAdminByEmpresaIdQuery, useEquipesByPerfilQuery } from "../../domains/equipe/EquipeQueries";
 
 const filterMenuItems = (items: IDrawerMenuItem[], query: string, context: DrawerMenuItemContext) => {
 	let filteredMenuItems: IDrawerMenuItem[] = [];
@@ -42,7 +42,7 @@ const renderShortcutItems = (items: IDrawerMenuItem[], context: DrawerMenuItemCo
 			return <Collapse key={i} appear>
 				{/*<Typography color="primary" variant='button'>{titulo}</Typography>*/}
 				<Chip label={titulo} sx={{mb: 1}}/>
-				<Stack direction="row" gap={1} sx={{mb: 1}}>
+				<Stack direction="row" gap={1} sx={{mb: 1}} flexWrap='wrap'>
 					{renderShortcutItems(submenu ? (typeof submenu === 'function') ? submenu(context) : submenu : [menuItem], context, depth + 1)}
 				</Stack>
 			</Collapse>
@@ -88,7 +88,7 @@ const HomePage = () => {
 	const {data: relatorios} = useRelatoriosByPerfilQuery(perfil?.perfilId);
 	const { data: relatoriosAdmin } = useRelatoriosByEmpresaIdQuery(empresa?.empresaId, usuarioLogado?.isAdmin ?? false);
 	const { data: equipes } = useEquipesByPerfilQuery(perfil?.perfilId);
-	const { data: equipesAdmin } = useEquipesByEmpresaIdQuery(empresa?.empresaId, usuarioLogado?.isAdmin ?? false);
+	const { data: equipesAdmin } = useEquipesAdminByEmpresaIdQuery(empresa?.empresaId, usuarioLogado?.isAdmin ?? false);
 
 	const items = useMemo(() => {
 		const context = {

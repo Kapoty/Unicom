@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { getEquipeAdminByEmpresaIdAndEquipeId, getEquipeByEmpresaIdAndEquipeId, getEquipeInfoByEmpresaIdAndEquipeId, getEquipesByEmpresaId, getEquipesByPerfilId } from './EquipeService';
+import { getEquipeAdminByEmpresaIdAndEquipeId, getEquipeByEmpresaIdAndEquipeId, getEquipeInfoByEmpresaIdAndEquipeId, getEquipesAdminByEmpresaId, getEquipesByPerfilId } from './EquipeService';
 
 export const useEquipesByPerfilQuery = (perfilId?: number) => {
 
@@ -10,11 +10,11 @@ export const useEquipesByPerfilQuery = (perfilId?: number) => {
 	});
 };
 
-export const useEquipesByEmpresaIdQuery = (empresaId?: number, enabled = true) => {
+export const useEquipesAdminByEmpresaIdQuery = (empresaId?: number, enabled = true) => {
 
 	return useQuery({
-		queryKey: ['equipes', 'empresas', empresaId],
-		queryFn: async () => getEquipesByEmpresaId(empresaId!),
+		queryKey: ['equipes', 'empresas', empresaId, 'admin'],
+		queryFn: async () => getEquipesAdminByEmpresaId(empresaId!),
 		enabled: !!empresaId && enabled
 	});
 };

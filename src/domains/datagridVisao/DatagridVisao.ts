@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { GridInitialStatePremium } from "@mui/x-data-grid-premium/models/gridStatePremium";
 
 export const DatagridVisaoTipoSchema = z.enum(["PADRAO", "PERSONALIZADA"]);
 
